@@ -952,6 +952,7 @@ applications:
       - docs/spec/resource-sharing.md
       - docs/spec/qq-group-services.md
       - docs/spec/personal-center.md
+      - docs/spec/student-verification.md
       - docs/spec/wallet-and-points.md
       - docs/spec/action-eligibility.md
       - docs/spec/my-courses.md
