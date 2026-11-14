@@ -1,7 +1,7 @@
 ---
 type: development
 status: Accepted
-updated: 2026-11-14
+updated: 2026-11-15
 ---
 
 # 框架实施状态
@@ -20,7 +20,7 @@ Web 与 stuhelper-admin 提供状态展示、错误恢复和八语言入口。Ad
 
 ## v0.1.13 固定组合
 
-组合固定 backend v0.1.15、Web v0.1.5、Admin v0.1.3 和 ops v0.1.8。verification v0.1.1、campus-adapters v0.1.7 与其他非 Web 项沿用 v0.1.12。完整 tag 与源码提交记录于 workspace.lock.json，部署前核对正式附件的来源与 SHA256SUMS。
+组合固定 backend v0.1.15、Web v0.1.6、Admin v0.1.3 和 ops v0.1.8。verification v0.1.1、campus-adapters v0.1.7 与其他非 Web 项沿用 v0.1.12。完整 tag 与源码提交记录于 workspace.lock.json，部署前核对正式附件的来源与 SHA256SUMS。
 
 本组合更新校园认证页的展示。下拉框保持布局稳定，操作错误在表单内就近显示并播报，学校资料使用所选凭证的认证时间，未知来源隐藏。现有提供方接口、业务规则与非 Web 制品保持原版本。
 
