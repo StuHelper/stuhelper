@@ -1012,6 +1012,7 @@ applications:
       - docs/spec/internationalization.md
       - docs/spec/module-lifecycle.md
       - docs/spec/admin-operations.md
+      - docs/spec/content-management.md
       - docs/spec/storage-placement.md
       - docs/spec/storage-contribution.md
       - docs/spec/resource-sharing.md
