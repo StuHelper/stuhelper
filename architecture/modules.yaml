@@ -305,6 +305,14 @@ modules:
         - report_test.go#TestPendingEvidenceCannotOverwriteConcurrentDecision
       CM-15:
         - complaints_test.go#TestComplaintRateLimitIsPerAccountAndReplayDoesNotConsumeQuota
+      CM-19:
+        - feedback_test.go#TestFeedbackConcurrentIngestAuthorizationAndAudit
+      CM-20:
+        - feedback_test.go#TestFeedbackReplyUnknownIsNeverResentAndRetentionDeletesMaterials
+        - feedback_test.go#TestFeedbackLeapDayRetentionMatchesDatabaseCalendarMonths
+        - feedback_test.go#TestFeedbackRetentionUsesUTCRegardlessOfDatabaseTimezone
+      CM-21:
+        - feedback_test.go#TestFeedbackRateCapacityAndCursor
   - id: media
     repository: StuHelper/stuhelper-media
     visibility: public
@@ -1004,6 +1012,7 @@ applications:
       - docs/spec/internationalization.md
       - docs/spec/module-lifecycle.md
       - docs/spec/admin-operations.md
+      - docs/spec/content-management.md
       - docs/spec/storage-placement.md
       - docs/spec/storage-contribution.md
       - docs/spec/resource-sharing.md
