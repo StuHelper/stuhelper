@@ -1,31 +1,31 @@
 ---
 type: adr
 status: Accepted
-updated: 2026-11-11
+updated: 2026-11-15
 ---
 
 # 0002：按任务选择 CI runner
 
 ## 背景与设计条件
 
-公共仓库适合使用 GitHub 标准托管 runner 完成普通检查。项目 Registry 位于 BJ1，项目负责人确认自建 runner 的网络条件更好，Docker 构建及镜像传输应与这一网络条件匹配。
+公共仓库使用 GitHub 托管 runner 完成普通检查。组织计费失败会拒绝启动私有仓库的托管作业，自建 ARC 作业仍可运行。项目 Registry 位于 BJ1，镜像构建与传输继续使用自建网络。
 
 ## 决策与确认依据
 
-普通文档、静态检查和不依赖私有 Registry 的测试默认使用 GitHub 标准托管 `ubuntu-26.04` runner，并保留受信分支手动切换到 StuHelper ARC 的能力。
+2026-11-15，负责人确认私有仓库的普通 push/PR 检查改用 stuhelper-arc 组、stuhelper-arc-sh-k8s 标签。公开仓库继续使用 GitHub ubuntu-26.04。公开 PR 不能接触能够读取私有源码、凭据或缓存的环境。
 
-Docker/OCI 镜像构建，以及 BJ1 Registry 的拉取、推送和镜像缓存任务固定使用 StuHelper 自建 runner；不受普通检查的 `CI_RUNNER` 变量覆盖。原生 iOS 编译仍需要 macOS，其他平台按实际 SDK 支持安排。
+Docker/OCI 镜像构建与 BJ1 Registry 任务固定使用自建 runner。共享普通检查与附件发行通过调用方的 runs-on JSON 选择环境，公开调用方始终使用托管 runner。原生 iOS 编译仍需要 macOS，其他平台按实际 SDK 支持安排。
 
-2026-10-24，项目负责人要求托管检查改用 Ubuntu 26.04，并计划自行升级 StuHelper runner。
+runner 镜像基于 Ubuntu 26.04 预装声明的工具版本。主机与容器系统分别维护，主机升级先核对实际发行版与可用备份，在无任务执行时操作。跨发行版重装须独立评估，不能直接执行 Ubuntu 原地升级命令。
 
-普通检查使用有大小限制的公开依赖缓存，PR 只恢复，可信 develop 成功检查后保存。Actions cache 免费额度独立于 artifact/Packages。Docker 缓存使用自建环境或 BJ1 Registry。版本引用使用明确 tag，摘要继续用于完整性核验。
+私有依赖和构建缓存只保存在自建环境，按仓库和用途分区。可信 develop/main 成功后发布缓存，PR 只读。公开仓库不使用这些缓存。容量、保留期和清理按规格执行。版本使用明确 tag，摘要用于核验。
 
 ## 备选与取舍
 
-所有任务都用托管 runner 会让镜像任务受跨网传输影响；所有任务都用自建 runner 会扩大共享资源与信任边界。按任务分工保留免费托管检查的便利，并把镜像工作放在合适的网络中。
+按可见性分配普通检查，使私有仓库不再依赖托管作业的组织计费状态，并保持公开 PR 与内部资源隔离。代价是私有检查依赖自建容量与维护窗口，需要预装工具、缓存上限和可执行的回退方案。
 
 ## 后果与验证
 
-镜像任务需要可用的自建容量、受控 Registry 凭据与独立信任入口；不受信公共 PR 不能直接触发带内部网络或凭据的镜像任务，应先审查并由可信流程接续。未来镜像工作流需实际验证 runner 和 Registry 行为，本次不创建空构建任务。
+迁移保留既有 check 名称，每个私有仓库在指定 ARC 上完成必需检查。验证公开 PR 仍使用托管环境，并以同一提交的首次与第二次运行衡量缓存效果。镜像、缓存与主机系统的实际结果分别记录。
 
 完整规则见 [runner 规格](../spec/ci-runners.md)，当前可用操作见 [CI 指南](../guide/ci-runners.md)。
