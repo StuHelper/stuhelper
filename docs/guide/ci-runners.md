@@ -1,7 +1,7 @@
 ---
 type: guide
 status: Accepted
-updated: 2026-11-15
+updated: 2026-11-16
 ---
 
 # CI 与制品任务
@@ -45,10 +45,16 @@ Docker 测试使用任务专属 Compose project 和镜像标签。退出时删�
 
 ## 镜像与主机升级
 
-先基于 Ubuntu 26.04 构建 runner 镜像，预装工具链清单中的准确版本及 PostgreSQL、编译工具和浏览器运行库。镜像使用 BJ1 Registry 的明确版本 tag，回读 manifest digest 和工具版本后，在独立 runner 验证。
+先基于 Ubuntu 26.04 构建 runner 镜像，预装准确版本的工具链、PostgreSQL 和浏览器运行库。当前临时使用 public 的 ghcr.io/stuhelper/ci-runner，BJ1 恢复后再迁回。镜像内容改变时使用新版本 tag，已发行 tag 不覆盖。
 
-切换镜像前保留旧 Helm values、镜像 tag 与 digest。现有任务结束后再滚动替换，新任务失败时恢复旧 values。镜像切换与主机升级分别记录停机和回退结果。
+公开前核对所有镜像层、配置和构建历史，检查私有源码、凭据、缓存和宿主配置。自动生成的默认 PostgreSQL 证书与私钥在安装所在的同一条 RUN 中删除，并关闭默认 TLS。重新构建后验证本机 PostgreSQL 能正常启动。
 
-本轮盘点确认主机使用 Debian，负责人决定保留主机系统，只更新 Ubuntu runner 容器。镜像源码、只读缓存发布器、运行配置、实机验证与回退入口统一由私有 ops 仓库维护。
+推送后将包设为 public，回读 manifest digest，并在无已有镜像内容和无拉取凭据的环境完整下载。随后运行 k3s canary，验证 PostgreSQL、Chromium 和 pnpm，确认新 runner 注册成功。组织禁止公开包时停止，不修改组织设置或计费。
+
+ARC 通过版本 tag 拉取，digest 只记录在核验结果中。确认现有任务结束后切换，失败时重新部署已验证的上一版本 tag。版本与部署配置由 ops 维护，runner 主机不保存镜像归档或手工配置备份。
+
+新版本验证成功后，先列出待删对象与大小，再清理旧镜像归档、调整前配置副本、旧回退脚本和无人使用的旧镜像。保留依赖缓存、发布器服务、ARC/k3s/BuildKit 配置及其他服务数据，最后核对磁盘和 runner。
+
+本轮主机保留 Debian，只更新 Ubuntu runner 容器。镜像源码、只读缓存发布器、版本配置与验收记录统一由私有 ops 仓库维护。
 
 未来更换主机系统时，先确认离机备份或虚拟机快照可恢复，再暂停接单并等待运行任务结束。跨发行版更换需要重装或替代节点。升级后核对网络、持久卷、k3s、ARC、BuildKit 与完整私有检查。
