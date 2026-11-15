@@ -1,7 +1,7 @@
 ---
 type: spec
 status: Accepted
-updated: 2026-11-15
+updated: 2026-11-16
 ---
 
 # CI 与 runner 约定
@@ -43,6 +43,12 @@ GitHub 对 reusable workflow 显示调用 job 与实际 job 的组合名称，�
 私有仓库的普通 push/PR 检查使用 stuhelper-arc 组、stuhelper-arc-sh-k8s 标签。公开仓库普通检查使用 GitHub ubuntu-26.04。可见性以 gh repo view --json visibility 核验，工作区登记不能代替远端权限状态。
 
 Docker/OCI、镜像组合和 BJ1 Registry 任务使用自建 runner。公开 PR 不在能够读取私有源码、凭据或缓存的环境运行。共享普通检查工作流接收调用方的 runs-on JSON，公开调用方固定使用托管环境。
+
+runner 镜像临时发布到 public 的 ghcr.io/stuhelper/ci-runner，BJ1 恢复后再迁回。ARC 使用明确版本 tag，运行配置不写 digest。已发行 tag 不覆盖，内容变化时发行新版本，digest 仅记录在核验结果中。
+
+公开前逐层检查镜像，禁止包含私有模块、凭据、令牌、私有缓存与宿主配置。公共工具自带的测试材料须核对来源。PostgreSQL 测试使用本机连接，默认关闭 TLS，并在生成层内删除自动创建的证书与私钥。
+
+runner 主机不保存备份或镜像归档。新镜像通过匿名拉取、工具检查与 runner 注册后，按使用关系清理旧归档、旧配置副本和闲置镜像。回退重新部署已验证的上一版本 tag，保留依赖缓存、运行配置和其他服务数据。
 
 私有 stuhelper-arc 组禁止公开仓库访问。Web/Admin 的正式镜像发行使用独立 stuhelper-arc-release 组，仅允许固定版本的共享发行工作流。公开发行池不挂载私有缓存，PR 事件在分配 runner 前跳过。
 
@@ -92,6 +98,8 @@ Actions 使用明确版本 tag。私有检查使用 tooling v0.1.8 的预装检�
 | CI-16 | Registry 验证只使用 Next 应用命名空间的唯一临时 tag，核验 manifest digest 后清理本次制品 |
 | CI-17 | 缺失或损坏的工具下载失败并保留非零退出码，摘要校验成功后才使用工具 |
 | CI-18 | 记录相同提交首次与第二次运行的检查、工具安装和依赖准备耗时，列明命中与未命中的缓存 |
+| CI-19 | runner 镜像逐层公开审计通过，版本 tag 与远端 digest 核验一致，匿名完整拉取成功后才切换 ARC |
+| CI-20 | ARC 使用版本 tag；新 runner 验证成功后清理主机备份和闲置旧镜像，保留运行资源，回退使用上一版本 tag |
 
 ## PostgreSQL 检查版本
 
