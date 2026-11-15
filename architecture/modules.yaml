@@ -979,6 +979,7 @@ applications:
       - docs/spec/wallet-and-points.md
       - docs/spec/action-eligibility.md
       - docs/spec/my-courses.md
+      - docs/spec/catalog-operations.md
     scenario_tests:
       RS-25:
         - tests/e2e/resources.spec.mjs#owned file reuse avoids content transfer and keeps separate review
