@@ -204,6 +204,9 @@ modules:
       - campus-adapters
       - verification
       - identity
+      - reviews
+      - favorites
+      - resources
     interface_owner: catalog
     contract_status: implemented
     specifications:
@@ -217,6 +220,7 @@ modules:
       - catalog.import
       - catalog.enrollments
       - catalog.maintain
+      - catalog.directory
     capability_requires:
       catalog.read:
         - identity
@@ -226,7 +230,18 @@ modules:
         - identity
       catalog.maintain:
         - identity
+      catalog.directory:
+        - identity
+        - reviews
+        - favorites
     scenario_tests:
+      CAT-TEACHER-01:
+        - teacher_directory_test.go#TestTeacherDirectoryUnionFiltersEveryReadBeforePagination
+      CAT-TEACHER-02:
+        - teacher_directory_test.go#TestTeacherSitesAtomicReplayRevocationAndChangedIdentity
+        - teacher_directory_test.go#TestTeacherSiteSnapshotRejectsConcurrentHomonym
+      CAT-TEACHER-03:
+        - teacher_directory_test.go#TestTeacherDirectoryKeepsAuthorizedMaintenanceOfHiddenTeachers
       CO-02:
         - integration_test.go#TestImportRelationsClassificationAndMissingCredits
       CO-04:
