@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "release": "v0.1.19",
+  "release": "v0.1.20",
   "projects": {
     "platform": {
       "repository": "https://github.com/StuHelper/stuhelper-platform.git",
@@ -52,14 +52,14 @@
     },
     "backend": {
       "repository": "https://github.com/StuHelper/stuhelper-backend.git",
-      "tag": "v0.1.21",
-      "revision": "4c8b5e20cfc00ba5378a30938827ff6fad447b73",
+      "tag": "v0.1.23",
+      "revision": "61912c6de475fb0873299e509835b21c7450c9c0",
       "dirty": false
     },
     "catalog": {
       "repository": "https://github.com/StuHelper/stuhelper-catalog.git",
-      "tag": "v0.1.1",
-      "revision": "3902dc56d0d56cd5202818805f2c9ee66cb54c27",
+      "tag": "v0.1.4",
+      "revision": "506ed6fdb2115a63428cbca51acb9d2f9c4b744a",
       "dirty": false
     },
     "open-platform": {
@@ -136,8 +136,8 @@
     },
     "ops": {
       "repository": "https://github.com/StuHelper/stuhelper-ops.git",
-      "tag": "v0.1.12",
-      "revision": "481c39d0c7472dd891cb221d27ffe78177e28245",
+      "tag": "v0.1.13",
+      "revision": "2b9ee32381d72cddc837b29429f60d8abc1c33ca",
       "dirty": false
     },
     "campus-adapters": {
