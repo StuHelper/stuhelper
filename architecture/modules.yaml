@@ -221,7 +221,13 @@ modules:
       - catalog.enrollments
       - catalog.maintain
       - catalog.directory
+      - catalog.teacher-sites.read
+      - catalog.teacher-sites.refresh
     capability_requires:
+      catalog.teacher-sites.read:
+        - identity
+      catalog.teacher-sites.refresh:
+        - identity
       catalog.read:
         - identity
       catalog.import:
@@ -235,6 +241,14 @@ modules:
         - reviews
         - favorites
     scenario_tests:
+      CAT-REFRESH-01:
+        - teacher_refresh_test.go#TestTeacherRefreshDurableConcurrencyIdempotencyAndTimeout
+      CAT-REFRESH-02:
+        - teacher_refresh_test.go#TestTeacherRefreshUnmatchedPaginationPrivacyAndFailureRetention
+      CAT-REFRESH-03:
+        - teacher_refresh_test.go#TestTeacherRefreshAuditAtomicityAndHTTPBoundary
+      CAT-OPTIONS-01:
+        - filter_options_test.go#TestFilterOptionsNonzeroCountsAndRevisionInvalidation
       CAT-TEACHER-01:
         - teacher_directory_test.go#TestTeacherDirectoryUnionFiltersEveryReadBeforePagination
       CAT-TEACHER-02:
