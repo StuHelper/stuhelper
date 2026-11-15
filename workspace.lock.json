@@ -10,8 +10,8 @@
     },
     "web": {
       "repository": "https://github.com/StuHelper/stuhelper-web.git",
-      "tag": "v0.1.15",
-      "revision": "21a3f20ac63acf2ab8ab690c7094d836a4f5d1c0",
+      "tag": "v0.1.16",
+      "revision": "a4602b1a896c0f2dc34954f27d66d17c8db0a343",
       "dirty": false
     },
     "admin": {
@@ -142,8 +142,8 @@
     },
     "campus-adapters": {
       "repository": "https://github.com/StuHelper/stuhelper-campus-adapters.git",
-      "tag": "v0.1.17",
-      "revision": "795df78652380a71ae83076894ad13cff4063608",
+      "tag": "v0.1.18",
+      "revision": "a676ba7547e726943e2e558c248d9c7c94d22951",
       "dirty": false
     },
     "storage-bhpan": {
