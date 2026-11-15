@@ -44,13 +44,15 @@ GitHub 对 reusable workflow 显示调用 job 与实际 job 的组合名称，�
 
 Docker/OCI、镜像组合和 BJ1 Registry 任务使用自建 runner。公开 PR 不在能够读取私有源码、凭据或缓存的环境运行。共享普通检查工作流接收调用方的 runs-on JSON，公开调用方固定使用托管环境。
 
+私有 stuhelper-arc 组禁止公开仓库访问。Web/Admin 的正式镜像发行使用独立 stuhelper-arc-release 组，仅允许固定版本的共享发行工作流。公开发行池不挂载私有缓存，PR 事件在分配 runner 前跳过。
+
 自建 runner 不可用时排队或失败，不自动改走托管环境。runner 镜像与主机系统分别升级；系统升级须先确认可用快照或备份，并在无任务执行时维护。实际系统与 Kubernetes 版本记录在运维验收中。
 
 Kubernetes runner 通过 `BUILDKIT_HOST` 提供远端 BuildKit。镜像发行使用 remote driver，不假设本地 Docker daemon 可用；部署连接使用明确的目标 Docker context。作业只清理自己的 builder 注册，远端服务和共享缓存由 runner 维护。
 
 默认权限为 `contents: read`。制品推送和部署工作流按任务增加最小权限，受保护环境控制晋级。跨私有仓库拉取优先使用按仓授权的 GitHub App 短期凭据，公开 PR 不接触这些凭据。
 
-Actions 使用明确版本 tag。tooling v0.1.7 起支持自建 runner 的准确版本预装检测，并提供 Node、Go、pnpm、actionlint 与 PostgreSQL 引导。完整 Go 与 Node 检查使用 reusable workflow，应用专用命令留在各仓。
+Actions 使用明确版本 tag。私有检查使用 tooling v0.1.8 的预装检测与直接工具引导，公开发行使用 v0.1.9 的独立 runner 入口。完整 Go 与 Node 检查使用 reusable workflow，应用专用命令留在各仓。
 
 预装版本以 architecture/toolchains.yaml 为准。缺失工具从官方来源有界下载，Node、Go、actionlint 核验 SHA-256，pnpm 核验 SHA-512。PostgreSQL 通过官方 PGDG 源安装，校验源密钥、签名元数据和包摘要。
 
@@ -62,7 +64,9 @@ Actions 使用明确版本 tag。tooling v0.1.7 起支持自建 runner 的准确
 
 持久缓存总上限为 40 GiB。每仓 Go 模块至多 3 GiB、Go 构建至多 2 GiB、pnpm store 至多 1 GiB，浏览器共享区至多 4 GiB。物理空间不足时缩小预算或拒绝写入，不自动扩盘。
 
-Go 模块、pnpm 和浏览器三十天无访问后清理，Go 构建七天无访问后清理。浏览器最多保留两个受支持修订。可信维护任务按最近访问时间淘汰，发布新快照前校验容量，清理不删除正在使用的快照或其他任务数据。
+私有 Go 模块与 pnpm 快照生成后三十天到期，Go 构建七天后停止恢复。替换的快照保留两小时再清理，避免影响正在恢复的作业。浏览器和公共依赖随版本化镜像维护，浏览器最多保留两个受支持修订，总预算为 4 GiB。
+
+可信维护任务在发布前校验容量与来源。复制只接受普通文件，跳过 pnpm 指向临时检出的项目链接。源码检查失败、取消、工具版本变化或容量超限时保留已有快照。清理只涉及本任务的缓存目录。
 
 不自动扩大付费额度。Docker/BuildKit 缓存使用任务专属 builder 或 BJ1 Registry，不使用 Actions cache。构建和测试完成、失败或中断后清理本任务容器、builder 和闲置镜像，保留其他任务与持久数据。
 

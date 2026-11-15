@@ -12,7 +12,7 @@ updated: 2026-11-15
 
 公开仓库普通检查使用 ubuntu-26.04，私有仓库使用 stuhelper-arc 组和 stuhelper-arc-sh-k8s 标签。先用 gh repo view --json visibility 核对可见性，再修改 runner。保留 job ID、name 与原检查命令，分支保护继续引用实际 check 名称。
 
-调用 tooling v0.1.7 的 Node、Go 或附件发行工作流时，通过 with.runs-on 传入 JSON。直接 job 使用相同的 group/labels 映射。公开调用方始终使用托管环境，完整规则见 [CI 规格](../spec/ci-runners.md)。
+调用 tooling v0.1.8 的 Node、Go 或附件发行工作流时，通过 with.runs-on 传入 JSON。直接 job 使用相同的 group/labels 映射。公开普通检查始终使用托管环境，完整规则见 [CI 规格](../spec/ci-runners.md)。
 
 ```yaml
 with:
@@ -26,6 +26,8 @@ setup action 可用 go-version-file: .go-version 准备 Go，用 postgres: 'true
 ## 镜像与部署
 
 Docker/OCI 和 BJ1 Registry 任务固定使用自建 runner。应用仓库构建版本制品，ops 验证和部署已经构建的镜像。生产部署不拉默认分支重新构建。
+
+公开 Web/Admin 使用独立发行组与 tooling v0.1.9 image.yml。升级共享工作流前，先把新版本登记到发行组的允许列表，再更新调用方。发行池无私有缓存与 Kubernetes API token。私有 runner 组禁止公开仓库使用。
 
 SSO 使用独立维护流程。更改主站发布组合不会更新 Casdoor。配置、凭据与生产数据通过部署环境提供，日志只记录可公开的提交、版本与结果。
 
@@ -47,6 +49,6 @@ Docker 测试使用任务专属 Compose project 和镜像标签。退出时删�
 
 切换镜像前保留旧 Helm values、镜像 tag 与 digest。现有任务结束后再滚动替换，新任务失败时恢复旧 values。镜像切换与主机升级分别记录停机和回退结果。
 
-主机升级先确认系统、k3s、ARC、BuildKit、磁盘、内存与缓存，再确认离机备份或虚拟机快照可恢复。暂停接单并等待运行任务清空，备份集群数据库、配置和持久卷信息，按当前 Ubuntu 版本选择受支持升级路径。
+本轮盘点确认主机使用 Debian，负责人决定保留主机系统，只更新 Ubuntu runner 容器。镜像源码、只读缓存发布器、运行配置、实机验证与回退入口统一由私有 ops 仓库维护。
 
-升级后核对主机网络、容器运行时、k3s 节点就绪、ARC 伸缩、BuildKit 和私有检查。未确认备份可用时保持当前系统，记录具体缺项。系统失败时通过控制台恢复已验证快照，再核对 runner 注册和缓存权限。
+未来更换主机系统时，先确认离机备份或虚拟机快照可恢复，再暂停接单并等待运行任务结束。跨发行版更换需要重装或替代节点。升级后核对网络、持久卷、k3s、ARC、BuildKit 与完整私有检查。
