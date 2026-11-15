@@ -227,13 +227,16 @@ test('discussion refresh preserves writing and fixed identity when replying',asy
 });
 
 test('missing enrollment explains the blocked publication and keeps draft access',async({page},info)=>{
-  const a=catalogue(info).academic;
+  const a=catalogue(info).academic,enrollmentReads=[];
+  page.on('request',req=>{if(new URL(req.url()).pathname==='/api/v1/catalog/me/enrollments')enrollmentReads.push(req.url());});
   await page.route('**/api/v1/reviews/compose?*',route=>fulfill(route,{allowed:false,state:'enrollment_required',requirements:[{key:'course_enrollment',state:'missing'}],teacher_ids:[],identity:'choice',rule_version:'fixture'}));
   await page.goto(`/courses/course?lang=${info.project.metadata.locale}`);
   await page.getByRole('button',{name:a.subject.writeCourse,exact:true}).click();
   const editor=editorOf(page,a,'course');
   await expect(editor.getByText(a.composer.enrollment_required,{exact:true})).toBeVisible();
-  await expect(editor.getByRole('link',{name:a.requirementStep.course_enrollment,exact:true})).toBeVisible();
+  // The personal course page stays closed until enrollment reading is authorized.
+  await expect(editor.getByRole('link',{name:a.requirementStep.course_enrollment,exact:true})).toHaveCount(0);
+  expect(enrollmentReads).toEqual([]);
   await expect(editor.getByRole('button',{name:a.editor.publish,exact:true})).toBeDisabled();
   await expect(editor.getByRole('button',{name:a.editor.saveDraft,exact:true})).toBeEnabled();
 });
