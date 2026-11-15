@@ -25,6 +25,12 @@ export async function fixture(page){
     if(p==='/api/v1/system/capabilities')return route.fallback();
     if(p==='/api/v1/auth/session')return fulfill(route,member);
     if(p==='/api/v1/verification/summary')return fulfill(route,summary);
+    if(p==='/api/v1/catalog/directory'){
+      const kind=u.searchParams.get('kind')||'course';
+      const selected=kind==='course'?[course]:[teacher,otherTeacher];
+      const items=selected.map(object=>({object,departments:directory.department,categories:kind==='course'?directory.category:[],review_count:1,recommendation:'recommended',dimensions,heat:1}));
+      return fulfill(route,{items,next:'',total:items.length,facet_total:items.length,category_facets:kind==='course'?[{id:'seminar',name:'Test Seminar',count:1,review_count:1}]:[],department_facets:[{id:'dept',name:'Test College',count:items.length,review_count:items.length}],generated_at:'2026-11-16T00:00:00Z'});
+    }
     if(p==='/api/v1/catalog/objects'){
       const kind=u.searchParams.get('kind');let items=directory[kind]??[];
       if(kind==='term_course')items=items.filter(item=>(!u.searchParams.get('term_id')||item.term_id===u.searchParams.get('term_id'))&&(!u.searchParams.get('teacher_id')||item.term_id===(u.searchParams.get('teacher_id')==='teacher-a'?'fall':'spring')));
@@ -65,14 +71,14 @@ test.beforeEach(async({page})=>fixture(page));
 
 test('directory has college/category filters and no semester control',async({page},info)=>{
   const locale=info.project.metadata.locale,a=catalogue(info).academic,all=catalogue(info);
-  const requests=[];page.on('request',req=>{if(req.url().includes('/catalog/objects?')&&req.url().includes('kind=course'))requests.push(new URL(req.url()));});
+  const requests=[];page.on('request',req=>{if(req.url().includes('/catalog/directory?')&&req.url().includes('kind=course'))requests.push(new URL(req.url()));});
   await page.goto(`/courses?lang=${locale}`);
   await expect(page.getByRole('link',{name:/Test Course/})).toBeVisible();
   await expect(page.getByRole('combobox',{name:a.feed.term})).toHaveCount(0);
-  const toggle=page.getByRole('button',{name:all.common.filters,exact:true});
-  if(await toggle.isVisible())await toggle.click();
-  await choose(page,a.directory.college,'Test College');
-  await choose(page,a.directory.category,'Test Seminar');
+  await choose(page,all.browse.offeringDepartment,'Test College');
+  const category=page.getByRole('group',{name:all.browse.courseCategory,exact:true}).getByRole('button',{name:/Test Seminar/});
+  await category.click();
+  await expect(category).toHaveAttribute('aria-pressed','true');
   await expect.poll(()=>requests.some(u=>u.searchParams.get('department_id')==='dept'&&u.searchParams.get('category_id')==='seminar')).toBe(true);
   expect(requests.every(u=>!u.searchParams.has('term_id'))).toBe(true);
   await expect(page.locator('html')).toHaveAttribute('dir',locale==='ar-EG'?'rtl':'ltr');
