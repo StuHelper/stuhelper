@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "release": "v0.1.21",
+  "release": "v0.1.22",
   "projects": {
     "platform": {
       "repository": "https://github.com/StuHelper/stuhelper-platform.git",
@@ -10,8 +10,8 @@
     },
     "web": {
       "repository": "https://github.com/StuHelper/stuhelper-web.git",
-      "tag": "v0.1.12",
-      "revision": "65910f78326253b1e9feedccb111d24cb445c6ee",
+      "tag": "v0.1.13",
+      "revision": "04fdd580dc8108b2f7160d9d75d23346d47cab19",
       "dirty": false
     },
     "admin": {
