@@ -52,8 +52,8 @@
     },
     "backend": {
       "repository": "https://github.com/StuHelper/stuhelper-backend.git",
-      "tag": "v0.1.26",
-      "revision": "60932f4f26911221bd3f8db98072a00299495f92",
+      "tag": "v0.1.27",
+      "revision": "a23f2578d04cde345196063cbe6537c1836daed5",
       "dirty": false
     },
     "catalog": {
@@ -88,8 +88,8 @@
     },
     "resources": {
       "repository": "https://github.com/StuHelper/stuhelper-resources.git",
-      "tag": "v0.1.1",
-      "revision": "5b9eec4020d1803bdf0787d95d5d26eb94579a59",
+      "tag": "v0.1.2",
+      "revision": "690503341f1a2e9ee666eae06d5448a1c578e7ca",
       "dirty": false
     },
     "profiles": {
