@@ -89,6 +89,24 @@ test('directory has college/category filters and no semester control',async({pag
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });
 
+test('former course link opens the current course with its names and context', async ({ page }, info) => {
+  const locale = info.project.metadata.locale;
+  const labels = catalogue(info).academic.subject;
+  const current = { ...course, english_name: 'Systems Engineering', former_codes: ['OLD-201'], former_names: ['Original title'] };
+  await page.route('**/catalog/objects/old-course/summary', route => fulfill(route, { code: 'not_found' }, 404));
+  await page.route('**/catalog/objects/old-course/resolution', route => fulfill(route, {
+    object: { ...current, canonical_id: current.id }, ids: ['old-course', current.id],
+  }));
+  await page.route('**/catalog/objects/course/summary', route => fulfill(route, {
+    object: current, school, department: directory.department[0], categories: [], natures: [], course_count: 1, teacher_count: 2,
+  }));
+  await page.goto(`/courses/old-course?lang=${locale}&term_id=fall`);
+  await expect(page).toHaveURL(url => url.pathname === '/courses/course' && url.searchParams.get('term_id') === 'fall');
+  for (const [label, value] of [[labels.englishName, current.english_name], [labels.formerCodes, 'OLD-201'], [labels.formerNames, 'Original title']]) {
+    await expect(page.locator('dt').filter({ hasText: label }).locator('xpath=following-sibling::dd[1]')).toHaveText(value);
+  }
+});
+
 test('review semester limits teacher choices and unknown submission retries once',async({page},info)=>{
   const all=catalogue(info),a=all.academic,posts=[];
   await page.route('**/api/v1/reviews',async route=>{
