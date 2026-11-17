@@ -125,7 +125,11 @@ export function verifyScenarios(directory, definition, checkout) {
       } else {
         assert(/\.(?:test|spec)\.(?:mjs|[jt]sx?)$/.test(file) && name.length > 0);
         const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        assert(new RegExp(`\\b(?:test|it|memberTest)\\(\\s*(['"])${escaped}\\1\\s*,`).test(source), `Missing scenario test: ${scenario}/${reference}`);
+        const literal = new RegExp(`\\b(?:test|it|memberTest)\\(\\s*(['"])${escaped}\\1\\s*,`);
+        // Locale suites register the same behavior with an explicit locale suffix.
+        // Match the complete base name and this one suffix, not arbitrary templates.
+        const localized = new RegExp('\\b(?:test|it|memberTest)\\(\\s*`' + escaped + ' \\(\\$\\{locale\\}\\)`\\s*,');
+        assert(literal.test(source) || localized.test(source), `Missing scenario test: ${scenario}/${reference}`);
       }
     }
   }

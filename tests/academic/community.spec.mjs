@@ -11,6 +11,7 @@ const terms=[obj('fall','term','Fall semester'),obj('spring','term','Spring seme
 const offerings=[obj('offering-fall','term_course','Fall offering',{course_id:'course',term_id:'fall'}),obj('offering-spring','term_course','Spring offering',{course_id:'course',term_id:'spring'})];
 const classes=[obj('class-one','class','Class One',{term_course_id:'offering-fall',category_id:'seminar',nature_id:'optional'})];
 const schedules=[obj('schedule','schedule','Teaching time',{class_id:'class-one',time_text:'Monday 09:00',location:'Room A'})];
+const restrictedKinds=new Set(['term_course','class','assignment','schedule']);
 const directory={term_course:offerings,class:classes,schedule:schedules,school:[school],department:[obj('dept','department','Test College')],category:[obj('seminar','category','Test Seminar')],nature:[obj('optional','nature','Optional')],term:terms,course:[course],teacher:[teacher,otherTeacher]};
 const dimensions=Array.from({length:5},()=>({level:3,samples:2,courses:1}));
 const review={id:'review',root_id:'review',kind:'course',school_id:'school',target_id:'course',term_id:'fall',title:'A student review',body:'Useful course content.',ratings:[3,3,3,3,3],author:{anonymous:true,handle:'anonymous'},revision:1,published_at:'2026-10-27T00:00:00Z',upvotes:0,downvotes:0,my_vote:0,mine:false,state:'published',can_edit:false};
@@ -32,13 +33,16 @@ export async function fixture(page){
       return fulfill(route,{items,next:'',total:items.length,facet_total:items.length,category_facets:kind==='course'?[{id:'seminar',name:'Test Seminar',count:1,review_count:1}]:[],department_facets:[{id:'dept',name:'Test College',count:items.length,review_count:items.length}],generated_at:'2026-11-16T00:00:00Z'});
     }
     if(p==='/api/v1/catalog/objects'){
-      const kind=u.searchParams.get('kind');let items=directory[kind]??[];
+      const kind=u.searchParams.get('kind');
+      if(restrictedKinds.has(kind)||u.searchParams.has('class_id')||u.searchParams.has('term_course_id'))return fulfill(route,{code:'forbidden'},403);
+      let items=directory[kind]??[];
       if(kind==='term_course')items=items.filter(item=>(!u.searchParams.get('term_id')||item.term_id===u.searchParams.get('term_id'))&&(!u.searchParams.get('teacher_id')||item.term_id===(u.searchParams.get('teacher_id')==='teacher-a'?'fall':'spring')));
       if(kind==='teacher'&&u.searchParams.get('class_id'))items=[teacher];
       return fulfill(route,{items,next:''});
     }
-    if(p==='/api/v1/catalog/objects/lookup'){const ids=(u.searchParams.get('ids')??'').split(',');const items=Object.values(directory).flat().filter(item=>ids.includes(item.id));return fulfill(route,{items,missing_ids:ids.filter(id=>!items.some(item=>item.id===id))});}
-    if(p.endsWith('/summary')){const id=p.split('/').at(-2);const entry=Object.values(directory).flat().find(item=>item.id===id);return fulfill(route,{object:entry,school,department:entry.kind==='course'?directory.department[0]:null,categories:entry.kind==='course'?directory.category:[],natures:entry.kind==='course'?directory.nature:[],course_count:1,teacher_count:entry.kind==='course'?2:1,offering_count:entry.kind==='course'?2:1});}
+    if(p==='/api/v1/catalog/objects/lookup'){const ids=(u.searchParams.get('ids')??'').split(',');const items=Object.values(directory).flat().filter(item=>ids.includes(item.id)&&!restrictedKinds.has(item.kind));return fulfill(route,{items,missing_ids:ids.filter(id=>!items.some(item=>item.id===id))});}
+    if(p.startsWith('/api/v1/catalog/objects/')){const id=p.split('/')[5];const item=Object.values(directory).flat().find(v=>v.id===id);if(item&&restrictedKinds.has(item.kind))return fulfill(route,{code:'not_found'},404);}
+    if(p.endsWith('/summary')){const id=p.split('/').at(-2);const entry=Object.values(directory).flat().find(item=>item.id===id);return fulfill(route,{object:entry,school,department:entry.kind==='course'?directory.department[0]:null,categories:entry.kind==='course'?directory.category:[],natures:entry.kind==='course'?directory.nature:[],course_count:1,teacher_count:entry.kind==='course'?2:1});}
     if(p.startsWith('/api/v1/catalog/objects/')){const id=p.split('/').at(-1);return fulfill(route,Object.values(directory).flat().find(v=>v.id===id)??course);}
     if(p==='/api/v1/catalog/me/enrollments')return fulfill(route,terms.map((term,i)=>({id:`enrollment-${i}`,subject:'synthetic',school_id:'school',course_id:'course',term_id:term.id,teacher_ids:[i===0?'teacher-a':'teacher-b'],active:true})));
     if(p==='/api/v1/reviews/compose'){
@@ -50,7 +54,7 @@ export async function fixture(page){
     if(p==='/api/v1/reviews'&&route.request().method()==='GET')return fulfill(route,{items:u.searchParams.get('kind')==='course'?[review]:[],next:''});
     if(p==='/api/v1/reviews/review')return fulfill(route,review);
     if(p==='/api/v1/reviews/me/entries')return fulfill(route,{items:[],next:''});
-    if(p==='/api/v1/reviews/me/references'){const ids=(u.searchParams.get('ids')??'').split(',');const items=Object.values(directory).flat().filter(item=>ids.includes(item.id)).map(({id,kind,name})=>({id,kind,name}));return fulfill(route,{items,missing_ids:ids.filter(id=>!items.some(item=>item.id===id))});}
+    if(p==='/api/v1/reviews/me/references'){const ids=(u.searchParams.get('ids')??'').split(',');const items=Object.values(directory).flat().filter(item=>ids.includes(item.id)&&!restrictedKinds.has(item.kind)).map(({id,kind,name})=>({id,kind,name}));return fulfill(route,{items,missing_ids:ids.filter(id=>!items.some(item=>item.id===id))});}
     if(p.startsWith('/api/v1/reviews/me/')||p==='/api/v1/moderation/tasks')return fulfill(route,[]);
     return fulfill(route,{code:'not_found'},404);
   });
@@ -144,23 +148,21 @@ test('personal page distinguishes failure and denied access without stale conten
   await expect(page.getByText(review.body,{exact:true})).toHaveCount(0);
 });
 
-test('course history opens the matching class, teachers and timetable',async({page},info)=>{
-  const a=catalogue(info).academic;
+test('public course summaries work without teaching counts and hidden teaching routes do not load',async({page},info)=>{
+  const a=catalogue(info).academic,restricted=[];
+  page.on('request',request=>{const u=new URL(request.url());if(u.pathname.startsWith('/api/v1/catalog/')&&(restrictedKinds.has(u.searchParams.get('kind'))||u.searchParams.has('class_id')||u.searchParams.has('term_course_id')||/\/(offering-fall|class-one|schedule)(?:\/|$)/.test(u.pathname)))restricted.push(u.pathname);});
   await page.goto(`/courses/course?lang=${info.project.metadata.locale}`);
+  await expect(page.getByRole('heading',{name:'Test Course',exact:true})).toBeVisible();
   await expect(page.getByText('Test College',{exact:true}).first()).toBeVisible();
-  await expect(page.getByText(a.subject.creditsUnknown,{exact:true}).first()).toBeVisible();
-  await page.getByRole('tab',{name:a.offerings.title,exact:true}).click();
-  await choose(page,a.feed.term,'Fall semester');
-  await expect(page.locator('a[href="/offerings/offering-spring"]')).toHaveCount(0);
-  await page.locator('a[href="/offerings/offering-fall"]').click();
-  await expect(page).toHaveURL(/\/offerings\/offering-fall/);
-  await expect(page.getByText(/Fall semester/).first()).toBeVisible();
-  await page.getByRole('link',{name:'Class One'}).click();
-  await expect(page.getByRole('heading',{name:'Class One',exact:true})).toBeVisible();
-  await expect(page.getByRole('link',{name:'Teacher A',exact:true})).toBeVisible();
-  await expect(page.getByRole('link',{name:'Teacher B',exact:true})).toHaveCount(0);
-  await expect(page.getByText('Monday 09:00',{exact:true})).toBeVisible();
-  await expect(page.getByText('Room A',{exact:true})).toBeVisible();
+  await expect(page.getByRole('tab',{name:a.offerings.title,exact:true})).toHaveCount(0);
+  await expect(page.locator('a[href^="/offerings/"],a[href^="/classes/"]')).toHaveCount(0);
+  for(const route of ['/offerings/offering-fall','/classes/class-one']){
+    await page.goto(`${route}?lang=${info.project.metadata.locale}`);
+    await expect(page).toHaveURL(/\/courses(?:\?|$)/);
+    await expect(page.getByRole('link',{name:/Test Course/})).toBeVisible();
+    await expect(page.getByText('Room A',{exact:true})).toHaveCount(0);
+  }
+  expect(restricted).toEqual([]);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });
 

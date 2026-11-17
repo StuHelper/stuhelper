@@ -18,8 +18,8 @@ async function fixture(page){
     const u=new URL(route.request().url()),p=u.pathname;
     if(p==='/api/v1/auth/session')return fulfill(route,administrator);
     if(p==='/api/v1/system/capabilities')return route.fallback();
-    if(p==='/api/v1/catalog/objects')return fulfill(route,{items:u.searchParams.get('kind')==='school'?[school]:u.searchParams.get('kind')==='course'?[course]:[],next:''});
-    if(p==='/api/v1/catalog/objects/course/summary')return fulfill(route,{object:course,school,department:null,categories:[],natures:[],course_count:1,teacher_count:0,offering_count:0});
+    if(p==='/api/v1/catalog/objects'||p==='/api/v1/catalog/admin/objects')return fulfill(route,{items:u.searchParams.get('kind')==='school'?[school]:u.searchParams.get('kind')==='course'?[course]:[],next:''});
+    if(p==='/api/v1/catalog/admin/objects/course/summary')return fulfill(route,{object:course,school,department:null,categories:[],natures:[],course_count:1,teacher_count:0,offering_count:0});
     if(p==='/api/v1/reviews/admin/entries')return fulfill(route,{items:[entry],next:''});
     if(p==='/api/v1/reviews/admin/entries/review')return fulfill(route,entry);
     if(p==='/api/v1/reviews/admin/entries/review/history')return fulfill(route,[]);
@@ -78,7 +78,7 @@ test('revoked moderator permission removes previously read originals',async({pag
 
 test('catalog correction retains edits after a stale revision and compares current data',async({page},info)=>{
   const a=messages(info),c=a.catalog;let current={...course},submitted;
-  await page.route('**/api/v1/catalog/objects/course/summary',route=>fulfill(route,{object:current,school,department:null,categories:[],natures:[],course_count:1,teacher_count:0,offering_count:0}));
+  await page.route('**/api/v1/catalog/admin/objects/course/summary',route=>fulfill(route,{object:current,school,department:null,categories:[],natures:[],course_count:1,teacher_count:0,offering_count:0}));
   await page.route('**/api/v1/catalog/objects/course',route=>{
     const body=route.request().postDataJSON();
     if(body.revision===1){current={...course,revision:2,name:'Concurrent correction'};return fulfill(route,{code:'conflict'},409)}
@@ -123,10 +123,10 @@ test('policy editor shows inherited rules and retries unknown saves with the sam
 
 test('catalog merge previews exact records before confirming',async({page},info)=>{
   const a=messages(info),c=a.catalog,target=object('target','course','Canonical Course');let merge,merged=false;
-  await page.route('**/api/v1/catalog/objects?*',route=>{const kind=new URL(route.request().url()).searchParams.get('kind');return fulfill(route,{items:kind==='school'?[school]:kind==='course'?(merged?[target]:[course,target]):[],next:''})});
+  await page.route(/\/api\/v1\/catalog\/(?:admin\/)?objects\?/,route=>{const kind=new URL(route.request().url()).searchParams.get('kind');return fulfill(route,{items:kind==='school'?[school]:kind==='course'?(merged?[target]:[course,target]):[],next:''})});
   await page.route('**/api/v1/catalog/objects/course/merge-preview',route=>fulfill(route,{source:course,target,aliases:1,preview_token:'checked-plan'}));
   await page.route('**/api/v1/catalog/objects/course/merge',route=>{merge=route.request().postDataJSON();merged=true;return fulfill(route,{...target,revision:2})});
-  await page.route('**/api/v1/catalog/objects/target/summary',route=>fulfill(route,{object:{...target,revision:2},school,department:null,categories:[],natures:[],course_count:1,teacher_count:0,offering_count:0}));
+  await page.route('**/api/v1/catalog/admin/objects/target/summary',route=>fulfill(route,{object:{...target,revision:2},school,department:null,categories:[],natures:[],course_count:1,teacher_count:0,offering_count:0}));
   await page.goto(`${base}/catalog?lang=${info.project.metadata.locale}`);
   await page.getByRole('row').filter({hasText:'Test Course'}).getByRole('button',{name:a.common.edit,exact:true}).click();
   const panel=drawer(page);
@@ -179,7 +179,7 @@ test('presentation settings persist the full language set and current revision',
 test('moderator attribution correction carries the authoritative evidence revision',async({page},info)=>{
   const a=messages(info),m=a.moderation;let decision;
   await page.route('**/api/v1/reviews/admin/entries/review/attribution*',route=>fulfill(route,{revision:1,evidence_revision:'source-v2',teacher_ids:['teacher-a'],previous_teacher_ids:['teacher-b']}));
-  await page.route('**/api/v1/catalog/objects?*',route=>{const kind=new URL(route.request().url()).searchParams.get('kind');return fulfill(route,{items:kind==='school'?[school]:kind==='teacher'?[object('teacher-a','teacher','Teacher A')]:[],next:''})});
+  await page.route(/\/api\/v1\/catalog\/(?:admin\/)?objects\?/,route=>{const kind=new URL(route.request().url()).searchParams.get('kind');return fulfill(route,{items:kind==='school'?[school]:kind==='teacher'?[object('teacher-a','teacher','Teacher A')]:[],next:''})});
   await page.route('**/api/v1/moderation/tasks/task/decisions',route=>{decision=route.request().postDataJSON();return fulfill(route,{...originalTask,state:'decided',revision:2,decision:decision.decision})});
   await page.goto(`${base}/moderation/queue?lang=${info.project.metadata.locale}`);
   await openTask(page,a);
