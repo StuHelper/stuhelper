@@ -1,7 +1,7 @@
 ---
 type: guide
 status: Accepted
-updated: 2026-11-16
+updated: 2026-11-17
 ---
 
 # CI 与制品任务
@@ -52,6 +52,10 @@ Docker 测试使用任务专属 Compose project 和镜像标签。退出时删�
 推送后将包设为 public，回读 manifest digest，并在无已有镜像内容和无拉取凭据的环境完整下载。随后运行 k3s canary，验证 PostgreSQL、Chromium 和 pnpm，确认新 runner 注册成功。组织禁止公开包时停止，不修改组织设置或计费。
 
 ARC 通过版本 tag 拉取，digest 只记录在核验结果中。确认现有任务结束后切换，失败时重新部署已验证的上一版本 tag。版本与部署配置由 ops 维护，runner 主机不保存镜像归档或手工配置备份。
+
+切换时将两个 ARC 池临时设为 minRunners = 0、maxRunners = 0，暂停新 runner 分配，并等待运行任务结束。核对旧 runner 已退出后更新镜像，分别验证私有池和公开发行池注册，再恢复各池原有容量。public GHCR 不配置 imagePullSecrets。
+
+排空期间同时读取 Helm values 与 AutoscalingRunnerSet 的实际 minRunners、maxRunners。其他操作直接修改集群容量时，Helm 中的值可能仍为 0。核对维护安排并恢复一致后，继续等待已有任务结束。
 
 新版本验证成功后，先列出待删对象与大小，再清理旧镜像归档、调整前配置副本、旧回退脚本和无人使用的旧镜像。保留依赖缓存、发布器服务、ARC/k3s/BuildKit 配置及其他服务数据，最后核对磁盘和 runner。
 
