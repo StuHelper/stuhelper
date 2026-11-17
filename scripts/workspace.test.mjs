@@ -92,6 +92,20 @@ test('client manifests resolve TypeScript and browser tests against central spec
   assert.throws(() => verifyClientScenarios(directory, definition, client), /Missing scenario test/);
 });
 
+test('locale-parameterized scenarios require the exact behavior name and locale suffix', t => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'stuhelper-locale-scenario-'));
+  t.after(() => fs.rmSync(directory, { recursive: true }));
+  fs.writeFileSync(path.join(directory, 'spec.md'), '| MC-01 | Week navigation |');
+  const definition = { specifications: ['spec.md'], scenario_tests: { 'MC-01': ['schedule.spec.mjs#week navigation'] } };
+  const source = value => fs.writeFileSync(path.join(directory, 'schedule.spec.mjs'), value);
+  source('test(`week navigation (${locale})`, async () => {});');
+  verifyScenarios(directory, definition, directory);
+  for (const value of ['test(`other week navigation (${locale})`, () => {});', 'test(`week navigation extra (${locale})`, () => {});', 'test(`week navigation (${anything})`, () => {});', 'test(`week navigation ${locale}`, () => {});']) {
+    source(value);
+    assert.throws(() => verifyScenarios(directory, definition, directory), /Missing scenario test/);
+  }
+});
+
 
 
 test('standalone architecture validation is independent of stale sibling checkouts', async t => {
