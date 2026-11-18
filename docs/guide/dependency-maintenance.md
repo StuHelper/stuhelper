@@ -1,14 +1,16 @@
 ---
 type: guide
 status: Accepted
-updated: 2026-11-11
+updated: 2026-11-19
 ---
 
 # 工具链与依赖维护
 
 ## 版本来源
 
-Go、Node.js、pnpm、Lefthook 和 actionlint 的项目版本维护在 `architecture/toolchains.yaml`。`.node-version`、`.go-version`、Go 模块和包管理器的引擎声明由工作区命令同步，CI 从版本文件读取 Go 与 Node.js。Mani 和 Git 是主机工具，开发者自行安装，CI 直接执行各仓检查命令。
+Go、Node.js、pnpm、Lefthook、actionlint、Playwright 与共享工程工具包版本维护在 `architecture/toolchains.yaml`。`.node-version`、`.go-version`、Go 模块、包管理器声明、Playwright 及工作流工具引用由工作区命令同步。
+
+CI 从版本文件读取 Go 与 Node.js。Mani 和 Git 是主机工具，开发者自行安装，CI 直接执行各仓检查命令。
 
 ## 常规依赖
 
