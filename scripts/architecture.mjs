@@ -58,7 +58,7 @@ export function validateModules(config) {
       assert(dependencies.every(dependency => declared.has(dependency)), `Undeclared capability dependency: ${capability}`);
     }
   }
-  for (const id of ['identity', 'verification', 'campus-adapters', 'billing']) {
+  for (const id of ['identity', 'verification', 'campus-adapters', 'billing', 'qq-binding']) {
     assert.equal(byId.get(id)?.visibility, 'private', `${id} must remain private`);
   }
   assert.equal(byId.get('storage-bhpan')?.visibility, 'public', 'storage-bhpan must remain public');
@@ -67,6 +67,26 @@ export function validateModules(config) {
   for (const app of apps.values()) {
     assert.equal(app.repository, `StuHelper/stuhelper-${app.id}`);
     assert.equal(app.visibility, app.id === 'backend' ? 'private' : 'public');
+    const optional = new Set();
+    assert(Array.isArray(app.optional ?? []), `${app.id}: optional must be a list`);
+    for (const dependency of app.optional ?? []) {
+      assert(byId.has(dependency), `Unknown dependency: ${app.id}/${dependency}`);
+      assert(!optional.has(dependency), `Repeated dependency: ${app.id}/${dependency}`);
+      optional.add(dependency);
+    }
+    for (const [capability, dependencies] of Object.entries(app.capability_requires ?? {})) {
+      assert.match(capability, /^[a-z][a-z0-9-]*\.[a-z][a-z0-9.-]*$/);
+      assert.equal(new Set(dependencies).size, dependencies.length, `Repeated capability dependency: ${app.id}/${capability}`);
+      assert(dependencies.every(dependency => optional.has(dependency)), `Undeclared capability dependency: ${app.id}/${capability}`);
+    }
+  }
+  const operations = new Map((config.operations ?? []).map(item => [item.id, item]));
+  assert.equal(operations.size, (config.operations ?? []).length, 'Duplicate operation ID');
+  for (const item of operations.values()) {
+    assert.equal(item.repository, `StuHelper/stuhelper-${item.id}`);
+    assert.equal(item.visibility, 'private', `${item.id} must remain private`);
+    assert(!repositories.has(item.repository), `Duplicate repository owner: ${item.repository}`);
+    repositories.add(item.repository);
   }
   for (const module of config.modules.filter(item => item.in_application)) {
     assert.equal(module.repository, apps.get(module.in_application)?.repository, 'Application module ownership mismatch');
@@ -84,6 +104,14 @@ export function validateModules(config) {
   for (const id of byId.keys()) visit(id);
 }
 
+export function verifyScenarioIds(directory, definition) {
+  const specs = definition.specifications.map(file => fs.readFileSync(path.join(directory, file), 'utf8')).join('\n');
+  for (const scenario of Object.keys(definition.scenario_tests ?? {})) {
+    assert(/^[A-Z]+(?:-[A-Z]+)*-\d+$/.test(scenario), `Invalid scenario: ${scenario}`);
+    assert(new RegExp(`\\|\\s*${scenario}\\s*(?:\\||：|:)`).test(specs), `Unknown implemented scenario: ${scenario}`);
+  }
+}
+
 export function validateSpecifications(config, directory = root) {
   const references = new Set(config.shared_specifications ?? []);
   for (const item of [...config.modules, ...config.applications, ...config.operations]) {
@@ -92,6 +120,9 @@ export function validateSpecifications(config, directory = root) {
   }
   for (const reference of references) {
     assert(/^docs\/spec\/[^/]+\.md$/.test(reference) && fs.statSync(path.join(directory, reference)).isFile(), `Invalid specification: ${reference}`);
+  }
+  for (const item of [...config.modules, ...config.applications, ...config.operations]) {
+    if (item.scenario_tests) verifyScenarioIds(directory, item);
   }
   for (const file of fs.readdirSync(path.join(directory, 'docs/spec')).filter(file => file.endsWith('.md') && !['README.md', 'TEMPLATE.md'].includes(file))) {
     assert(references.has(`docs/spec/${file}`), `Specification has no owner: ${file}`);
