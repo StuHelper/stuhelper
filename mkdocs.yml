@@ -46,14 +46,18 @@ markdown_extensions:
       permalink: true
       slugify: !!python/name:markdown.extensions.toc.slugify_unicode
 
+strict: true
+
 validation:
   nav:
     omitted_files: warn
     not_found: warn
+    absolute_links: warn
   links:
     not_found: warn
     unrecognized_links: warn
     anchors: warn
+    absolute_links: warn
 
 nav:
   - 文档:

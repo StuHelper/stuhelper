@@ -2,3 +2,10 @@ pre-commit:
   commands:
     staged:
       run: pnpm exec stuhelper-check staged
+    architecture:
+      glob:
+        - "architecture/*"
+        - "mani.yaml"
+        - "scripts/*"
+        - "workspace.lock.json"
+      run: node scripts/architecture.mjs && node scripts/workspace.mjs validate && node --test scripts/*.test.mjs
