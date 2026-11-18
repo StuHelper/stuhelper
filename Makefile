@@ -1,9 +1,12 @@
-.PHONY: setup check hooks docs
+.PHONY: setup setup-contracts check hooks docs
 setup:
 	LEFTHOOK=0 pnpm install --frozen-lockfile
+setup-contracts:
+	node scripts/workspace-install-oasdiff.mjs
 check:
 	pnpm exec stuhelper-check repository
 	node scripts/architecture.mjs
+	node scripts/docs.mjs
 	node scripts/workspace.mjs validate
 	node --test scripts/*.test.mjs
 	pnpm run check:docs
