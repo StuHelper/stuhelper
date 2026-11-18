@@ -155,6 +155,7 @@ jobs:
       - name: Record actual source combination
         run: |
           pnpm install --frozen-lockfile
+          make setup-contracts
           node scripts/workspace.mjs snapshot
           node scripts/workspace.mjs toolchains
           node scripts/workspace.mjs contracts --scope=platform,web,admin,catalog,reviews,moderation,storage,media,resources

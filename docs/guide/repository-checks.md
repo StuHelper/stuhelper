@@ -19,6 +19,7 @@ mkdir -p .tools/bin
 GOBIN="$PWD/.tools/bin" go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
 export PATH="$PWD/.tools/bin:$PATH"
 make setup
+make setup-contracts
 make check
 mani run check --tags code
 node scripts/workspace.mjs toolchains
@@ -43,7 +44,7 @@ pre-commit 检查暂存区快照，包括文件安全、脚本权限、语法和
 
 应用联调使用 platform 公开示例、Web 和 Admin。先构建三者，运行 `node scripts/workspace.mjs contracts`，再运行 `pnpm run test:e2e`。浏览器覆盖八种语言与桌面、移动视口，不包含文档站。
 
-契约来源检查缺少声明提交时，按完整 SHA 从提供方 origin 补取 Git 对象，不切换分支或修改源码。客户端可以继续使用兼容的旧版契约。
+契约来源检查缺少声明提交时，按完整 SHA 从提供方 origin 补取 Git 对象，不切换分支或修改源码。Git 补取最多等待 60 秒。契约内容有差异时，使用 setup-contracts 预装并校验 SHA-256 的 oasdiff，比较最多等待 60 秒。
 
 workspace.lock.json 声明 release 时，公开集成在 PR、push 和手动运行中均使用锁定的发布提交。每项记录 tag 与完整 SHA，CI summary 分别列出完整发布组合和实际检出测试的仓库。手动提供完整 SHA 可覆盖单项，实际组合会显示该差异。
 
