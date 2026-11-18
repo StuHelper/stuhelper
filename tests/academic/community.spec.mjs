@@ -1,6 +1,15 @@
-import { test, expect, mockCapabilities } from '../session-fixture.mjs';
+import { collectErrors, layout } from '../page-checks.mjs';
+import { test as base, expect, mockCapabilities } from '../session-fixture.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
+const test = base.extend({
+  page: async ({ page }, use, info) => {
+    const errors = collectErrors(page);
+    await use(page);
+    expect(errors).toEqual([]);
+    await layout(page, info.project.metadata.locale);
+  },
+});
 const web=process.env.WEB_PATH || path.resolve('workspace/web');
 const obj=(id,kind,name,extra={})=>({id,kind,name,school_id:'school',credits:null,aliases:[],revision:1,updated_at:'2026-10-27T00:00:00Z',...extra});
 const school=obj('school','school','Test University');
@@ -85,8 +94,24 @@ test('directory has college/category filters and no semester control',async({pag
   await expect(category).toHaveAttribute('aria-pressed','true');
   await expect.poll(()=>requests.some(u=>u.searchParams.get('department_id')==='dept'&&u.searchParams.get('category_id')==='seminar')).toBe(true);
   expect(requests.every(u=>!u.searchParams.has('term_id'))).toBe(true);
-  await expect(page.locator('html')).toHaveAttribute('dir',locale==='ar-EG'?'rtl':'ltr');
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+});
+
+test('former course link opens the current course with its names and context', async ({ page }, info) => {
+  const locale = info.project.metadata.locale;
+  const labels = catalogue(info).academic.subject;
+  const current = { ...course, english_name: 'Systems Engineering', former_codes: ['OLD-201'], former_names: ['Original title'] };
+  await page.route('**/catalog/objects/old-course/summary', route => fulfill(route, { code: 'not_found' }, 404));
+  await page.route('**/catalog/objects/old-course/resolution', route => fulfill(route, {
+    object: { ...current, canonical_id: current.id }, ids: ['old-course', current.id],
+  }));
+  await page.route('**/catalog/objects/course/summary', route => fulfill(route, {
+    object: current, school, department: directory.department[0], categories: [], natures: [], course_count: 1, teacher_count: 2,
+  }));
+  await page.goto(`/courses/old-course?lang=${locale}&term_id=fall`);
+  await expect(page).toHaveURL(url => url.pathname === '/courses/course' && url.searchParams.get('term_id') === 'fall');
+  for (const [label, value] of [[labels.englishName, current.english_name], [labels.formerCodes, 'OLD-201'], [labels.formerNames, 'Original title']]) {
+    await expect(page.locator('dt').filter({ hasText: label }).locator('xpath=following-sibling::dd[1]')).toHaveText(value);
+  }
 });
 
 test('review semester limits teacher choices and unknown submission retries once',async({page},info)=>{
@@ -163,7 +188,6 @@ test('public course summaries work without teaching counts and hidden teaching r
     await expect(page.getByText('Room A',{exact:true})).toHaveCount(0);
   }
   expect(restricted).toEqual([]);
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });
 
 test('incomplete draft saves and later publishes through its original draft',async({page},info)=>{
