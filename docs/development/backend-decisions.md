@@ -1,7 +1,7 @@
 ---
 type: development
 status: Accepted
-updated: 2026-11-12
+updated: 2026-11-19
 ---
 
 # 后端候选实施状态
@@ -32,35 +32,35 @@ updated: 2026-11-12
 
 ## 发布版本
 
-各仓库的版本 tag 指向 main 上的合并提交，workspace.lock.json 记录相同提交。当前组合使用 backend v0.1.4、profiles v0.1.1 和 Web/Admin v0.1.1，包含完整启动回归、module-history 驱动修复，以及按持久安装历史跳过未安装模块的注销处理。该组合用于预发布验收，生产尚未部署。
+各仓库版本 tag 指向 main 合并提交，[workspace.lock.json](https://github.com/StuHelper/stuhelper-next/blob/develop/workspace.lock.json) 记录 `v0.1.26` 组合提交。当前固定 backend v0.1.38、catalog v0.1.13、reviews v0.1.7、Web v0.1.18 与 Admin v0.1.7，覆盖启动回归、注销安装历史跳过与课程换号搜索恢复。生产部署与真实账号验收由私有 ops 记录。
 
 | 仓库 | 版本 | 提交 |
 | --- | --- | --- |
 | platform | v0.2.0 | 1b232d4 |
-| web | v0.1.1 | 77ede8d |
-| admin | v0.1.1 | 5a6b2a8 |
-| verification | v0.1.0 | 5a1cd27 |
+| web | v0.1.18 | d272867 |
+| admin | v0.1.7 | 4605dc7 |
+| verification | v0.1.8 | b6c4a65 |
 | storage | v0.1.0 | 70d0785 |
 | media | v0.1.0 | 63928dd |
 | storage-contribution | v0.1.0 | 2437c26 |
 | billing | v0.1.0 | c40e84c |
-| backend | v0.1.4 | 2c967db |
-| catalog | v0.1.0 | 55ba322 |
+| backend | v0.1.38 | 1b61621 |
+| catalog | v0.1.13 | eb28c90 |
 | open-platform | v0.1.0 | 2d82043 |
-| favorites | v0.1.0 | 480ad90 |
-| reviews | v0.1.0 | 995e6d0 |
-| moderation | v0.1.0 | 3a64bf8 |
-| resources | v0.1.0 | 4bc9cc1 |
+| favorites | v0.1.1 | 7c3a356 |
+| reviews | v0.1.7 | bf05add |
+| moderation | v0.1.4 | 1201875 |
+| resources | v0.1.2 | 6905033 |
 | profiles | v0.1.1 | 272cf90 |
 | qq-binding | v0.1.0 | 20f61b5 |
-| notifications | v0.1.0 | e99fd52 |
+| notifications | v0.1.2 | 56bb251 |
 | information-query | v0.1.0 | 97f0030 |
-| search | v0.1.0 | ad20810 |
+| search | v0.1.1 | a752e23 |
 | groups | v0.1.0 | 0538884 |
 | storage-bhpan | v0.1.0 | 669246c |
-| campus-adapters | v0.1.0 | 015ed5f |
-| ops | v0.1.1 | 20c5365 |
-| tooling | v0.1.4 | c93e2f0 |
+| campus-adapters | v0.1.21 | 96238e3 |
+| ops | v0.1.23 | 3636021 |
+| tooling | v0.1.6 | 2fe317c |
 
 首次部署启用 platform、identity、profiles、verification、catalog、reviews、moderation、storage、storage-contribution、media、resources、search、favorites、notifications 及其事件 relay。
 
@@ -116,7 +116,7 @@ verification、profiles、reviews、resources、groups、billing 已装配公开
 
 候选和敏感结果在查询审计提交成功后返回。审计默认保留 12 个自然月，运行身份负责读取与追加，独立维护身份负责有界清理。维护任务启动立即运行，随后每小时清理最多 1000 条，停机取消并等待退出。
 
-接口与权限规则见[全站信息关联查询](../spec/information-query.md)。批量预览和导出、争议保留自动排除及恢复演练尚未完成，机器人信息查询默认关闭。
+接口与权限规则见[全站信息关联查询](../spec/information-query.md)。机器人信息查询默认关闭，群聊渠道拒绝展开敏感类别；批量预览、导出、争议保留逐对象排除及恢复演练待对应模块合入验收。
 
 ## 验证与剩余工作
 
@@ -132,9 +132,9 @@ groups、search 与 notifications 已登记模块场景。search 使用 DS-01、
 
 | 当前缺口 | 影响与剩余工作 |
 | --- | --- |
-| verification 实名入口限流 | 学号未规范化会使同一学号的大小写形式分别计数；开放北航实名方法前须修复 |
-| storage 已知问题 | 配额刷新与上传扣减存在并发覆盖；删除收尾、共享暂存锁释放及暂停实例的在途写入仍需修复 |
-| resources 已知问题 | 发布结果不明后的媒体引用、任务租约代次、目录子项上限、幂等重放顺序和打包权限过滤仍需修复 |
+| verification 实名入口限流 | v0.1.8 的实名入口先规范化学号再计算限流键。锁定的北航适配器统一转小写。账号及提供方预算通过隔离数据库测试 |
+| storage 已知问题 | v0.1.0（`70d0785`）采样期间若有上传完成，刷新会覆盖已扣减的可用容量。独立数据库已复现。取消后的任务状态、暂存锁释放和暂停期间的在途写入仍待子仓验收，切换需新版本 |
+| resources 发布与目录打包 | v0.1.2（`6905033`）在任务提交时检查执行者、租约期限和代次。打包排除未授权项并在读取时复查。结果不明后重试只产生一次发布效果，两项数据库回归已通过。未知结果与撤回并发时的媒体引用清理仍待验证 |
 | backend 镜像发行 | v0.1.0 镜像工作流因 Registry 域名解析失败；当前部署制品使用固定源码本机构建，runner DNS 待处理 |
 | catalog 课表通知 | 封闭标题目录没有课表变更通知，relay 不发送该类通知；上课提醒尚未接入 |
 | catalog 跨账号查询 | 只支持指定学校内本人选课，线索解析到其他账号时返回 unavailable |
