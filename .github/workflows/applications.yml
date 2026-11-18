@@ -73,9 +73,9 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 20
     outputs:
-      platform: ${{ steps.refs.outputs.platform }}
-      web: ${{ steps.refs.outputs.web }}
-      admin: ${{ steps.refs.outputs.admin }}
+      platform: ${{ steps.checked.outputs.platform }}
+      web: ${{ steps.checked.outputs.web }}
+      admin: ${{ steps.checked.outputs.admin }}
     env:
       LEFTHOOK: "0"
       GOWORK: off
@@ -162,6 +162,15 @@ jobs:
         with:
           go-version-file: .go-version
           cache: false
+      - name: Pin browser jobs to the checked-out commits
+        id: checked
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in platform web admin; do
+            revision=$(git -C "workspace/$name" rev-parse --verify 'HEAD^{commit}')
+            printf '%s=%s\n' "$name" "$revision" >> "$GITHUB_OUTPUT"
+          done
       - name: Record actual source combination and check contracts
         run: |
           pnpm install --frozen-lockfile
