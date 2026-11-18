@@ -1,7 +1,7 @@
 ---
 type: development
 status: Accepted
-updated: 2026-11-11
+updated: 2026-11-19
 ---
 
 # 课程目录与评课社区实施
@@ -126,3 +126,5 @@ workspace.lock.json 固定本轮源码组合。提供方接口快照已按实际
 | stuhelper-admin | [#12](https://github.com/StuHelper/stuhelper-admin/pull/12) |
 
 学校适配核对单独保存在私有仓库的配套 PR。上述 PR 保留原模块候选。统一业务组合目前保存为本地提交，本轮尚未更新这些 PR，也未合并、发行或部署。
+
+窗口外作者追评已由 `stuhelper-reviews` 候选分支实现。同账号同归属评分等权去重、考核方式结构化标签、课程页任课教师说明区、教职工邮箱快捷认领及教师新评价按日汇总通知已在中央规格确认，待提供方与前端后续联调接入。
