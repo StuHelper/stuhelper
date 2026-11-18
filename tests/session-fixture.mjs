@@ -16,5 +16,19 @@ export const administrator = { authenticated:true, content_school_id:'school', p
 
 // Business-page fixtures opt into enabled modules; framework tests use the real server.
 export async function mockCapabilities(page) {
-    await page.route('**/api/v1/system/capabilities', route => route.fulfill({ json: { api_version: 1, capabilities: ['favorites.manage', 'groups.read', 'groups.manage', 'groups.configure', 'billing.manage', 'billing.membership', 'billing.wallet', 'billing.resource-unlock', 'notifications.inbox', 'open-platform.data', 'open-platform.manage', 'qq-binding.manage', 'search.query', 'information-query.query'] } }));
+    await page.route('**/api/v1/system/capabilities', route => route.fulfill({ json: { api_version: 1, capabilities: ['catalog.read', 'catalog.directory', 'catalog.maintain', 'catalog.import', 'catalog.enrollments', 'reviews.read', 'reviews.write', 'reviews.moderate', 'moderation.tasks', 'favorites.manage', 'groups.read', 'groups.manage', 'groups.configure', 'billing.manage', 'billing.membership', 'billing.wallet', 'billing.resource-unlock', 'notifications.inbox', 'open-platform.data', 'open-platform.manage', 'qq-binding.manage', 'search.query', 'information-query.query'] } }));
+}
+
+export function watchRuntimeErrors(page) {
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('console', message => {
+    if (/\[intlify\].*(Not found|Fall back)/i.test(message.text())) errors.push(message.text());
+  });
+  return errors;
+}
+
+export async function assertDirectionAndFit(page, locale) {
+  await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar-EG' ? 'rtl' : 'ltr');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 }
