@@ -10,7 +10,7 @@ import { readYaml, root, verifyScenarioIds } from './architecture.mjs';
 
 const readJSON = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const hash = value => crypto.createHash('sha256').update(value).digest('hex');
-const git = (directory, ...args) => execFileSync('git', ['-C', directory, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+const git = (directory, ...args) => execFileSync('git', ['-C', directory, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 30_000 }).trim();
 export const projects = (directory = root) => Object.entries(readYaml(path.join(directory, 'mani.yaml')).projects).map(([name, value]) => ({ name, ...value, directory: path.resolve(directory, value.path) }));
 
 export function validate(directory = root) {
@@ -165,9 +165,9 @@ export function providerSource(checkout, revision, filename) {
   assert(!path.isAbsolute(filename) && !filename.split('/').includes('..'), 'Invalid snapshot path');
   try { git(checkout, 'cat-file', '-e', `${revision}^{commit}`); }
   catch {
-    execFileSync('git', ['-C', checkout, 'fetch', '--no-tags', 'origin', revision], { stdio: 'inherit' });
+    execFileSync('git', ['-C', checkout, 'fetch', '--no-tags', 'origin', revision], { stdio: 'inherit', timeout: 60_000, killSignal: 'SIGKILL' });
   }
-  return execFileSync('git', ['-C', checkout, 'show', `${revision}:${filename}`], { encoding: 'utf8' });
+  return execFileSync('git', ['-C', checkout, 'show', `${revision}:${filename}`], { encoding: 'utf8', timeout: 30_000 });
 }
 export function verifyWorkspaceScenarios(directory, definitions, records, scope) {
   if (scope) {
@@ -194,6 +194,13 @@ export function verifyRuntimeDescriptor(definition, manifest) {
   assert.deepEqual(capabilities(manifest.capability_requires), capabilities(definition.capability_requires), `Capability dependencies differ: ${definition.id}`);
 }
 
+export function compareContracts(prior, current, binary = path.join(root, '.tools/bin/oasdiff')) {
+  if (fs.readFileSync(prior).equals(fs.readFileSync(current))) return;
+  assert(fs.existsSync(binary), 'Install the pinned oasdiff with make setup-contracts');
+  execFileSync(binary, ['breaking', prior, current, '--allow-external-refs=false', '--fail-on', 'WARN'],
+    { stdio: 'inherit', timeout: 60_000, killSignal: 'SIGKILL' });
+}
+
 export function contracts(directory = root, scope) {
   const records = projects(directory);
   const architecture = readYaml(path.join(directory, 'architecture/modules.yaml'));
@@ -215,9 +222,7 @@ export function contracts(directory = root, scope) {
     verifySource(provider, client, source, (revision, filename) => providerSource(provider.directory, revision, filename));
     const prior = path.join(client.directory, 'contracts/platform.openapi.yaml');
     const current = path.join(provider.directory, 'contracts/platform.openapi.yaml');
-    if (!fs.readFileSync(prior).equals(fs.readFileSync(current))) {
-      execFileSync('go', ['run', 'github.com/oasdiff/oasdiff@v1.34.1', 'breaking', prior, current, '--allow-external-refs=false', '--fail-on', 'WARN'], { cwd: provider.directory, env: { ...process.env, GOWORK: 'off' }, stdio: 'inherit' });
-    }
+    compareContracts(prior, current);
     for (const module of ['catalog', 'reviews', 'moderation', 'resources', 'media']) {
       const sourceFile = path.join(client.directory, `contracts/${module}.source.json`);
       if (!fs.existsSync(sourceFile)) continue;
@@ -226,9 +231,7 @@ export function contracts(directory = root, scope) {
       verifyAcademicSource(academic, client, source, (revision, filename) => providerSource(academic.directory, revision, filename));
       const prior = path.join(client.directory, `contracts/${module}.openapi.json`);
       const current = path.join(academic.directory, `contracts/${module}.openapi.json`);
-      if (!fs.readFileSync(prior).equals(fs.readFileSync(current))) {
-        execFileSync('go', ['run', 'github.com/oasdiff/oasdiff@v1.34.1', 'breaking', prior, current, '--allow-external-refs=false', '--fail-on', 'WARN'], { cwd: academic.directory, env: { ...process.env, GOWORK: 'off' }, stdio: 'inherit' });
-      }
+      compareContracts(prior, current);
     }
   }
   console.log('PASS: scenario mappings, client snapshot provenance and API compatibility');

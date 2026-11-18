@@ -3,3 +3,9 @@ go: 1.27.3
 pnpm: 10.33.4
 actionlint: 1.7.12
 lefthook: 2.2.2
+oasdiff:
+  version: 1.34.1
+  sha256:
+    linux_amd64: 75775f65b0adebd26a8e013af51a799342dfdc6262d89efa9e3b7bdf89657d90
+    linux_arm64: e8f99bbf102a4b7f235104da72d0b9d67702e78622d1d4d37169e698ee90a249
+    darwin_all: 64948ba30c5555d3d15b95a7f3eda22fa83c15cf37fd4dad1720c0deb0a07cb5
