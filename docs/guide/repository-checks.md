@@ -39,9 +39,9 @@ pre-commit 检查暂存区快照，包括文件安全、脚本权限、语法和
 
 ## 工作区与应用测试
 
-`scripts/architecture.mjs` 验证模块、依赖和规格；`scripts/workspace.mjs` 处理 Mani 约定、工具链、Go Workspace、契约来源与联调快照。通用检查器及其回归测试在工具仓库维护。
+`scripts/architecture.mjs` 验证模块、应用与运维清单的依赖和规格归属；`scripts/workspace.mjs` 以 `architecture/modules.yaml` 为数据源核对 Mani 公私标签、工具链、运行描述、全量客户端契约来源与联调快照。通用检查器及其回归测试在工具仓库维护。
 
-应用联调使用 platform 公开示例、Web 和 Admin。先构建三者，运行 `node scripts/workspace.mjs contracts`，再运行 `pnpm run test:e2e`。浏览器覆盖八种语言与桌面、移动视口，不包含文档站。
+应用联调使用 platform 公开示例、Web 和 Admin。公共集成工作流先在第一阶段完成源码组合核对、契约兼容性检查与构建验证，再在第二阶段按 `framework`、`academic`、`web-resources`、`admin-resources` 四组矩阵并行运行八语言桌面与移动浏览器套件。
 
 契约来源检查缺少声明提交时，按完整 SHA 从提供方 origin 补取 Git 对象，不切换分支或修改源码。客户端可以继续使用兼容的旧版契约。
 

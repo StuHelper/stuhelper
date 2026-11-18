@@ -682,7 +682,7 @@ modules:
         - delivery_membership_test.go#TestGroupsForOwnerPaginationAndBounds
         - api_v03_test.go#TestGroupSummaryCountsMaskingAndScope
         - api_v03_test.go#TestConfigurationRevisionPasswordAndReplay
-        - api_v03_test.go#TestCandidateMigrationToFinalContractAndLeaseRecovery
+        - api_v03_test.go#TestFinalSchemaInitializationAndLeaseRecovery
         - integration_test.go#TestQQAdmissionGraceRestorationExtensionExemptionAndRemoval
       QQ-02:
         - my_groups_test.go#TestMyGroupsMissingConditionsAndUnknownFacts
@@ -751,11 +751,11 @@ modules:
     capability_requires: {}
     scenario_tests:
       IQ-01:
-        - service_test.go#TestPlatformQQAndSeparateCandidates
+        - resolver_test.go#TestResolveKindsGroupsAndHistory
       IQ-02:
         - service_test.go#TestScopeAndDomainIsolation
       IQ-03:
-        - service_test.go#TestPlatformQQAndSeparateCandidates
+        - resolver_test.go#TestResolveKindsGroupsAndHistory
       IQ-04:
         - service_test.go#TestScopeAndDomainIsolation
       IQ-05:
@@ -852,6 +852,10 @@ modules:
     required:
       - platform
     optional:
+      - reviews
+      - resources
+      - verification
+      - moderation
       - profiles
     interface_owner: notifications
     contract_status: implemented
@@ -917,7 +921,7 @@ modules:
     scenario_tests:
       QQB-01:
         - integration_test.go#TestIndependentBindingsCodesConflictAndClosure
-        - integration_test.go#TestCodeRetentionReissueAndOutbox
+        - integration_test.go#TestCodeRetentionAndReissue
       QQB-02:
         - integration_test.go#TestOAuthSessionStateUnionIDAndFailures
         - integration_test.go#TestOAuthConfirmCancelReplayAndAlreadyBound
@@ -949,6 +953,15 @@ applications:
       - profiles
       - billing
       - favorites
+      - verification
+      - campus-adapters
+      - storage
+      - storage-contribution
+      - qq-binding
+      - notifications
+      - information-query
+      - search
+      - groups
     capability_requires:
       resources.read:
         - resources
@@ -966,6 +979,9 @@ applications:
     visibility: public
     implementation: framework
     optional:
+      - identity
+      - profiles
+      - verification
       - storage
       - storage-contribution
       - catalog
@@ -973,6 +989,12 @@ applications:
       - moderation
       - media
       - resources
+      - favorites
+      - billing
+      - open-platform
+      - qq-binding
+      - notifications
+      - search
       - groups
     capability_requires:
       storage.custody:
@@ -1023,6 +1045,9 @@ applications:
     visibility: public
     implementation: framework
     optional:
+      - identity
+      - profiles
+      - verification
       - storage
       - storage-contribution
       - catalog
@@ -1030,6 +1055,12 @@ applications:
       - moderation
       - media
       - resources
+      - favorites
+      - billing
+      - open-platform
+      - qq-binding
+      - information-query
+      - groups
     capability_requires:
       storage.operations:
         - storage

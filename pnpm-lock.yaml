@@ -19,8 +19,8 @@ importers:
         specifier: 1.64.1
         version: 1.64.1
       '@stuhelper/engineering-tools':
-        specifier: git+https://github.com/StuHelper/stuhelper-tooling.git#v0.1.4
-        version: https://codeload.github.com/StuHelper/stuhelper-tooling/tar.gz/c93e2f0e3c8ca946abec25264a939deb328dd430
+        specifier: git+https://github.com/StuHelper/stuhelper-tooling.git#v0.1.9
+        version: https://codeload.github.com/StuHelper/stuhelper-tooling/tar.gz/17ce794c7fd1b77a1d7faee1189c0ae00d1abdc9
       lefthook:
         specifier: 2.2.2
         version: 2.2.2
@@ -32,9 +32,9 @@ packages:
     engines: {node: '>=20'}
     hasBin: true
 
-  '@stuhelper/engineering-tools@https://codeload.github.com/StuHelper/stuhelper-tooling/tar.gz/c93e2f0e3c8ca946abec25264a939deb328dd430':
-    resolution: {gitHosted: true, integrity: sha512-sL71n0WaZGK5soYV99TYCQkt9fkpKcPTMKzJg9i2K9IVMz9tiFY52ERjQvzYW5KHAyCCtr+wJfcG5NOzCOB9wA==, tarball: https://codeload.github.com/StuHelper/stuhelper-tooling/tar.gz/c93e2f0e3c8ca946abec25264a939deb328dd430}
-    version: 0.1.4
+  '@stuhelper/engineering-tools@https://codeload.github.com/StuHelper/stuhelper-tooling/tar.gz/17ce794c7fd1b77a1d7faee1189c0ae00d1abdc9':
+    resolution: {gitHosted: true, integrity: sha512-VZOwRYbg1jN11TnZkTITjVVakIVK+mVsfqvMYJlegeqq5363bCIyytZ/wqx3+nbHQAiJ+tbbfWb5QsRMVcFbYQ==, tarball: https://codeload.github.com/StuHelper/stuhelper-tooling/tar.gz/17ce794c7fd1b77a1d7faee1189c0ae00d1abdc9}
+    version: 0.1.9
     engines: {node: 24.22.1, pnpm: 10.33.4}
     hasBin: true
 
@@ -317,7 +317,7 @@ snapshots:
     dependencies:
       playwright: 1.64.1
 
-  '@stuhelper/engineering-tools@https://codeload.github.com/StuHelper/stuhelper-tooling/tar.gz/c93e2f0e3c8ca946abec25264a939deb328dd430':
+  '@stuhelper/engineering-tools@https://codeload.github.com/StuHelper/stuhelper-tooling/tar.gz/17ce794c7fd1b77a1d7faee1189c0ae00d1abdc9':
     dependencies:
       github-slugger: 2.0.0
       markdown-it: 15.0.3

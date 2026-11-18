@@ -6,11 +6,14 @@ on:
       - main
     paths:
       - architecture/**
-      - scripts/workspace*
-      - scripts/integration-*
-      - tests/e2e/**
-      - tests/academic/**
+      - scripts/**
+      - tests/**
       - playwright*.mjs
+      - mani.yaml
+      - package.json
+      - pnpm-lock.yaml
+      - .go-version
+      - .node-version
       - workspace.lock.json
       - .github/workflows/applications.yml
   push:
@@ -19,11 +22,14 @@ on:
       - main
     paths:
       - architecture/**
-      - scripts/workspace*
-      - scripts/integration-*
-      - tests/e2e/**
-      - tests/academic/**
+      - scripts/**
+      - tests/**
       - playwright*.mjs
+      - mani.yaml
+      - package.json
+      - pnpm-lock.yaml
+      - .go-version
+      - .node-version
       - workspace.lock.json
       - .github/workflows/applications.yml
   workflow_dispatch:
@@ -62,10 +68,14 @@ concurrency:
     github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 jobs:
-  applications:
-    name: Public application integration
+  contracts:
+    name: Public contract and build verification
     runs-on: ubuntu-26.04
-    timeout-minutes: 35
+    timeout-minutes: 20
+    outputs:
+      platform: ${{ steps.refs.outputs.platform }}
+      web: ${{ steps.refs.outputs.web }}
+      admin: ${{ steps.refs.outputs.admin }}
     env:
       LEFTHOOK: "0"
       GOWORK: off
@@ -147,38 +157,99 @@ jobs:
           path: workspace/resources
           fetch-depth: 0
           persist-credentials: false
-      - uses: StuHelper/stuhelper-tooling/actions/setup@v0.1.4
+      - uses: StuHelper/stuhelper-tooling/actions/setup@v0.1.9
       - uses: actions/setup-go@v7.0.0
         with:
           go-version-file: .go-version
           cache: false
-      - name: Record actual source combination
+      - name: Record actual source combination and check contracts
         run: |
           pnpm install --frozen-lockfile
           node scripts/workspace.mjs snapshot
           node scripts/workspace.mjs toolchains
           node scripts/workspace.mjs contracts --scope=platform,web,admin,catalog,reviews,moderation,storage,media,resources
       - name: Build public example and clients
-        run: >
-          (cd workspace/platform && go build -mod=readonly -o
-          bin/stuhelper-platform ./examples/server)
-
+        run: |
+          (cd workspace/platform && go build -mod=readonly -o bin/stuhelper-platform ./examples/server)
           pnpm --dir workspace/web install --frozen-lockfile
-
           pnpm --dir workspace/web run build
-
           pnpm --dir workspace/admin install --frozen-lockfile
-
           pnpm --dir workspace/admin run setup
-
           pnpm --dir workspace/admin run build
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm run test:e2e
-      - run: pnpm exec playwright test --config playwright.academic.config.mjs
-      - name: Resources Web and Admin browser acceptance
-        run: >-
-          pnpm --dir workspace/web exec playwright test
-          tests/e2e/resources.spec.mjs
-
-          pnpm --dir workspace/admin exec playwright test --config
-          playwright.storage.config.mjs tests/e2e/resources.spec.mjs
+  browser:
+    name: Browser (${{ matrix.suite }})
+    needs: contracts
+    runs-on: ubuntu-26.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        suite:
+          - framework
+          - academic
+          - web-resources
+          - admin-resources
+    env:
+      LEFTHOOK: "0"
+      GOWORK: off
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v7.0.1
+        if: matrix.suite == 'framework'
+        with:
+          repository: StuHelper/stuhelper-platform
+          ref: ${{ needs.contracts.outputs.platform }}
+          path: workspace/platform
+          persist-credentials: false
+      - uses: actions/checkout@v7.0.1
+        if: matrix.suite != 'admin-resources'
+        with:
+          repository: StuHelper/stuhelper-web
+          ref: ${{ needs.contracts.outputs.web }}
+          path: workspace/web
+          persist-credentials: false
+      - uses: actions/checkout@v7.0.1
+        if: matrix.suite != 'web-resources'
+        with:
+          repository: StuHelper/stuhelper-admin
+          ref: ${{ needs.contracts.outputs.admin }}
+          path: workspace/admin
+          persist-credentials: false
+      - uses: StuHelper/stuhelper-tooling/actions/setup@v0.1.9
+      - uses: actions/setup-go@v7.0.0
+        if: matrix.suite == 'framework'
+        with:
+          go-version-file: .go-version
+          cache: false
+      - name: Install locked workspace dependencies and Chromium
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
+      - name: Build platform public server
+        if: matrix.suite == 'framework'
+        run: (cd workspace/platform && go build -mod=readonly -o bin/stuhelper-platform ./examples/server)
+      - name: Build Web client
+        if: matrix.suite != 'admin-resources'
+        run: |
+          pnpm --dir workspace/web install --frozen-lockfile
+          pnpm --dir workspace/web run build
+      - name: Build Admin client
+        if: matrix.suite != 'web-resources'
+        run: |
+          pnpm --dir workspace/admin install --frozen-lockfile
+          pnpm --dir workspace/admin run setup
+          pnpm --dir workspace/admin run build
+      - name: Run framework browser suite
+        if: matrix.suite == 'framework'
+        run: pnpm run test:e2e
+      - name: Run academic browser suite
+        if: matrix.suite == 'academic'
+        run: pnpm exec playwright test --config playwright.academic.config.mjs
+      - name: Run Web resources browser suite
+        if: matrix.suite == 'web-resources'
+        run: pnpm --dir workspace/web exec playwright test tests/e2e/resources.spec.mjs
+      - name: Run Admin resources browser suite
+        if: matrix.suite == 'admin-resources'
+        run: pnpm --dir workspace/admin exec playwright test --config playwright.storage.config.mjs tests/e2e/resources.spec.mjs
