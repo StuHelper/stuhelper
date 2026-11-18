@@ -58,7 +58,7 @@ export function validateModules(config) {
       assert(dependencies.every(dependency => declared.has(dependency)), `Undeclared capability dependency: ${capability}`);
     }
   }
-  for (const id of ['identity', 'verification', 'campus-adapters', 'billing']) {
+  for (const id of ['identity', 'verification', 'campus-adapters', 'billing', 'qq-binding']) {
     assert.equal(byId.get(id)?.visibility, 'private', `${id} must remain private`);
   }
   assert.equal(byId.get('storage-bhpan')?.visibility, 'public', 'storage-bhpan must remain public');
@@ -67,6 +67,26 @@ export function validateModules(config) {
   for (const app of apps.values()) {
     assert.equal(app.repository, `StuHelper/stuhelper-${app.id}`);
     assert.equal(app.visibility, app.id === 'backend' ? 'private' : 'public');
+    const optional = new Set();
+    assert(Array.isArray(app.optional ?? []), `${app.id}: optional must be a list`);
+    for (const dependency of app.optional ?? []) {
+      assert(byId.has(dependency), `Unknown dependency: ${app.id}/${dependency}`);
+      assert(!optional.has(dependency), `Repeated dependency: ${app.id}/${dependency}`);
+      optional.add(dependency);
+    }
+    for (const [capability, dependencies] of Object.entries(app.capability_requires ?? {})) {
+      assert.match(capability, /^[a-z][a-z0-9-]*\.[a-z][a-z0-9.-]*$/);
+      assert.equal(new Set(dependencies).size, dependencies.length, `Repeated capability dependency: ${app.id}/${capability}`);
+      assert(dependencies.every(dependency => optional.has(dependency)), `Undeclared capability dependency: ${app.id}/${capability}`);
+    }
+  }
+  const operations = new Map((config.operations ?? []).map(item => [item.id, item]));
+  assert.equal(operations.size, (config.operations ?? []).length, 'Duplicate operation ID');
+  for (const item of operations.values()) {
+    assert.equal(item.repository, `StuHelper/stuhelper-${item.id}`);
+    assert.equal(item.visibility, 'private', `${item.id} must remain private`);
+    assert(!repositories.has(item.repository), `Duplicate repository owner: ${item.repository}`);
+    repositories.add(item.repository);
   }
   for (const module of config.modules.filter(item => item.in_application)) {
     assert.equal(module.repository, apps.get(module.in_application)?.repository, 'Application module ownership mismatch');
