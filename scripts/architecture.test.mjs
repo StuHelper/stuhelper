@@ -25,3 +25,12 @@ for (const [name, mutate, message] of [
   mutate(new Map(config.modules.map(module => [module.id, module])));
   assert.throws(() => validateModules(config), message);
 });
+
+test('central scenario IDs are checked even without provider checkouts', () => {
+  for (const id of ['backend', 'web', 'admin', 'ops']) {
+    const config = load();
+    const owner = [...config.applications, ...config.operations].find(item => item.id === id);
+    owner.scenario_tests['UNKNOWN-99'] = ['case.test.ts#missing'];
+    assert.throws(() => validateSpecifications(config), /Unknown implemented scenario: UNKNOWN-99/);
+  }
+});
