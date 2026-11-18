@@ -1,3 +1,4 @@
+import { collectErrors, layout } from '../page-checks.mjs';
 import YAML from 'yaml';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -10,18 +11,6 @@ function messages(testInfo) {
   const locale = testInfo.project.metadata.locale;
   return { locale, web: JSON.parse(fs.readFileSync(path.join(process.env.WEB_PATH || path.join(root, 'workspace/web'), `src/locales/${locale}.json`), 'utf8')), admin: JSON.parse(fs.readFileSync(path.join(process.env.ADMIN_PATH || path.join(root, 'workspace/admin'), `apps/web-antd/src/locales/langs/${locale}/page.json`), 'utf8')) };
 }
-function collectErrors(page) {
-  const errors = [];
-  page.on('pageerror', error => errors.push(error.message));
-  page.on('console', message => { if (/\[intlify\].*(Not found|Fall back)/i.test(message.text())) errors.push(message.text()); });
-  return errors;
-}
-async function layout(page, locale) {
-  await expect(page.locator('html')).toHaveAttribute('lang', locale);
-  await expect(page.locator('html')).toHaveAttribute('dir', policy.languages[locale].direction);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-}
-
 test('Web portal and campus load translated content within the viewport', async ({ page }, testInfo) => {
   const { locale, web } = messages(testInfo);
   const errors = collectErrors(page);
@@ -107,7 +96,7 @@ test('stuhelper-admin loads translated controls and keeps identity checks active
   }
 });
 
-test('Chinese is the default language without a saved preference', async ({ page }) => {
+test('Chinese is the default language without a saved preference', { tag: '@default-language' }, async ({ page }) => {
   await page.goto('http://127.0.0.1:18781/');
   await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
   await page.goto('http://127.0.0.1:18782/');

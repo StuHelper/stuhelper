@@ -18,8 +18,8 @@ export default defineConfig({
   reporter: 'list',
   use: { trace: 'off', screenshot: 'only-on-failure' },
   projects: Object.keys(YAML.parse(fs.readFileSync(path.join(root, 'architecture/locales.yaml'), 'utf8')).languages).flatMap(locale => [
-    { name: `desktop-${locale}`, metadata: { locale }, use: { ...devices['Desktop Chrome'] } },
-    { name: `mobile-${locale}`, metadata: { locale }, use: { ...devices['Pixel 7'] } },
+    { name: `desktop-${locale}`, metadata: { locale }, grepInvert: locale === 'zh-CN' ? undefined : /@default-language/, use: { ...devices['Desktop Chrome'] } },
+    { name: `mobile-${locale}`, metadata: { locale }, grepInvert: locale === 'zh-CN' ? undefined : /@default-language/, use: { ...devices['Pixel 7'] } },
   ]),
   webServer: [
     {
