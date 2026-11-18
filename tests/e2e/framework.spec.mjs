@@ -1,3 +1,4 @@
+import { collectErrors, layout } from '../page-checks.mjs';
 import YAML from 'yaml';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -10,18 +11,6 @@ function messages(testInfo) {
   const locale = testInfo.project.metadata.locale;
   return { locale, web: JSON.parse(fs.readFileSync(path.join(process.env.WEB_PATH || path.join(root, 'workspace/web'), `src/locales/${locale}.json`), 'utf8')), admin: JSON.parse(fs.readFileSync(path.join(process.env.ADMIN_PATH || path.join(root, 'workspace/admin'), `apps/web-antd/src/locales/langs/${locale}/page.json`), 'utf8')) };
 }
-function collectErrors(page) {
-  const errors = [];
-  page.on('pageerror', error => errors.push(error.message));
-  page.on('console', message => { if (/\[intlify\].*(Not found|Fall back)/i.test(message.text())) errors.push(message.text()); });
-  return errors;
-}
-async function layout(page, locale) {
-  await expect(page.locator('html')).toHaveAttribute('lang', locale);
-  await expect(page.locator('html')).toHaveAttribute('dir', policy.languages[locale].direction);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-}
-
 test('Web portal and campus load translated content within the viewport', async ({ page }, testInfo) => {
   const { locale, web } = messages(testInfo);
   const errors = collectErrors(page);
@@ -52,21 +41,27 @@ test('Web recovers from a network failure through a translated retry action', as
 
 test('Web deep links and language selection retain the chosen language', async ({ page }, testInfo) => {
   const { locale, web } = messages(testInfo);
+  const errors = collectErrors(page);
   await page.goto(`http://127.0.0.1:18781/unimplemented-module?lang=${locale}`);
   await expect(page.getByRole('heading', { name: web.notFound.title })).toBeVisible();
   await page.getByRole('link', { name: web.notFound.home, exact: true }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveAccessibleName(web.brand.name);
   // The language control is a listbox: open it, then choose a language by its own name.
   // Its accessible name follows the current language.
-  const chinese = messages({ project: { metadata: { locale: 'zh-CN' } } }).web;
+  const switched = locale === 'zh-CN' ? 'en-US' : 'zh-CN';
+  const switchedWeb = messages({ project: { metadata: { locale: switched } } }).web;
   const choose = async (label, value) => {
     await page.getByRole('combobox', { name: label }).click();
     await page.getByRole('option', { name: policy.languages[value].name, exact: true }).click();
   };
-  await choose(web.language.label, 'zh-CN');
-  await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
-  await choose(chinese.language.label, locale);
+  await choose(web.language.label, switched);
+  await layout(page, switched);
+  await page.reload();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveAccessibleName(switchedWeb.brand.name);
+  await layout(page, switched);
+  await choose(switchedWeb.language.label, locale);
   await layout(page, locale);
+  expect(errors).toEqual([]);
 });
 
 test('stuhelper-admin loads translated controls and keeps identity checks active', async ({ page, request }, testInfo) => {
@@ -82,15 +77,18 @@ test('stuhelper-admin loads translated controls and keeps identity checks active
   expect((await response.json()).code).toBe('identity_unavailable');
   await layout(page, locale);
   const common = JSON.parse(fs.readFileSync(path.join(process.env.ADMIN_PATH || path.join(root, 'workspace/admin'), `packages/locales/src/langs/${locale}/preferences.json`), 'utf8'));
+  const switched = locale === 'en-US' ? 'zh-CN' : 'en-US';
   await page.getByRole('button', { name: common.language, exact: true }).click();
-  await page.getByRole('menuitem', { name: 'English', exact: true }).click();
-  await expect(page.locator('html')).toHaveAttribute('lang', 'en-US');
+  await page.getByRole('menuitem', { name: policy.languages[switched].name, exact: true }).click();
+  await layout(page, switched);
+  const urlLang = new URL(page.url()).searchParams.get('lang');
+  const expectedAfterReload = urlLang === locale ? locale : switched;
+  const reloadedAdmin = messages({ project: { metadata: { locale: expectedAfterReload } } }).admin;
   await page.reload();
-  // An explicit URL locale remains the navigation preference after reload.
-  await expect(page.locator('html')).toHaveAttribute('lang', locale);
+  await expect(page.locator('html')).toHaveAttribute('lang', expectedAfterReload);
   await expect(page.locator('#__app-loading__')).toHaveCount(0);
-  await expect(page.getByRole('status')).toContainText(admin.framework.errors.identity);
-  await layout(page, locale);
+  await expect(page.getByRole('status')).toContainText(reloadedAdmin.framework.errors.identity);
+  await layout(page, expectedAfterReload);
   expect(errors).toEqual([]);
   if (process.env.FRAMEWORK_SCREENSHOTS) {
     await mkdir(process.env.FRAMEWORK_SCREENSHOTS, { recursive: true });
@@ -98,7 +96,7 @@ test('stuhelper-admin loads translated controls and keeps identity checks active
   }
 });
 
-test('Chinese is the default language without a saved preference', async ({ page }) => {
+test('Chinese is the default language without a saved preference', { tag: '@default-language' }, async ({ page }) => {
   await page.goto('http://127.0.0.1:18781/');
   await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
   await page.goto('http://127.0.0.1:18782/');
