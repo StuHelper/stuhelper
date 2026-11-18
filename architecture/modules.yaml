@@ -975,6 +975,18 @@ applications:
       - resources
       - groups
     capability_requires:
+      catalog.directory:
+        - catalog
+      catalog.read:
+        - catalog
+      catalog.enrollments:
+        - catalog
+      reviews.read:
+        - reviews
+      reviews.write:
+        - reviews
+      moderation.tasks:
+        - moderation
       storage.custody:
         - storage
       contributions.manage:
@@ -1031,6 +1043,16 @@ applications:
       - media
       - resources
     capability_requires:
+      catalog.read:
+        - catalog
+      catalog.maintain:
+        - catalog
+      catalog.import:
+        - catalog
+      reviews.moderate:
+        - reviews
+      moderation.tasks:
+        - moderation
       storage.operations:
         - storage
       storage.custody.operations:
