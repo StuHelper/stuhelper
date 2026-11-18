@@ -50,7 +50,7 @@ pre-commit 检查暂存区快照，包括文件安全、脚本权限、语法和
 
 `scripts/architecture.mjs` 验证模块、依赖和规格；`scripts/workspace.mjs` 处理 Mani 约定、工具链、Go Workspace、契约来源与联调快照。通用检查器及其回归测试在工具仓库维护。
 
-应用联调使用 platform 公开示例、Web 和 Admin。先构建三者，运行 `node scripts/workspace.mjs contracts`，再运行 `pnpm run test:e2e`。浏览器覆盖八种语言与桌面、移动视口，不包含文档站。
+应用联调使用 platform 公开示例、Web 和 Admin。先构建三者，运行 `node scripts/workspace.mjs contracts`，再运行 `pnpm run test:e2e`。浏览器覆盖八种语言与桌面、移动视口，学术 Web 用例逐页检查脚本异常、缺失翻译、文字方向和横向溢出。无语言偏好的默认中文用例在两种视口各执行一次。
 
 每份客户端 OpenAPI 快照须有同名来源记录，每份来源记录也须有对应快照。同一提供方有多份契约时逐份核对。客户端可以继续使用兼容的旧版契约。
 

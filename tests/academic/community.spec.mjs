@@ -1,6 +1,15 @@
-import { test, expect, mockCapabilities } from '../session-fixture.mjs';
+import { collectErrors, layout } from '../page-checks.mjs';
+import { test as base, expect, mockCapabilities } from '../session-fixture.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
+const test = base.extend({
+  page: async ({ page }, use, info) => {
+    const errors = collectErrors(page);
+    await use(page);
+    expect(errors).toEqual([]);
+    await layout(page, info.project.metadata.locale);
+  },
+});
 const web=process.env.WEB_PATH || path.resolve('workspace/web');
 const obj=(id,kind,name,extra={})=>({id,kind,name,school_id:'school',credits:null,aliases:[],revision:1,updated_at:'2026-10-27T00:00:00Z',...extra});
 const school=obj('school','school','Test University');
@@ -85,8 +94,6 @@ test('directory has college/category filters and no semester control',async({pag
   await expect(category).toHaveAttribute('aria-pressed','true');
   await expect.poll(()=>requests.some(u=>u.searchParams.get('department_id')==='dept'&&u.searchParams.get('category_id')==='seminar')).toBe(true);
   expect(requests.every(u=>!u.searchParams.has('term_id'))).toBe(true);
-  await expect(page.locator('html')).toHaveAttribute('dir',locale==='ar-EG'?'rtl':'ltr');
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });
 
 test('former course link opens the current course with its names and context', async ({ page }, info) => {
@@ -181,7 +188,6 @@ test('public course summaries work without teaching counts and hidden teaching r
     await expect(page.getByText('Room A',{exact:true})).toHaveCount(0);
   }
   expect(restricted).toEqual([]);
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });
 
 test('incomplete draft saves and later publishes through its original draft',async({page},info)=>{
