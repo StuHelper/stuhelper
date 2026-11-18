@@ -1,7 +1,7 @@
 ---
 type: guide
 status: Accepted
-updated: 2026-11-11
+updated: 2026-11-18
 ---
 
 # 后端交易与收款资料配置
@@ -47,7 +47,7 @@ STUHELPER_RELAY_CONFIG 增加 billing_dsn_file，resources_dsn_file 沿用资料
 
 确认资料订单从 paid 推进到 fulfilled，交付拒绝时退回原账户。会员事件按修订更新，下载按当前有效期判断。管理交易需 billing.manage，查看收款资料还需 billing.refund-payee-read，覆盖写入需全站 resources.coverage.manage。
 
-结果未知时先查询原订单，重试沿用原请求与幂等键。人工事件使用 event-retry --source billing 或 --source resources 查询，附加 --id 按原事件 ID 重试。不要通过重新扣费处理交付积压。
+结果未知时先查询原订单，重试沿用原请求与幂等键。进入人工队列的事件可在管理端死信事件面板查看脱敏状态并按原事件 ID 重试，或由运维执行 `event-retry --source billing`、`--source resources` 附加 `--id` 重试。不要通过重新扣费处理交付积压。
 
 退款收款资料清理与支付核查由单个 worker 串行执行，每 5 秒最多清理 100 条，整轮最多 20 秒，SQL 最多 5 秒。停机先取消并等待任务退出，再关闭连接。
 
