@@ -70,3 +70,12 @@ test('mkdocs nav, category indexes and doc links reject duplicates, escaped path
   );
   assert.throws(() => validateDocLinksAndIndexes(dir), /Unstable GitHub branch link/);
 });
+
+test('table validation ignores CommonMark indented and fenced code and preserves source lines', () => {
+  const example = '# Example\n\n    | shell | output |\n\n\t| more | output |\n\n~~~~\n| fenced | output |\n~~~~\n';
+  validateMarkdownTables(example, 'guide.md');
+  assert.throws(() => validateMarkdownTables(example + '\n| broken | table |\n', 'guide.md'),
+    /without header separator at guide\.md:11/);
+  assert.throws(() => validateMarkdownTables('1. Item\n\n   | broken | table |\n', 'list.md'),
+    /without header separator at list\.md:3/);
+});

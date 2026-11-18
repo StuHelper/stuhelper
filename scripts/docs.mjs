@@ -2,7 +2,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import MarkdownIt from 'markdown-it';
 import YAML from 'yaml';
+
+const markdown = new MarkdownIt('commonmark');
 
 export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -18,22 +21,12 @@ function walkMarkdown(directory) {
 
 function* nonCodeLines(content) {
   const lines = content.split(/\r?\n/);
-  let fence = '';
-  for (let index = 0; index < lines.length; index++) {
-    const line = lines[index];
-    const match = /^ {0,3}(`{3,}|~{3,})/.exec(line);
-    if (match) {
-      if (!fence) {
-        fence = match[1];
-        continue;
-      }
-      if (line.trimStart().startsWith(fence[0].repeat(fence.length))) {
-        fence = '';
-        continue;
-      }
-    }
-    if (!fence) yield { lineNumber: index + 1, line };
+  for (const token of markdown.parse(content, {})) {
+    if (token.type !== 'fence' && token.type !== 'code_block') continue;
+    const [start, end] = token.map;
+    for (let index = start; index < end; index++) lines[index] = '';
   }
+  for (const [index, line] of lines.entries()) yield { lineNumber: index + 1, line };
 }
 
 export function validateMarkdownTables(content, label) {
