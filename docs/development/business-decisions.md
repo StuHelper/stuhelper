@@ -46,7 +46,7 @@ updated: 2026-11-19
 | --- | --- | --- |
 | 账户展示 | 积分与 Ivory 分别展示余额、明细、到期信息和退款进度 | [账务对接](../spec/wallet-and-points.md) |
 | 收藏 | 独立 favorites 模块拥有课程、教师、资料收藏和收藏夹 | [资格配置](../spec/action-eligibility.md) |
-| 账号注销 | 7 天冷静期内登录可撤销；期满且资产处置完成后由管理员注销 | [个人中心](../spec/personal-center.md) |
+| 账号注销 | 7 天冷静期内登录可撤销；期满且无资产或依赖阻断时自动结清注销，存在阻断由管理员处理 | [个人中心](../spec/personal-center.md) |
 | 认证期限 | 普通认证长期有效，只对限时凭证提示到期 | [学生认证](../spec/student-verification.md) |
 | 本人身份字段 | 只展示服务端生成的脱敏姓名和证件号 | [个人中心](../spec/personal-center.md) |
 | 昵称 | 最多 20 个 Unicode 码点，首次登录依次尝试 SSO 显示名和用户名，都不合规时由用户填写 | [个人中心](../spec/personal-center.md) |

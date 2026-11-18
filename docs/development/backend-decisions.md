@@ -122,6 +122,8 @@ verification、profiles、reviews、resources、groups、billing 已装配公开
 
 注销修复先复现缺失账务与开放平台时的阻塞，再通过隔离 PostgreSQL 验证安装历史、跳过结果持久化、故障恢复和重复请求。提供方及 backend 完整检查通过，Web 注销申请与撤销覆盖八语言桌面和移动端共 16 个浏览器用例。
 
+profiles 候选已预留到期注销扫描端口与脱敏阻断原因，Admin 候选已新增注销管理页面；无阻断到期注销自动巡检执行器与管理端人工队列 outbox 重试面板已在中央规格确认，待 backend 与 Admin 后续联调接入。
+
 backend v0.1.4 正式 tag 制品已使用生产配置模板与空数据库完成本地启动检查。两端完整检查及浏览器 CI 通过。真实账号验收仍待负责人完成。
 
 发布提交由 workspace.lock.json 记录，模块场景与测试函数登记在 architecture/modules.yaml。提供方的数据库验证使用隔离 PostgreSQL 与模块运行身份，正式 backend 依赖由 go.mod 固定。源码检查、客户端接入和真实环境验收分别记录。
