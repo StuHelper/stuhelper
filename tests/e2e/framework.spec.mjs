@@ -52,21 +52,27 @@ test('Web recovers from a network failure through a translated retry action', as
 
 test('Web deep links and language selection retain the chosen language', async ({ page }, testInfo) => {
   const { locale, web } = messages(testInfo);
+  const errors = collectErrors(page);
   await page.goto(`http://127.0.0.1:18781/unimplemented-module?lang=${locale}`);
   await expect(page.getByRole('heading', { name: web.notFound.title })).toBeVisible();
   await page.getByRole('link', { name: web.notFound.home, exact: true }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveAccessibleName(web.brand.name);
   // The language control is a listbox: open it, then choose a language by its own name.
   // Its accessible name follows the current language.
-  const chinese = messages({ project: { metadata: { locale: 'zh-CN' } } }).web;
+  const switched = locale === 'zh-CN' ? 'en-US' : 'zh-CN';
+  const switchedWeb = messages({ project: { metadata: { locale: switched } } }).web;
   const choose = async (label, value) => {
     await page.getByRole('combobox', { name: label }).click();
     await page.getByRole('option', { name: policy.languages[value].name, exact: true }).click();
   };
-  await choose(web.language.label, 'zh-CN');
-  await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
-  await choose(chinese.language.label, locale);
+  await choose(web.language.label, switched);
+  await layout(page, switched);
+  await page.reload();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveAccessibleName(switchedWeb.brand.name);
+  await layout(page, switched);
+  await choose(switchedWeb.language.label, locale);
   await layout(page, locale);
+  expect(errors).toEqual([]);
 });
 
 test('stuhelper-admin loads translated controls and keeps identity checks active', async ({ page, request }, testInfo) => {
@@ -82,15 +88,18 @@ test('stuhelper-admin loads translated controls and keeps identity checks active
   expect((await response.json()).code).toBe('identity_unavailable');
   await layout(page, locale);
   const common = JSON.parse(fs.readFileSync(path.join(process.env.ADMIN_PATH || path.join(root, 'workspace/admin'), `packages/locales/src/langs/${locale}/preferences.json`), 'utf8'));
+  const switched = locale === 'en-US' ? 'zh-CN' : 'en-US';
   await page.getByRole('button', { name: common.language, exact: true }).click();
-  await page.getByRole('menuitem', { name: 'English', exact: true }).click();
-  await expect(page.locator('html')).toHaveAttribute('lang', 'en-US');
+  await page.getByRole('menuitem', { name: policy.languages[switched].name, exact: true }).click();
+  await layout(page, switched);
+  const urlLang = new URL(page.url()).searchParams.get('lang');
+  const expectedAfterReload = urlLang === locale ? locale : switched;
+  const reloadedAdmin = messages({ project: { metadata: { locale: expectedAfterReload } } }).admin;
   await page.reload();
-  // An explicit URL locale remains the navigation preference after reload.
-  await expect(page.locator('html')).toHaveAttribute('lang', locale);
+  await expect(page.locator('html')).toHaveAttribute('lang', expectedAfterReload);
   await expect(page.locator('#__app-loading__')).toHaveCount(0);
-  await expect(page.getByRole('status')).toContainText(admin.framework.errors.identity);
-  await layout(page, locale);
+  await expect(page.getByRole('status')).toContainText(reloadedAdmin.framework.errors.identity);
+  await layout(page, expectedAfterReload);
   expect(errors).toEqual([]);
   if (process.env.FRAMEWORK_SCREENSHOTS) {
     await mkdir(process.env.FRAMEWORK_SCREENSHOTS, { recursive: true });

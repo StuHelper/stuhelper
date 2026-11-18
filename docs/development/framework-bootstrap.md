@@ -14,7 +14,7 @@ platform 提供公共模块接口、依赖校验、能力降级、Fx 生命周�
 
 通用存储已有独立库，实现多账号准入、三副本、两份发布门槛、恢复与清理，见[实施状态](storage-module.md)。media 已实现文件上传、批准、引用与下载，backend 固定依赖联调通过。贡献管理和 resources 资料业务已有实现，见[资料实施](resources.md)。生产配置与真实账号验收由私有 ops 记录。
 
-Web 与 stuhelper-admin 提供状态展示、错误恢复和八语言入口。Admin 另有存储运营页面，接口、权限和验收范围见[存储实施状态](storage-module.md)。国际化检查覆盖消息键、占位符、复数、数字、金额、日期、时区、相对时间和 RTL。
+Web 与 stuhelper-admin 提供状态展示、错误恢复和八语言入口。Admin 另有存储运营页面，接口、权限和验收范围见[存储实施状态](storage-module.md)。国际化检查覆盖消息键、占位符、复数、数字、金额、日期、时区、相对时间和 RTL；界面主动切换语言时同步更新或移除地址栏 `?lang=` 参数已在国际化规格（`I18N-09`）确认，待双端下一版本接入。
 
 共享检查器、GitHub action、reusable workflow 与 Lefthook 预设已迁至 stuhelper-tooling。主仓库保留架构、Mani、工作区工具和应用联调。SSO 官方制品资料归 ops，后端身份实现归 backend。
 
