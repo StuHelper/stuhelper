@@ -1,7 +1,7 @@
 ---
 type: spec
 status: Accepted
-updated: 2026-11-17
+updated: 2026-11-18
 ---
 
 # CI 与 runner 约定
@@ -40,51 +40,37 @@ GitHub 对 reusable workflow 显示调用 job 与实际 job 的组合名称，�
 
 ## runner 与权限
 
-私有仓库的普通 push/PR 检查使用 stuhelper-arc 组、stuhelper-arc-sh-k8s 标签。公开仓库普通检查使用 GitHub ubuntu-26.04。可见性以 gh repo view --json visibility 核验，工作区登记不能代替远端权限状态。
+私有 Linux 作业只声明 runner group `stuhelper-arc`，由组内可用站点接单。公开 Linux 作业使用 GitHub 托管的 `ubuntu-26.04`。调用共享工作流时选择对应可见性的入口，检查名称保持稳定。
 
-Docker/OCI、镜像组合和 BJ1 Registry 任务使用自建 runner。公开 PR 不在能够读取私有源码、凭据或缓存的环境运行。共享普通检查工作流接收调用方的 runs-on JSON，公开调用方固定使用托管环境。
+公开应用使用托管 BuildKit 构建，凭作业的 packages 写权限推送 GHCR。私有镜像任务使用站点提供的远程 BuildKit。发布连接和生产晋级依旧执行各自的授权与版本核验。
 
-runner 镜像临时发布到 public 的 ghcr.io/stuhelper/ci-runner，BJ1 恢复后再迁回。ARC 使用明确版本 tag，运行配置不写 digest。已发行 tag 不覆盖，内容变化时发行新版本，digest 仅记录在核验结果中。
+runner 镜像发布在公开 GHCR，按明确版本 tag 拉取。ops 在发行前逐层核对公共软件来源，记录 manifest 摘要并验证匿名完整拉取。站点配置提供包源、DNS、BuildKit 和 Actions 缓存入口。
 
-公开前逐层检查镜像，禁止包含私有模块、凭据、令牌、私有缓存与宿主配置。公共工具自带的测试材料须核对来源。PostgreSQL 测试使用本机连接，默认关闭 TLS，并在生成层内删除自动创建的证书与私钥。
-
-runner 主机不保存备份或镜像归档。新镜像通过匿名拉取、工具检查与 runner 注册后，按使用关系清理旧归档、旧配置副本和闲置镜像。回退重新部署已验证的上一版本 tag，保留依赖缓存、运行配置和其他服务数据。
-
-变更镜像前排空私有池与公开发行池，同时核对 Helm values 和集群实际容量。确认运行任务结束后切换，分别验证两个池的注册，再恢复各池原有容量。排空期间持续核对并行操作造成的容量变化。
-
-私有 stuhelper-arc 组禁止公开仓库访问。Web/Admin 的正式镜像发行使用独立 stuhelper-arc-release 组，仅允许固定版本的共享发行工作流。公开发行池不挂载私有缓存，PR 事件在分配 runner 前跳过。
-
-自建 runner 不可用时排队或失败，不自动改走托管环境。runner 镜像与主机系统分别升级；系统升级须先确认可用快照或备份，并在无任务执行时维护。实际系统与 Kubernetes 版本记录在运维验收中。
-
-Kubernetes runner 通过 `BUILDKIT_HOST` 提供远端 BuildKit。镜像发行使用 remote driver，不假设本地 Docker daemon 可用；部署连接使用明确的目标 Docker context。作业只清理自己的 builder 注册，远端服务和共享缓存由 runner 维护。
+新站点部署独立的 scale set 并加入同一私有组。先验证新模板接单、网络和缓存，再退出旧模板。vm999 运行 runner 及配套服务。回退使用上一版可拉取的 tag，备份不存放在 runner 主机。
 
 默认权限为 `contents: read`。制品推送和部署工作流按任务增加最小权限，受保护环境控制晋级。跨私有仓库拉取优先使用按仓授权的 GitHub App 短期凭据，公开 PR 不接触这些凭据。
 
-Actions 使用明确版本 tag。私有检查使用 tooling v0.1.8 的预装检测与直接工具引导，公开发行使用 v0.1.9 的独立 runner 入口。完整 Go 与 Node 检查使用 reusable workflow，应用专用命令留在各仓。
+Actions 使用明确版本 tag。tooling v0.1.10 提供仓库分组、官方缓存与托管镜像发行，v0.1.11 增加多仓锁文件与站点 Registry。Go 与 Node 检查使用 reusable workflow，应用专用命令留在各仓。
 
-预装版本以 architecture/toolchains.yaml 为准。缺失工具从官方来源有界下载，Node、Go、actionlint 核验 SHA-256，pnpm 核验 SHA-512。PostgreSQL 通过官方 PGDG 源安装，校验源密钥、签名元数据和包摘要。
+预装版本由 architecture/toolchains.yaml 确定。镜像构建核验公共工具来源和归档摘要。作业使用 setup-node、setup-go 安装其他声明版本。PostgreSQL 安装程序验证 PGDG 签名元数据和包摘要。
 
 ## 依赖与存储
 
-依赖按锁文件安装。私有 runner 可以保存 Go 模块、Go 构建、pnpm store 和 Playwright 浏览器缓存，私有模块只留在自建环境。公开仓库不使用这些缓存，不向 GitHub 上传私有模块缓存或普通检查 artifact。
+依赖按锁文件安装。setup-node 复用 pnpm store，setup-go 复用 Go 模块与编译缓存。公开项目可复用 Vite 优化依赖、TypeScript 的构建信息和与锁文件匹配的 Chromium。
 
-持久缓存按仓库和工具链版本分区，只接收 develop/main 上成功的可信运行。PR 只读取已发布缓存，缺失依赖与构建写入作业临时目录，结束后丢弃。只读权限由卷挂载或宿主身份保证，不能只依赖工作流中的 if 条件。
+私有缓存保存在支持 Actions 缓存协议的自建服务，其后端为 S3 兼容对象存储。仓库身份与分支作用域由服务端验证。对象存储凭据留在服务端。站点接入后要用两个仓库的合成样本验证隔离。
 
-持久缓存总上限为 40 GiB。每仓 Go 模块至多 3 GiB、Go 构建至多 2 GiB、pnpm store 至多 1 GiB，浏览器共享区至多 4 GiB。物理空间不足时缩小预算或拒绝写入，不自动扩盘。
+共享检查在可信 develop/main 成功后保存，PR 只恢复。键包含工具链与依赖输入。托管缓存遵循仓库限额及平台回收规则，自建缓存按服务配置的容量与生命周期回收。CI 不扩大付费额度。
 
-私有 Go 模块与 pnpm 快照生成后三十天到期，Go 构建七天后停止恢复。替换的快照保留两小时再清理，避免影响正在恢复的作业。浏览器和公共依赖随版本化镜像维护，浏览器最多保留两个受支持修订，总预算为 4 GiB。
-
-可信维护任务在发布前校验容量与来源。复制只接受普通文件，跳过 pnpm 指向临时检出的项目链接。源码检查失败、取消、工具版本变化或容量超限时保留已有快照。清理只涉及本任务的缓存目录。
-
-不自动扩大付费额度。Docker/BuildKit 缓存使用任务专属 builder 或 BJ1 Registry，不使用 Actions cache。构建和测试完成、失败或中断后清理本任务容器、builder 和闲置镜像，保留其他任务与持久数据。
+BuildKit 层缓存与 Actions 依赖缓存分别维护，清理仅处理作业拥有的临时资源。各站点维护方法与实际验证记录由 ops 管理。
 
 ## 验收场景
 
 | 场景 | 操作与预期结果 |
 | --- | --- |
-| CI-01 | 私有 push/PR 的实际 job 使用指定 ARC 组与标签，公开 push/PR 使用 ubuntu-26.04，检查名称保持不变 |
-| CI-02 | 公开 PR 使用托管环境，不能读取私有源码凭据或持久缓存；公开调用方传入自建 runner 仍使用托管环境 |
-| CI-03 | 镜像任务固定使用自建 runner |
+| CI-01 | 私有 push/PR 的实际 job 使用指定 ARC 组，公开 push/PR 使用 ubuntu-26.04，检查名称保持不变 |
+| CI-02 | 公开 PR 使用托管环境，公开仓库调用私有入口时跳过私有 job，私有 runner group 禁止公开仓库接入 |
+| CI-03 | 公开镜像发行在托管 runner 推送 GHCR，私有镜像作业由私有组接单 |
 | CI-04 | 自建 runner 不可用时排队或失败，不切换环境 |
 | CI-05 | 更新 Casdoor 候选只验证官方制品，不重新编译 |
 | CI-06 | 安装按锁文件执行，依赖失败使检查失败 |
@@ -94,14 +80,14 @@ Actions 使用明确版本 tag。私有检查使用 tooling v0.1.8 的预装检�
 | CI-10 | develop 文档提交仍执行本仓基础检查 |
 | CI-11 | 组合检查报告实际参与的源码提交 |
 | CI-12 | 实际检查失败或取消时不得宣称通过 |
-| CI-13 | 可信 develop/main 成功后才发布缓存；PR 挂载只读快照，写入被拒绝；容量与保留期清理可验证 |
+| CI-13 | 同仓同版本可恢复，其他仓库查询相同标记无法命中。PR 只恢复，可信分支成功后保存 |
 | CI-14 | hook 只检查暂存快照，失败和中断不改动索引 |
 | CI-15 | 子命令非零退出码保留到检查结果 |
 | CI-16 | Registry 验证只使用 Next 应用命名空间的唯一临时 tag，核验 manifest digest 后清理本次制品 |
 | CI-17 | 缺失或损坏的工具下载失败并保留非零退出码，摘要校验成功后才使用工具 |
 | CI-18 | 记录相同提交首次与第二次运行的检查、工具安装和依赖准备耗时，列明命中与未命中的缓存 |
 | CI-19 | runner 镜像逐层公开审计通过，版本 tag 与远端 digest 核验一致，匿名完整拉取成功后才切换 ARC |
-| CI-20 | 两个 ARC 池排空后切换版本 tag，实际容量与 Helm 一致；注册验证成功后恢复容量并清理旧备份和闲置镜像，保留运行资源 |
+| CI-20 | 新模板先注册并接单。已验证现用 tag 可拉取后退出旧模板，再回收无引用资源 |
 
 ## PostgreSQL 检查版本
 
