@@ -245,7 +245,12 @@ export function snapshot(directory = root, write = false) {
     record.projects[project.name] = { repository: project.url, revision, dirty, ...(tag ? { tag } : {}) };
   }
   const rendered = `${JSON.stringify(record, null, 2)}\n`;
-  if (write) fs.writeFileSync(path.join(directory, 'workspace.lock.json'), rendered);
+  if (write) {
+    for (const name of Object.keys(locked?.projects ?? {})) {
+      assert(Object.hasOwn(record.projects, name), `Missing checkout for locked project: ${name}`);
+    }
+    fs.writeFileSync(lockPath, rendered);
+  }
   console.log(rendered);
   if (process.env.GITHUB_STEP_SUMMARY) {
     const lines = Object.entries(record.projects).map(([name, value]) => `| ${name} | ${value.tag || '—'} | ${value.revision} | ${value.dirty} |`);

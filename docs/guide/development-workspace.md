@@ -1,7 +1,7 @@
 ---
 type: guide
 status: Accepted
-updated: 2026-11-11
+updated: 2026-11-18
 ---
 
 # 开发工作区
@@ -34,7 +34,7 @@ mani run hooks --all
 
 ## 联调记录
 
-`node scripts/workspace.mjs snapshot` 显示已检出仓库的实际提交和脏状态。`snapshot --write` 要求这些检出已提交，生成 `workspace.lock.json`。该工具生成记录用于复查，不要求日常每次提交都更新。
+`node scripts/workspace.mjs snapshot` 显示已检出仓库的实际提交和脏状态。`snapshot --write` 要求检出并提交已有快照中的每个仓库，才会更新 `workspace.lock.json`。该工具生成记录用于复查，不要求日常每次提交都更新。
 
 跨仓 PR 在描述中列出依赖 PR、测试提交和合并顺序。应用集成工作流默认使用公开仓库 develop；手动候选输入使用完整提交 SHA。每轮把实际提交写入 CI summary，候选更新后重新执行。
 
