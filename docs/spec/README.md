@@ -1,7 +1,7 @@
 ---
 type: spec
 status: Accepted
-updated: 2026-11-11
+updated: 2026-11-18
 ---
 
 # 功能与模块规格
@@ -37,7 +37,6 @@ updated: 2026-11-11
 | [文件与媒体模块](media.md) | 上传、文件引用、交付与存储状态 |
 | [模块通信与一致性](module-protocol.md) | 事件、幂等、补偿、签名 URL 与数据库边界 |
 | [统一业务术语](terminology.md) | 统一业务概念、英文名称与接口标识 |
+| [QQ 三项独立绑定](qq-binding.md) | 身份归属、验证码、OAuth、解绑和事件 |
 
 新增主题使用[分类模板](TEMPLATE.md)，并同步维护[文档导航](../README.md)。
-
-| [QQ 三项独立绑定](qq-binding.md) | 身份归属、验证码、OAuth、解绑和事件 |

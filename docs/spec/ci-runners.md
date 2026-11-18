@@ -1,7 +1,7 @@
 ---
 type: spec
 status: Accepted
-updated: 2026-11-17
+updated: 2026-11-18
 ---
 
 # CI 与 runner 约定
@@ -33,6 +33,9 @@ updated: 2026-11-17
 | resources | public | Resources checks |
 | storage-contribution | public | Contribution checks |
 | catalog、reviews、moderation | public | Catalog checks、Reviews checks、Moderation checks |
+| profiles、favorites、open-platform | public | Profiles checks、Favorites checks、Open platform checks |
+| notifications、information-query | public | Notifications checks、Information query checks |
+| groups、search | public | Groups checks、Search checks |
 
 GitHub 对 reusable workflow 显示调用 job 与实际 job 的组合名称，分支规则使用远端实际产生的 check 名称。迁移 runner 时保持 job ID、name 与检查命令。私有仓库的强制保护受套餐能力限制时，合并前仍须核对完整结果，不降低必需检查。
 
