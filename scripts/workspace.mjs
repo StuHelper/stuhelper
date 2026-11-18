@@ -127,6 +127,16 @@ export function verifyScenarios(directory, definition, checkout) {
     }
   }
 }
+export function verifySnapshotPairs(client) {
+  const files = fs.readdirSync(path.join(client.directory, 'contracts'));
+  const records = new Set(files.filter(file => file.endsWith('.source.json')));
+  for (const file of files.filter(file => /\.openapi\.(?:json|ya?ml)$/.test(file))) {
+    const source = file.replace(/\.openapi\.[^.]+$/, '.source.json');
+    assert(records.delete(source), `${client.name}/${file}: missing or ambiguous ${source}`);
+  }
+  assert.equal(records.size, 0, `${client.name}: no OpenAPI snapshot for ${[...records].join(', ')}`);
+}
+
 export function verifyClientScenarios(directory, definition, client) {
   assert(definition, `Missing central application: ${client.name}`);
   const manifest = readJSON(path.join(client.directory, 'module.json'));
@@ -199,6 +209,7 @@ export function contracts(directory = root, scope) {
     verifyRuntimeDescriptor(definitions.find(d=>d.id===id), readYaml(path.join(project.directory,'module.yaml')));
   }
   for (const client of records.filter(project => project.tags.includes('frontend'))) {
+    if (!scope || scope.includes(client.name)) verifySnapshotPairs(client);
     if (!scope || scope.includes(client.name)) verifyClientScenarios(directory, architecture.applications.find(app => app.id === client.name), client);
     const source = readJSON(path.join(client.directory, 'contracts/platform.source.json'));
     verifySource(provider, client, source, (revision, filename) => providerSource(provider.directory, revision, filename));

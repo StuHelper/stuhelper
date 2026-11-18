@@ -147,11 +147,14 @@ jobs:
           path: workspace/resources
           fetch-depth: 0
           persist-credentials: false
-      - uses: StuHelper/stuhelper-tooling/actions/setup@v0.1.4
-      - uses: actions/setup-go@v7.0.0
+      - uses: StuHelper/stuhelper-tooling/actions/setup@v0.1.11
         with:
           go-version-file: .go-version
-          cache: false
+          go-cache-dependency-path: workspace/*/go.sum
+          pnpm-cache-dependency-path: |
+            pnpm-lock.yaml
+            workspace/web/pnpm-lock.yaml
+            workspace/admin/pnpm-lock.yaml
       - name: Record actual source combination
         run: |
           pnpm install --frozen-lockfile
@@ -172,7 +175,7 @@ jobs:
           pnpm --dir workspace/admin run setup
 
           pnpm --dir workspace/admin run build
-      - run: pnpm exec playwright install --with-deps chromium
+      - uses: StuHelper/stuhelper-tooling/actions/chromium@v0.1.11
       - run: pnpm run test:e2e
       - run: pnpm exec playwright test --config playwright.academic.config.mjs
       - name: Resources Web and Admin browser acceptance

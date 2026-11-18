@@ -24,6 +24,9 @@ importers:
       lefthook:
         specifier: 2.2.2
         version: 2.2.2
+      markdown-it:
+        specifier: 15.0.3
+        version: 15.0.3
       typescript:
         specifier: 5.9.3
         version: 5.9.3
