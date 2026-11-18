@@ -57,6 +57,6 @@ CI 保留 Markdown、元信息、链接和导航检查，不安装 MkDocs、不�
 
 公共组合工作流为场景检查显式传入 `--scope=platform,web,admin,catalog,reviews,moderation,storage,media,resources`，只检查该作业实际检出的提供方。省略 scope 时仍执行完整工作区场景检查，范围内缺失测试文件会失败。
 
-客户端场景由 Web/Admin 的 module.json 登记。contracts 按 architecture/modules.yaml 中的客户端规格列表核对编号，并检查对应 TypeScript 单元测试和 Playwright 测试的文件与名称。中央规格只定义行为，不复制客户端测试。
+客户端自身场景由 Web/Admin 的 module.json 登记。contracts 按 architecture/modules.yaml 中的客户端规格列表核对编号，并检查对应 TypeScript 单元测试和 Playwright 测试的文件与名称。客户端 module.json 与中央清单登记的跨仓场景分别核对，任一清单引用失效都会中止检查。
 
 按语言参数化的浏览器用例可以使用完整行为名称后接 `(${locale})` 的模板标题，module.json 登记稳定的行为名称。检查器只接受该明确后缀，其他动态模板仍须使用可核对的固定名称。

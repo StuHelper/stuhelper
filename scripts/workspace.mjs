@@ -5,7 +5,8 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import YAML from 'yaml';
-import { readYaml, root } from './architecture.mjs';
+import { scenarioTitles } from './scenario-titles.mjs';
+import { readYaml, root, verifyScenarioIds } from './architecture.mjs';
 
 const readJSON = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const hash = value => crypto.createHash('sha256').update(value).digest('hex');
@@ -110,27 +111,19 @@ export function verifySource(provider, client, source, loadSource) {
   assert.equal(YAML.parse(contract.toString()).info.version, source.version, 'Contract version differs from source record');
 }
 export function verifyScenarios(directory, definition, checkout) {
-  const specs = definition.specifications.map(file => fs.readFileSync(path.join(directory, file), 'utf8')).join('\n');
+  const titles = new Map();
+  verifyScenarioIds(directory, definition);
   for (const [scenario, tests] of Object.entries(definition.scenario_tests ?? {})) {
-    assert(/^[A-Z]+(?:-[A-Z]+)*-\d+$/.test(scenario), `Invalid scenario: ${scenario}`);
-    assert(new RegExp(`\\|\\s*${scenario}\\s*(?:\\||：|:)`).test(specs), `Unknown implemented scenario: ${scenario}`);
     assert(tests.length, `No tests for implemented scenario: ${scenario}`);
     for (const reference of tests) {
-      const [file, name] = reference.split('#');
+      const separator = reference.indexOf('#');
+      assert(separator > 0 && separator < reference.length - 1, `Invalid scenario reference: ${scenario}/${reference}`);
+      const file = reference.slice(0, separator);
+      const name = reference.slice(separator + 1);
       assert(!path.isAbsolute(file) && !file.split('/').includes('..'));
-      const source = fs.readFileSync(path.join(checkout, file), 'utf8');
-      if (/_test\.go$/.test(file)) {
-        assert(/^Test[A-Za-z0-9_]+$/.test(name));
-        assert(source.includes(`func ${name}(t *testing.T)`), `Missing scenario test: ${scenario}/${reference}`);
-      } else {
-        assert(/\.(?:test|spec)\.(?:mjs|[jt]sx?)$/.test(file) && name.length > 0);
-        const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const literal = new RegExp(`\\b(?:test|it|memberTest)\\(\\s*(['"])${escaped}\\1\\s*,`);
-        // Locale suites register the same behavior with an explicit locale suffix.
-        // Match the complete base name and this one suffix, not arbitrary templates.
-        const localized = new RegExp('\\b(?:test|it|memberTest)\\(\\s*`' + escaped + ' \\(\\$\\{locale\\}\\)`\\s*,');
-        assert(literal.test(source) || localized.test(source), `Missing scenario test: ${scenario}/${reference}`);
-      }
+      assert(/(?:_test\.go|\.(?:test|spec)\.(?:mjs|[jt]sx?))$/.test(file), `Invalid test file: ${file}`);
+      if (!titles.has(file)) titles.set(file, scenarioTitles(file, fs.readFileSync(path.join(checkout, file), 'utf8')));
+      assert(titles.get(file).has(name), `Missing scenario test: ${scenario}/${reference}`);
     }
   }
 }
@@ -139,7 +132,7 @@ export function verifyClientScenarios(directory, definition, client) {
   const manifest = readJSON(path.join(client.directory, 'module.json'));
   assert.equal(manifest.id, definition.id);
   assert(manifest.scenario_tests && Object.keys(manifest.scenario_tests).length, `Missing client scenarios: ${client.name}`);
-  // Clients own executable references; the workspace owns shared specification definitions.
+  verifyScenarios(directory, definition, client.directory);
   verifyScenarios(directory, { ...definition, scenario_tests: manifest.scenario_tests }, client.directory);
 }
 export function verifyAcademicSource(provider, client, source, loadSource) {
