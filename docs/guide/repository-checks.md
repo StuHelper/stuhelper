@@ -1,7 +1,7 @@
 ---
 type: guide
 status: Accepted
-updated: 2026-11-18
+updated: 2026-11-19
 ---
 
 # 仓库检查与文档预览
@@ -35,7 +35,7 @@ Mani 原生批量输出用于本地开发。CI 在各仓工作目录直接运行
 
 pre-commit 检查暂存区快照，包括文件安全、脚本权限、语法和文档；前端增加暂存文件 ESLint。检查使用本地依赖，不联网安装、不修改工作树，也不重新暂存文件。部分暂存、关联 worktree、首次提交、失败和中断清理由工具仓库测试覆盖。
 
-架构仓库对暂存的 `architecture/*`、`mani.yaml`、`scripts/*` 与 `workspace.lock.json` 变更额外执行 `node scripts/architecture.mjs`、`node scripts/workspace.mjs validate` 和脚本单元测试，在提交阶段拦截模块依赖与锁文件错误。
+架构仓库对暂存的 `architecture/*`、`mani.yaml`、`scripts/*` 与 `workspace.lock.json` 变更建立临时 Git 索引快照，使用该快照的脚本执行 `node scripts/architecture.mjs`、`node scripts/workspace.mjs validate` 和脚本单元测试，在提交阶段拦截模块依赖与锁文件错误。
 
 当前不配置 pre-push。完整检查由显式命令和 CI 执行。修改依赖后先安装新锁文件，再提交。CI 设置 `LEFTHOOK=0`，直接运行检查入口。
 

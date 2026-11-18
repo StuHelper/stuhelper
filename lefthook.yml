@@ -8,4 +8,4 @@ pre-commit:
         - "mani.yaml"
         - "scripts/*"
         - "workspace.lock.json"
-      run: node scripts/architecture.mjs && node scripts/workspace.mjs validate && node --test scripts/*.test.mjs
+      run: bash -o pipefail -c 'git show :scripts/check-staged-architecture.sh | bash'
