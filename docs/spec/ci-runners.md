@@ -50,9 +50,9 @@ runner 镜像发布在公开 GHCR，按明确版本 tag 拉取。ops 在发行�
 
 默认权限为 `contents: read`。制品推送和部署工作流按任务增加最小权限，受保护环境控制晋级。跨私有仓库拉取优先使用按仓授权的 GitHub App 短期凭据，公开 PR 不接触这些凭据。
 
-Actions 使用明确版本 tag。私有检查使用 tooling v0.1.8 的预装检测与直接工具引导，公开发行使用 v0.1.9 的独立 runner 入口。完整 Go 与 Node 检查使用 reusable workflow，应用专用命令留在各仓。
+Actions 使用明确版本 tag。tooling v0.1.10 提供仓库分组、官方缓存与托管镜像发行，v0.1.11 增加多仓锁文件与站点 Registry。Go 与 Node 检查使用 reusable workflow，应用专用命令留在各仓。
 
-预装版本以 architecture/toolchains.yaml 为准。缺失工具从官方来源有界下载，Node、Go、actionlint 核验 SHA-256，pnpm 核验 SHA-512。PostgreSQL 通过官方 PGDG 源安装，校验源密钥、签名元数据和包摘要。
+预装版本由 architecture/toolchains.yaml 确定。镜像构建核验公共工具来源和归档摘要。作业使用 setup-node、setup-go 安装其他声明版本。PostgreSQL 安装程序验证 PGDG 签名元数据和包摘要。
 
 ## 依赖与存储
 
@@ -69,7 +69,7 @@ BuildKit 层缓存与 Actions 依赖缓存分别维护，清理仅处理作业�
 | 场景 | 操作与预期结果 |
 | --- | --- |
 | CI-01 | 私有 push/PR 的实际 job 使用指定 ARC 组，公开 push/PR 使用 ubuntu-26.04，检查名称保持不变 |
-| CI-02 | 公开 PR 使用托管环境，不能读取私有源码凭据或持久缓存；公开调用方传入自建 runner 仍使用托管环境 |
+| CI-02 | 公开 PR 使用托管环境，公开仓库调用私有入口时跳过私有 job，私有 runner group 禁止公开仓库接入 |
 | CI-03 | 公开镜像发行在托管 runner 推送 GHCR，私有镜像作业由私有组接单 |
 | CI-04 | 自建 runner 不可用时排队或失败，不切换环境 |
 | CI-05 | 更新 Casdoor 候选只验证官方制品，不重新编译 |
