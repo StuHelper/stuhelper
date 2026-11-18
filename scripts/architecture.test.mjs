@@ -20,8 +20,36 @@ for (const [name, mutate, message] of [
   ['undeclared eligibility facts fail', modules => { modules.get('reviews').eligibility_facts.phone_bound = 'missing'; }, /Undeclared eligibility/],
   ['capability dependencies must be declared', modules => { modules.get('platform').capability_requires['platform.status'] = ['identity']; }, /Undeclared capability dependency/],
   ['same dependency cannot be required and optional', modules => { modules.get('reviews').optional.push('platform'); }, /Repeated dependency/],
+  ['qq-binding implementation cannot become public', modules => { modules.get('qq-binding').visibility = 'public'; }, /must remain private/],
 ]) test(name, () => {
   const config = load();
   mutate(new Map(config.modules.map(module => [module.id, module])));
   assert.throws(() => validateModules(config), message);
+});
+
+test('applications and operations validate optional dependencies and private visibility', () => {
+  const badOps = load();
+  badOps.operations[0].visibility = 'public';
+  assert.throws(() => validateModules(badOps), /ops must remain private/);
+
+  const unknownAppDep = load();
+  unknownAppDep.applications[0].optional.push('missing-module');
+  assert.throws(() => validateModules(unknownAppDep), /Unknown dependency: backend\/missing-module/);
+
+  const repeatedAppDep = load();
+  repeatedAppDep.applications[1].optional.push('catalog');
+  assert.throws(() => validateModules(repeatedAppDep), /Repeated dependency: web\/catalog/);
+
+  const undeclaredAppCap = load();
+  undeclaredAppCap.applications[2].capability_requires['notifications.inbox'] = ['notifications'];
+  assert.throws(() => validateModules(undeclaredAppCap), /Undeclared capability dependency: admin\/notifications\.inbox/);
+});
+
+test('central scenario IDs are checked even without provider checkouts', () => {
+  for (const id of ['backend', 'web', 'admin', 'ops']) {
+    const config = load();
+    const owner = [...config.applications, ...config.operations].find(item => item.id === id);
+    owner.scenario_tests['UNKNOWN-99'] = ['case.test.ts#missing'];
+    assert.throws(() => validateSpecifications(config), /Unknown implemented scenario: UNKNOWN-99/);
+  }
 });

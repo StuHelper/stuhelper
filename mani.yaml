@@ -89,6 +89,7 @@ projects:
     branch: develop
     tags:
       - documents
+      - private
   backend:
     path: workspace/backend
     url: https://github.com/StuHelper/stuhelper-backend.git
