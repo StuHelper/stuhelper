@@ -1,7 +1,7 @@
 ---
 type: development
 status: Accepted
-updated: 2026-11-18
+updated: 2026-11-19
 ---
 
 # 课程目录与评课社区实施
