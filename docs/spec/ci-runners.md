@@ -1,7 +1,7 @@
 ---
 type: spec
 status: Accepted
-updated: 2026-11-17
+updated: 2026-11-18
 ---
 
 # CI 与 runner 约定
@@ -36,7 +36,7 @@ updated: 2026-11-17
 
 GitHub 对 reusable workflow 显示调用 job 与实际 job 的组合名称，分支规则使用远端实际产生的 check 名称。迁移 runner 时保持 job ID、name 与检查命令。私有仓库的强制保护受套餐能力限制时，合并前仍须核对完整结果，不降低必需检查。
 
-公开应用联调默认使用各仓 develop。首次跨仓实现的 academic-community PR 使用 workspace.lock.json 中显式登记的提交，push 到 develop/main 后仍使用 develop。手动运行可通过完整 SHA 指定候选，实际组合写入 CI summary。
+公开应用联调默认检出各仓 develop。变更锁文件的 PR 和面向 main 的 PR 验证固定组合。main push 和手动运行使用发行锁文件。手动输入可覆盖单项提交，CI summary 记录实际组合。
 
 ## runner 与权限
 

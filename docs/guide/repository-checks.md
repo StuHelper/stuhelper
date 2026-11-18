@@ -45,9 +45,9 @@ pre-commit 检查暂存区快照，包括文件安全、脚本权限、语法和
 
 契约来源检查缺少声明提交时，按完整 SHA 从提供方 origin 补取 Git 对象，不切换分支或修改源码。客户端可以继续使用兼容的旧版契约。
 
-workspace.lock.json 声明 release 时，公开集成在 PR、push 和手动运行中均使用锁定的发布提交。每项记录 tag 与完整 SHA，CI summary 分别列出完整发布组合和实际检出测试的仓库。手动提供完整 SHA 可覆盖单项，实际组合会显示该差异。
+普通 develop push 和面向 develop 的 PR 检出各仓 develop。PR 改动 workspace.lock.json 时使用候选提交。面向 main 的 PR 使用锁定组合。main push 和手动运行可按发行锁文件重放，手动输入完整 SHA 可覆盖单项。
 
-没有 release 标记时，普通集成继续解析 develop，已登记的候选 PR 使用候选锁文件。发布锁文件通过核验远端注释 tag 后维护，不使用本地候选 snapshot --write 覆盖。
+发布候选须登记每个参测仓库的干净提交及版本 tag。含 storage 并发配额缺陷的提交不能用于新发行候选。CI summary 列出锁定组合及实际检出的源码。版本支持三段式及四段式日期 tag。
 
 ## 文档预览
 
