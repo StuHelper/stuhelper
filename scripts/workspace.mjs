@@ -5,7 +5,8 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import YAML from 'yaml';
-import { readYaml, root } from './architecture.mjs';
+import { scenarioTitles } from './scenario-titles.mjs';
+import { readYaml, root, verifyScenarioIds } from './architecture.mjs';
 
 const readJSON = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const hash = value => crypto.createHash('sha256').update(value).digest('hex');
@@ -222,32 +223,30 @@ export function verifySource(provider, client, source, loadSource) {
 }
 
 export function verifyScenarios(directory, definition, checkout) {
-  const specs = definition.specifications.map(file => fs.readFileSync(path.join(directory, file), 'utf8')).join('\n');
+  const titles = new Map();
+  verifyScenarioIds(directory, definition);
   for (const [scenario, tests] of Object.entries(definition.scenario_tests ?? {})) {
-    assert(/^[A-Z]+(?:-[A-Z]+)*-\d+$/.test(scenario), `Invalid scenario: ${scenario}`);
-    assert(new RegExp(`\\|\\s*${scenario}\\s*(?:\\||：|:)`).test(specs), `Unknown implemented scenario: ${scenario}`);
     assert(tests.length, `No tests for implemented scenario: ${scenario}`);
     for (const reference of tests) {
       const separator = reference.indexOf('#');
-      assert(separator > 0, `Invalid scenario reference: ${scenario}/${reference}`);
+      assert(separator > 0 && separator < reference.length - 1, `Invalid scenario reference: ${scenario}/${reference}`);
       const file = reference.slice(0, separator);
       const name = reference.slice(separator + 1);
       assert(!path.isAbsolute(file) && !file.split('/').includes('..'));
-      const source = fs.readFileSync(path.join(checkout, file), 'utf8');
-      if (/_test\.go$/.test(file)) {
-        assert(/^Test[A-Za-z0-9_]+$/.test(name));
-        assert(new RegExp(`^func\\s+${name}\\(t\\s+\\*testing\\.T\\)`, 'm').test(source), `Missing scenario test: ${scenario}/${reference}`);
-      } else {
-        assert(/\.(?:test|spec)\.(?:mjs|[jt]sx?)$/.test(file) && name.length > 0);
-        const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const literal = new RegExp(`\\b(?:test|it|memberTest)\\(\\s*(['"])${escaped}\\1\\s*,`);
-        // Locale suites register the same behavior with an explicit locale suffix.
-        // Match the complete base name and this one suffix, not arbitrary templates.
-        const localized = new RegExp('\\b(?:test|it|memberTest)\\(\\s*`' + escaped + ' \\(\\$\\{locale\\}\\)`\\s*,');
-        assert(literal.test(source) || localized.test(source), `Missing scenario test: ${scenario}/${reference}`);
-      }
+      assert(/(?:_test\.go|\.(?:test|spec)\.(?:mjs|[jt]sx?))$/.test(file), `Invalid test file: ${file}`);
+      if (!titles.has(file)) titles.set(file, scenarioTitles(file, fs.readFileSync(path.join(checkout, file), 'utf8')));
+      assert(titles.get(file).has(name), `Missing scenario test: ${scenario}/${reference}`);
     }
   }
+}
+export function verifySnapshotPairs(client) {
+  const files = fs.readdirSync(path.join(client.directory, 'contracts'));
+  const records = new Set(files.filter(file => file.endsWith('.source.json')));
+  for (const file of files.filter(file => /\.openapi\.(?:json|ya?ml)$/.test(file))) {
+    const source = file.replace(/\.openapi\.[^.]+$/, '.source.json');
+    assert(records.delete(source), `${client.name}/${file}: missing or ambiguous ${source}`);
+  }
+  assert.equal(records.size, 0, `${client.name}: no OpenAPI snapshot for ${[...records].join(', ')}`);
 }
 
 export function verifyClientScenarios(directory, definition, client) {
@@ -255,7 +254,7 @@ export function verifyClientScenarios(directory, definition, client) {
   const manifest = readJSON(path.join(client.directory, 'module.json'));
   assert.equal(manifest.id, definition.id);
   assert(manifest.scenario_tests && Object.keys(manifest.scenario_tests).length, `Missing client scenarios: ${client.name}`);
-  // Clients own executable references; the workspace owns shared specification definitions.
+  verifyScenarios(directory, definition, client.directory);
   verifyScenarios(directory, { ...definition, scenario_tests: manifest.scenario_tests }, client.directory);
 }
 
@@ -317,21 +316,12 @@ export function providerSource(checkout, revision, filename) {
   assert(!path.isAbsolute(filename) && !filename.split('/').includes('..'), 'Invalid snapshot path');
   try { git(checkout, 'cat-file', '-e', `${revision}^{commit}`); }
   catch {
-    execFileSync('git', ['-C', checkout, 'fetch', '--no-tags', 'origin', revision], { stdio: 'inherit', timeout: 60_000 });
+    execFileSync('git', ['-C', checkout, 'fetch', '--no-tags', 'origin', revision], { stdio: 'inherit', timeout: 60_000, killSignal: 'SIGKILL' });
   }
   return execFileSync('git', ['-C', checkout, 'show', `${revision}:${filename}`], { encoding: 'utf8', timeout: 30_000 });
 }
 
-function runOasdiff(cwd, prior, current) {
-  execFileSync('go', ['run', 'github.com/oasdiff/oasdiff@v1.34.1', 'breaking', prior, current, '--allow-external-refs=false', '--fail-on', 'WARN'], {
-    cwd,
-    env: { ...process.env, GOWORK: 'off' },
-    stdio: 'inherit',
-    timeout: 60_000,
-  });
-}
-
-export function verifyClientContracts(records, architecture, client, scope, loadProviderSource = providerSource, checkBreaking = runOasdiff) {
+export function verifyClientContracts(records, architecture, client, scope, loadProviderSource = providerSource, checkBreaking = compareContracts) {
   const app = architecture.applications.find(item => item.id === client.name);
   assert(app, `Missing central application: ${client.name}`);
   const byId = new Map(architecture.modules.map(item => [item.id, item]));
@@ -365,7 +355,7 @@ export function verifyClientContracts(records, architecture, client, scope, load
     const prior = path.join(client.directory, clientContract);
     const current = path.join(provider.directory, providerContract);
     if (!fs.readFileSync(prior).equals(fs.readFileSync(current))) {
-      checkBreaking(provider.directory, prior, current);
+      checkBreaking(prior, current);
     }
   }
   for (const repository of expectedRepositories) {
@@ -402,6 +392,13 @@ export function verifyRuntimeDescriptor(definition, manifest) {
   assert.deepEqual(capabilities(manifest.capability_requires), capabilities(definition.capability_requires), `Capability dependencies differ: ${definition.id}`);
 }
 
+export function compareContracts(prior, current, binary = path.join(root, '.tools/bin/oasdiff')) {
+  if (fs.readFileSync(prior).equals(fs.readFileSync(current))) return;
+  assert(fs.existsSync(binary), 'Install the pinned oasdiff with make setup-contracts');
+  execFileSync(binary, ['breaking', prior, current, '--allow-external-refs=false', '--fail-on', 'WARN'],
+    { stdio: 'inherit', timeout: 60_000, killSignal: 'SIGKILL' });
+}
+
 export function contracts(directory = root, scope) {
   const records = projects(directory);
   const architecture = readYaml(path.join(directory, 'architecture/modules.yaml'));
@@ -420,6 +417,7 @@ export function contracts(directory = root, scope) {
   }
   for (const client of records.filter(project => project.tags?.includes('frontend'))) {
     if (scope && !scope.includes(client.name)) continue;
+    verifySnapshotPairs(client);
     verifyClientScenarios(directory, architecture.applications.find(app => app.id === client.name), client);
     verifyClientContracts(records, architecture, client, scope);
   }
@@ -442,7 +440,12 @@ export function snapshot(directory = root, write = false) {
     record.projects[project.name] = { repository: project.url, revision, dirty, ...(tag ? { tag } : {}) };
   }
   const rendered = `${JSON.stringify(record, null, 2)}\n`;
-  if (write) fs.writeFileSync(path.join(directory, 'workspace.lock.json'), rendered);
+  if (write) {
+    for (const name of Object.keys(locked?.projects ?? {})) {
+      assert(Object.hasOwn(record.projects, name), `Missing checkout for locked project: ${name}`);
+    }
+    fs.writeFileSync(lockPath, rendered);
+  }
   console.log(rendered);
   if (process.env.GITHUB_STEP_SUMMARY) {
     const lines = Object.entries(record.projects).map(([name, value]) => `| ${name} | ${value.tag || '—'} | ${value.revision} | ${value.dirty} |`);

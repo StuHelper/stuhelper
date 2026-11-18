@@ -1,7 +1,7 @@
 ---
 type: guide
 status: Accepted
-updated: 2026-11-18
+updated: 2026-11-19
 ---
 
 # 工具链与依赖维护

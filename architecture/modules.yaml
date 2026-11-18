@@ -997,6 +997,18 @@ applications:
       - search
       - groups
     capability_requires:
+      catalog.directory:
+        - catalog
+      catalog.read:
+        - catalog
+      catalog.enrollments:
+        - catalog
+      reviews.read:
+        - reviews
+      reviews.write:
+        - reviews
+      moderation.tasks:
+        - moderation
       storage.custody:
         - storage
       contributions.manage:
@@ -1031,7 +1043,7 @@ applications:
         - tests/e2e/contributions.spec.mjs#exit remains pending while replicas remain
       ST-08:
         - tests/e2e/contributions.spec.mjs#lost response retries original mutation, paginates and clears revoked data
-        - src/composables/hostTransport.test.ts#passes current host credentials to both APIs and clears private state on revocation
+        - src/features/storage/hostTransport.test.ts#passes current host credentials to both APIs and clears private state on revocation
       RS-19:
         - tests/e2e/resources.spec.mjs#configured category field filters and grouping follow server configuration
       RS-13:
@@ -1062,6 +1074,16 @@ applications:
       - information-query
       - groups
     capability_requires:
+      catalog.read:
+        - catalog
+      catalog.maintain:
+        - catalog
+      catalog.import:
+        - catalog
+      reviews.moderate:
+        - reviews
+      moderation.tasks:
+        - moderation
       storage.operations:
         - storage
       storage.custody.operations:
@@ -1085,15 +1107,13 @@ applications:
       - docs/spec/qq-group-services.md
       - docs/spec/personal-center.md
     scenario_tests:
-      RS-25:
-        - tests/e2e/resources.spec.mjs#owned file reuse avoids content transfer and keeps separate review
       ST-11:
         - tests/e2e/custody.spec.mjs#custody administration resumes original consent without credential access
         - tests/e2e/custody.spec.mjs#custody administration handles unauthenticated and empty states
       ST-09:
         - tests/e2e/contributions.spec.mjs#operator retry preserves conditions, retains uncertain request and clears revoked inventory
         - tests/e2e/contributions.spec.mjs#operator login boundary recovers to an empty page
-        - apps/web-antd/src/composables/hostTransport.test.ts#passes current host credentials to both APIs and clears private state on revocation
+        - apps/web-antd/src/features/storage/hostTransport.test.ts#passes current host credentials to both APIs and clears private state on revocation
       RS-19:
         - tests/e2e/resources.spec.mjs#category configuration preserves stable ids, fields and original-request retry
       RS-13:

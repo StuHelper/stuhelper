@@ -44,3 +44,12 @@ test('applications and operations validate optional dependencies and private vis
   undeclaredAppCap.applications[2].capability_requires['notifications.inbox'] = ['notifications'];
   assert.throws(() => validateModules(undeclaredAppCap), /Undeclared capability dependency: admin\/notifications\.inbox/);
 });
+
+test('central scenario IDs are checked even without provider checkouts', () => {
+  for (const id of ['backend', 'web', 'admin', 'ops']) {
+    const config = load();
+    const owner = [...config.applications, ...config.operations].find(item => item.id === id);
+    owner.scenario_tests['UNKNOWN-99'] = ['case.test.ts#missing'];
+    assert.throws(() => validateSpecifications(config), /Unknown implemented scenario: UNKNOWN-99/);
+  }
+});

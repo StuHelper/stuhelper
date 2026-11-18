@@ -104,6 +104,14 @@ export function validateModules(config) {
   for (const id of byId.keys()) visit(id);
 }
 
+export function verifyScenarioIds(directory, definition) {
+  const specs = definition.specifications.map(file => fs.readFileSync(path.join(directory, file), 'utf8')).join('\n');
+  for (const scenario of Object.keys(definition.scenario_tests ?? {})) {
+    assert(/^[A-Z]+(?:-[A-Z]+)*-\d+$/.test(scenario), `Invalid scenario: ${scenario}`);
+    assert(new RegExp(`\\|\\s*${scenario}\\s*(?:\\||：|:)`).test(specs), `Unknown implemented scenario: ${scenario}`);
+  }
+}
+
 export function validateSpecifications(config, directory = root) {
   const references = new Set(config.shared_specifications ?? []);
   for (const item of [...config.modules, ...config.applications, ...config.operations]) {
@@ -112,6 +120,9 @@ export function validateSpecifications(config, directory = root) {
   }
   for (const reference of references) {
     assert(/^docs\/spec\/[^/]+\.md$/.test(reference) && fs.statSync(path.join(directory, reference)).isFile(), `Invalid specification: ${reference}`);
+  }
+  for (const item of [...config.modules, ...config.applications, ...config.operations]) {
+    if (item.scenario_tests) verifyScenarioIds(directory, item);
   }
   for (const file of fs.readdirSync(path.join(directory, 'docs/spec')).filter(file => file.endsWith('.md') && !['README.md', 'TEMPLATE.md'].includes(file))) {
     assert(references.has(`docs/spec/${file}`), `Specification has no owner: ${file}`);

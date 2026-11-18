@@ -157,11 +157,14 @@ jobs:
           path: workspace/resources
           fetch-depth: 0
           persist-credentials: false
-      - uses: StuHelper/stuhelper-tooling/actions/setup@v0.1.9
-      - uses: actions/setup-go@v7.0.0
+      - uses: StuHelper/stuhelper-tooling/actions/setup@v0.1.11
         with:
           go-version-file: .go-version
-          cache: false
+          go-cache-dependency-path: workspace/*/go.sum
+          pnpm-cache-dependency-path: |
+            pnpm-lock.yaml
+            workspace/web/pnpm-lock.yaml
+            workspace/admin/pnpm-lock.yaml
       - name: Pin browser jobs to the checked-out commits
         id: checked
         shell: bash
@@ -174,6 +177,7 @@ jobs:
       - name: Record actual source combination and check contracts
         run: |
           pnpm install --frozen-lockfile
+          make setup-contracts
           node scripts/workspace.mjs snapshot
           node scripts/workspace.mjs toolchains
           node scripts/workspace.mjs contracts --scope=platform,web,admin,catalog,reviews,moderation,storage,media,resources
@@ -226,16 +230,16 @@ jobs:
           ref: ${{ needs.contracts.outputs.admin }}
           path: workspace/admin
           persist-credentials: false
-      - uses: StuHelper/stuhelper-tooling/actions/setup@v0.1.9
-      - uses: actions/setup-go@v7.0.0
-        if: matrix.suite == 'framework'
+      - uses: StuHelper/stuhelper-tooling/actions/setup@v0.1.11
         with:
-          go-version-file: .go-version
-          cache: false
-      - name: Install locked workspace dependencies and Chromium
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm exec playwright install --with-deps chromium
+          go-version-file: ${{ matrix.suite == 'framework' && '.go-version' || '' }}
+          go-cache-dependency-path: workspace/platform/go.sum
+          pnpm-cache-dependency-path: |
+            pnpm-lock.yaml
+            workspace/web/pnpm-lock.yaml
+            workspace/admin/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - uses: StuHelper/stuhelper-tooling/actions/chromium@v0.1.11
       - name: Build platform public server
         if: matrix.suite == 'framework'
         run: (cd workspace/platform && go build -mod=readonly -o bin/stuhelper-platform ./examples/server)
