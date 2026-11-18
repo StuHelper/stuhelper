@@ -44,6 +44,8 @@ Mani 原生批量输出用于本地开发。CI 在各仓工作目录直接运行
 
 pre-commit 检查暂存区快照，包括文件安全、脚本权限、语法和文档；前端增加暂存文件 ESLint。检查使用本地依赖，不联网安装、不修改工作树，也不重新暂存文件。部分暂存、关联 worktree、首次提交、失败和中断清理由工具仓库测试覆盖。
 
+架构仓库对暂存的 `architecture/*`、`mani.yaml`、`scripts/*` 与 `workspace.lock.json` 变更建立临时 Git 索引快照，使用该快照的脚本执行 `node scripts/architecture.mjs`、`node scripts/workspace.mjs validate` 和脚本单元测试，在提交阶段拦截模块依赖与锁文件错误。
+
 当前不配置 pre-push。完整检查由显式命令和 CI 执行。修改依赖后先安装新锁文件，再提交。CI 设置 `LEFTHOOK=0`，直接运行检查入口。
 
 ## 工作区与应用测试
@@ -64,7 +66,7 @@ workspace.lock.json 声明 release 时，公开集成在 PR、push 和手动运�
 
 ## 文档预览
 
-本地安装 uv 后运行 `make docs`，命令使用 `uvx --with mkdocs-material --with mkdocs-mermaid-zoom mkdocs serve`。MkDocs 配置只服务开发预览，文档没有独立 uv 项目或锁文件。
+本地安装 uv 后运行 `make docs`，命令固定 `mkdocs==1.6.1`、`mkdocs-material==9.8.1` 与 `mkdocs-mermaid-zoom==0.1.0` 并开启 `--strict` 严格校验。MkDocs 配置只服务开发预览，文档不维护独立 uv 项目。
 
 CI 保留 Markdown、元信息、链接和导航检查，不安装 MkDocs、不构建或部署文档站。专业 Python 工具可使用自己的标准库或明确依赖，不因此为文档引入 Python 工作区。
 

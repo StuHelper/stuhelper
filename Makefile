@@ -14,4 +14,4 @@ check:
 hooks:
 	pnpm exec lefthook install
 docs:
-	uvx --with mkdocs-material --with mkdocs-mermaid-zoom mkdocs serve
+	NO_MKDOCS_2_WARNING=1 uvx --with mkdocs==1.6.1 --with mkdocs-material==9.8.1 --with mkdocs-mermaid-zoom==0.1.0 mkdocs serve --strict

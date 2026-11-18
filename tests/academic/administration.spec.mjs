@@ -40,6 +40,8 @@ const fieldLabel = label => new RegExp(`^(?:\\*\\s*)?${label.replace(/[.*+?^${}(
 // FormItem htmlFor binds the visible label to the Select combobox input; ArrowDown expands its popup options.
 async function choose(page, scope, label, option) {
   const combobox = scope.getByRole('combobox', { name: fieldLabel(label) });
+  // Keyboard focus alone can open the popup while its drawer is still moving.
+  await combobox.scrollIntoViewIfNeeded();
   await combobox.focus();
   if ((await combobox.getAttribute('aria-expanded')) !== 'true') {
     await page.keyboard.press('ArrowDown');
@@ -79,9 +81,14 @@ test('moderator reads original and distinguishes queued decision from applied re
     return fulfill(route, task);
   });
   await page.goto(`${base}/moderation/queue?lang=${info.project.metadata.locale}`);
+  // Exercise option selection before a slow drawer has reached its final position.
+  const motion = await page.addStyleTag({
+    content: 'div:has(button[aria-label="Close"]) { transition-duration: 2s !important; }',
+  });
   await openTask(page, a);
   const panel = drawer(page);
   await choose(page, panel, m.action, m.actions.identity);
+  await motion.evaluate(style => style.remove());
   await panel.getByRole('checkbox', { name: m.signedIdentity, exact: true }).check();
   await panel.getByLabel(m.reason, { exact: true }).fill('Verified author request.');
   await panel.getByRole('button', { name: m.applyDecision, exact: true }).click();
