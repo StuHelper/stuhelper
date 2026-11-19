@@ -39,7 +39,7 @@ export async function fixture(page){
       const kind=u.searchParams.get('kind')||'course';
       const selected=kind==='course'?[course]:[teacher,otherTeacher];
       const items=selected.map(object=>({object,departments:directory.department,categories:kind==='course'?directory.category:[],review_count:1,recommendation:'recommended',dimensions,heat:1}));
-      return fulfill(route,{items,next:'',total:items.length,facet_total:items.length,category_facets:kind==='course'?[{id:'seminar',name:'Test Seminar',count:1,review_count:1}]:[],department_facets:[{id:'dept',name:'Test College',count:items.length,review_count:items.length}],generated_at:'2026-11-16T00:00:00Z'});
+      return fulfill(route,{items,next:'',total:items.length,facet_total:items.length,nature_facets: [], category_facets:kind==='course'?[{id:'seminar',name:'Test Seminar',count:1,review_count:1}]:[],department_facets:[{id:'dept',name:'Test College',count:items.length,review_count:items.length}],generated_at:'2026-11-16T00:00:00Z'});
     }
     if(p==='/api/v1/catalog/objects'){
       const kind=u.searchParams.get('kind');
@@ -51,7 +51,7 @@ export async function fixture(page){
     }
     if(p==='/api/v1/catalog/objects/lookup'){const ids=(u.searchParams.get('ids')??'').split(',');const items=Object.values(directory).flat().filter(item=>ids.includes(item.id)&&!restrictedKinds.has(item.kind));return fulfill(route,{items,missing_ids:ids.filter(id=>!items.some(item=>item.id===id))});}
     if(p.startsWith('/api/v1/catalog/objects/')){const id=p.split('/')[5];const item=Object.values(directory).flat().find(v=>v.id===id);if(item&&restrictedKinds.has(item.kind))return fulfill(route,{code:'not_found'},404);}
-    if(p.endsWith('/summary')){const id=p.split('/').at(-2);const entry=Object.values(directory).flat().find(item=>item.id===id);return fulfill(route,{object:entry,school,department:entry.kind==='course'?directory.department[0]:null,categories:entry.kind==='course'?directory.category:[],natures:entry.kind==='course'?directory.nature:[],course_count:1,teacher_count:entry.kind==='course'?2:1});}
+    if(p.endsWith('/summary')){const id=p.split('/').at(-2);const entry=Object.values(directory).flat().find(item=>item.id===id);return fulfill(route,{object:entry,school,department:entry.kind==='course'?directory.department[0]:null,categories:entry.kind==='course'?directory.category:[],natures:entry.kind==='course'?directory.nature:[],courses: [], teachers: [], course_count:1,teacher_count:entry.kind==='course'?2:1});}
     if(p.startsWith('/api/v1/catalog/objects/')){const id=p.split('/').at(-1);return fulfill(route,Object.values(directory).flat().find(v=>v.id===id)??course);}
     if(p==='/api/v1/catalog/me/enrollments')return fulfill(route,terms.map((term,i)=>({id:`enrollment-${i}`,subject:'synthetic',school_id:'school',course_id:'course',term_id:term.id,teacher_ids:[i===0?'teacher-a':'teacher-b'],active:true})));
     if(p==='/api/v1/reviews/compose'){
@@ -105,7 +105,7 @@ test('former course link opens the current course with its names and context', a
     object: { ...current, canonical_id: current.id }, ids: ['old-course', current.id],
   }));
   await page.route('**/catalog/objects/course/summary', route => fulfill(route, {
-    object: current, school, department: directory.department[0], categories: [], natures: [], course_count: 1, teacher_count: 2,
+    object: current, school, department: directory.department[0], categories: [], natures: [], courses: [], teachers: [], course_count: 1, teacher_count: 2,
   }));
   await page.goto(`/courses/old-course?lang=${locale}&term_id=fall`);
   await expect(page).toHaveURL(url => url.pathname === '/courses/course' && url.searchParams.get('term_id') === 'fall');
@@ -298,8 +298,14 @@ test('own-course teacher reply visibly requires authorized name and teacher badg
   await page.goto(`/reviews/review?lang=${info.project.metadata.locale}`);
   const editor=editorOf(page,a,'reply');
   await expect(editor.getByText(a.disclosure.teacherRequired,{exact:true})).toBeVisible();
-  for(const key of ['real_name','teacher']){const box=editor.getByRole('checkbox',{name:new RegExp(labels[key])});await expect(box).toBeChecked();await expect(box).toBeDisabled();}
   await editor.getByLabel(a.editor.body,{exact:true}).fill('Response from the verified teacher.');
+  const publish = editor.getByRole('button',{name:a.editor.publish,exact:true});
+  for (const key of ['real_name', 'teacher']) {
+    const option = editor.getByRole('checkbox', { name: new RegExp(labels[key]) });
+    await expect(option).not.toBeChecked();
+    await expect(publish).toBeDisabled();
+    await option.check();
+  }
   await editor.getByRole('button',{name:a.editor.publish,exact:true}).click();
   await expect(page.getByText(a.editor.published,{exact:true})).toBeVisible();
   expect(posted.disclosures.sort()).toEqual(['real_name','teacher']);expect(JSON.stringify(posted)).not.toContain('Synthetic Teacher');

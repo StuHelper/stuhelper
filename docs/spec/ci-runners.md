@@ -1,7 +1,7 @@
 ---
 type: spec
 status: Accepted
-updated: 2026-11-19
+updated: 2026-11-20
 ---
 
 # CI 与 runner 约定
@@ -39,7 +39,7 @@ updated: 2026-11-19
 
 GitHub 对 reusable workflow 显示调用 job 与实际 job 的组合名称，分支规则使用远端实际产生的 check 名称。迁移 runner 时保持 job ID、name 与检查命令。私有仓库的强制保护受套餐能力限制时，合并前仍须核对完整结果，不降低必需检查。
 
-公开应用联调分为契约构建验证与四组并行浏览器分片两个阶段，默认使用各仓 develop。跨仓联调按 workspace.lock.json 登记的组合运行，手动运行可通过完整 SHA 指定候选，实际组合写入 CI summary。
+公开应用联调先验证契约并构建，再运行四组浏览器分片。develop 默认检出各仓 develop。变更锁文件的 PR、面向 main 的 PR、main push 和手动运行验证固定组合。手动输入可以覆盖单项提交，CI summary 记录实际组合。
 
 ## runner 与权限
 
@@ -64,6 +64,8 @@ Actions 使用明确版本 tag。tooling v0.1.10 提供仓库分组、官方缓�
 私有缓存保存在支持 Actions 缓存协议的自建服务，其后端为 S3 兼容对象存储。仓库身份与分支作用域由服务端验证。对象存储凭据留在服务端。站点接入后要用两个仓库的合成样本验证隔离。
 
 共享检查在可信 develop/main 成功后保存，PR 只恢复。键包含工具链与依赖输入。托管缓存遵循仓库限额及平台回收规则，自建缓存按服务配置的容量与生命周期回收。CI 不扩大付费额度。
+
+应用发行使用两个作业。构建作业以只读权限上传保留 1 天的 Actions artifact，发布作业单独持有写权限，按 artifact ID 下载并校验后发布。
 
 BuildKit 层缓存与 Actions 依赖缓存分别维护，清理仅处理作业拥有的临时资源。各站点维护方法与实际验证记录由 ops 管理。
 

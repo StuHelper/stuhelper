@@ -25,7 +25,7 @@ async function fixture(page) {
     if (p === '/api/v1/auth/session') return fulfill(route, administrator);
     if (p === '/api/v1/system/capabilities') return route.fallback();
     if (p === '/api/v1/catalog/objects' || p === '/api/v1/catalog/admin/objects') return fulfill(route, { items: u.searchParams.get('kind') === 'school' ? [school] : u.searchParams.get('kind') === 'course' ? [course] : [], next: '' });
-    if (p === '/api/v1/catalog/admin/objects/course/summary') return fulfill(route, { object: course, school, department: null, categories: [], natures: [], course_count: 1, teacher_count: 0, offering_count: 0 });
+    if (p === '/api/v1/catalog/admin/objects/course/summary') return fulfill(route, { object: course, school, department: null, categories: [], natures: [], courses: [], teachers: [], course_count: 1, teacher_count: 0, offering_count: 0 });
     if (p === '/api/v1/reviews/admin/entries') return fulfill(route, { items: [entry], next: '' });
     if (p === '/api/v1/reviews/admin/entries/review') return fulfill(route, entry);
     if (p === '/api/v1/reviews/admin/entries/review/history') return fulfill(route, []);
@@ -101,7 +101,7 @@ test('moderator reads original and distinguishes queued decision from applied re
 test('revoked moderator permission removes previously read originals', async ({ page }, info) => {
   const a = messages(info);
   let allowed = true;
-  await page.route('**/api/v1/reviews/admin/entries/review', route => allowed ? fulfill(route, entry) : fulfill(route, { code: 'forbidden' }, 403));
+  await page.route(url => url.pathname === '/api/v1/reviews/admin/entries/review', route => allowed ? fulfill(route, entry) : fulfill(route, { code: 'forbidden' }, 403));
   await page.goto(`${base}/moderation/queue?lang=${info.project.metadata.locale}`);
   await openTask(page, a);
   allowed = false;
@@ -115,7 +115,7 @@ test('revoked moderator permission removes previously read originals', async ({ 
 test('catalog correction retains edits after a stale revision and compares current data', async ({ page }, info) => {
   const a = messages(info), c = a.catalog;
   let current = { ...course }, submitted;
-  await page.route('**/api/v1/catalog/admin/objects/course/summary', route => fulfill(route, { object: current, school, department: null, categories: [], natures: [], course_count: 1, teacher_count: 0, offering_count: 0 }));
+  await page.route('**/api/v1/catalog/admin/objects/course/summary', route => fulfill(route, { object: current, school, department: null, categories: [], natures: [], courses: [], teachers: [], course_count: 1, teacher_count: 0, offering_count: 0 }));
   await page.route('**/api/v1/catalog/objects/course', route => {
     const body = route.request().postDataJSON();
     if (body.revision === 1) {
@@ -179,7 +179,7 @@ test('catalog merge previews exact records before confirming', async ({ page }, 
     merged = true;
     return fulfill(route, { ...target, revision: 2 });
   });
-  await page.route('**/api/v1/catalog/admin/objects/target/summary', route => fulfill(route, { object: { ...target, revision: 2 }, school, department: null, categories: [], natures: [], course_count: 1, teacher_count: 0, offering_count: 0 }));
+  await page.route('**/api/v1/catalog/admin/objects/target/summary', route => fulfill(route, { object: { ...target, revision: 2 }, school, department: null, categories: [], natures: [], courses: [], teachers: [], course_count: 1, teacher_count: 0, offering_count: 0 }));
   await page.goto(`${base}/catalog?lang=${info.project.metadata.locale}`);
   await page.getByRole('row').filter({ hasText: 'Test Course' }).getByRole('button', { name: a.common.edit, exact: true }).click();
   const panel = drawer(page);
@@ -305,6 +305,11 @@ test('moderator navigates drawer controls with keyboard and closes via Escape', 
   await expect(signedCheckbox).toBeFocused();
   await page.keyboard.press('Space');
   await expect(signedCheckbox).toBeChecked();
+  const presets = panel.getByRole('group', { name: m.presetsLabel }).getByRole('button');
+  for (const preset of await presets.all()) {
+    await page.keyboard.press('Tab');
+    await expect(preset).toBeFocused();
+  }
   await page.keyboard.press('Tab');
   await expect(panel.getByLabel(m.reason, { exact: true })).toBeFocused();
   let leavePrompt = '';
