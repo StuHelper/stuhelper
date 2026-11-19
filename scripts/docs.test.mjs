@@ -38,7 +38,7 @@ test('mkdocs nav, category indexes and doc links reject duplicates, escaped path
   fs.writeFileSync(path.join(dir, 'docs/spec/topic.md'), '# Topic\n');
   fs.writeFileSync(
     path.join(dir, 'docs/spec/README.md'),
-    '| 主题 | 说明 |\n| --- | --- |\n| [主题](topic.md) | 见 [主仓](https://github.com/StuHelper/stuhelper-next/blob/develop/README.md) |\n',
+    '| 主题 | 说明 |\n| --- | --- |\n| [主题](topic.md) | 见 [主仓](https://github.com/StuHelper/stuhelper/blob/develop/README.md) |\n',
   );
   fs.writeFileSync(
     path.join(dir, 'mkdocs.yml'),

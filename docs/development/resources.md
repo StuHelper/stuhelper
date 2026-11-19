@@ -1,7 +1,7 @@
 ---
 type: development
 status: Accepted
-updated: 2026-11-19
+updated: 2026-11-20
 ---
 
 # 学习资料实施
@@ -48,7 +48,7 @@ Web 与 Admin 各有九项传输单元测试和 80 项资料浏览器用例。�
 
 完整应用检查通过：Web 59 项单元测试与 192 项浏览器用例，Admin 376 项单元测试与 176 项浏览器用例。另有 80 项公共框架和 352 项课程社区浏览器用例通过，既有课程、存储与资料页面使用同一候选客户端。
 
-Next 的 20 模块架构、18 项脚本测试、文档、工作流、13 个检出目录的工具链及契约来源检查通过。[workspace.lock.json](https://github.com/StuHelper/stuhelper-next/blob/develop/workspace.lock.json) 记录各仓库的发布提交。
+StuHelper 的 20 模块架构、18 项脚本测试、文档、工作流、13 个检出目录的工具链及契约来源检查通过。[workspace.lock.json](https://github.com/StuHelper/stuhelper/blob/develop/workspace.lock.json) 记录各仓库的发布提交。
 
 中文桌面及阿拉伯语移动截图已检查。根据截图修正 Web 控件拉伸、跳转链接隐藏及 Admin 深色主题对比度。其他语言已检查键、参数、布局与交互，语义仍需母语审阅。
 
@@ -72,7 +72,7 @@ Next 的 20 模块架构、18 项脚本测试、文档、工作流、13 个检�
 
 [Backend #7](https://github.com/StuHelper/stuhelper-backend/pull/7)、[Web #11](https://github.com/StuHelper/stuhelper-web/pull/11)与[Admin #13](https://github.com/StuHelper/stuhelper-admin/pull/13)组成资料应用候选。各应用分支组合了已提交的存储和课程候选，未改动其他任务工作树。
 
-先合入 platform、catalog、reviews 与 moderation 基础，再处理 storage、media、moderation 的资料扩展和 resources。原存储与课程应用 PR 合入后，再处理资料应用候选，最后更新 Next 固定组合。所有合并、发行和部署继续等待负责人授权。
+先合入 platform、catalog、reviews 与 moderation 基础，再处理 storage、media、moderation 的资料扩展和 resources。原存储与课程应用 PR 合入后，再处理资料应用候选，最后更新发布组合。所有合并、发行和部署继续等待负责人授权。
 
 ## 统一登录与学生资格
 

@@ -1,4 +1,4 @@
-# StuHelper Next 工程约定
+# StuHelper 工程约定
 
 更新日期：2026-11-15。
 
@@ -16,7 +16,7 @@
 * CI 同时验证 develop/main push 和面向这两个分支的 PR，取消同一事件及分支或 PR 的旧运行。路径选择和最终必需检查见 [CI 规格](docs/spec/ci-runners.md)，本地 hooks 见[检查指南](docs/guide/repository-checks.md)。
 * 普通检查按锁文件安装依赖。公开依赖使用仓库 Actions 缓存，私有依赖保存在自建服务，可信 develop/main 成功后保存，PR 只恢复。新增存储说明用途、容量和回收方式。BuildKit 缓存独立维护。
 * Docker 测试使用任务专属名称、标签或 Compose project。完成、失败和中断时清理本任务的容器及闲置镜像，保留其他任务资源和持久数据。
-* 本仓库任务在 Next 工作区内完成。旧 StuHelper、AI、Store 工作树及生产系统分别按对应任务处理。
+* 本仓库任务在 StuHelper 工作区完成。AI、Store 的工作树及生产系统按各自工程约定维护。
 
 ## 接口、数据与国际化
 

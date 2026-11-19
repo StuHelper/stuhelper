@@ -1,7 +1,7 @@
-site_name: StuHelper Next
-site_description: StuHelper Next 的设计、规格、开发、指南与决策
-repo_url: https://github.com/StuHelper/stuhelper-next
-repo_name: StuHelper/stuhelper-next
+site_name: StuHelper
+site_description: StuHelper 的设计、规格、开发、指南与决策
+repo_url: https://github.com/StuHelper/stuhelper
+repo_name: StuHelper/stuhelper
 edit_uri: edit/develop/docs/
 docs_dir: docs
 site_dir: site

@@ -1,7 +1,7 @@
 ---
 type: adr
 status: Accepted
-updated: 2026-11-11
+updated: 2026-11-20
 ---
 
 # 0004：按业务模块采用多仓库
@@ -14,7 +14,7 @@ updated: 2026-11-11
 
 项目负责人于 2026-10-24 明确采用按模块划分的 multi repo。各模块拥有数据、接口、版本和生命周期，依赖公开契约协作。详细划分见[模块仓库设计](../design/module-repositories.md)。
 
-认证与实名、学校适配、账务及生产配置使用 private 仓库。群聊管理、信息查询和 stuhelper-next 为 public，私有设计放在对应私有仓库。
+认证与实名、学校适配、账务及生产配置使用 private 仓库。群聊管理、信息查询和 stuhelper 为 public，私有设计放在对应私有仓库。
 
 公开与私有业务模块均可编译进私有 backend，模块独立管理访问边界。官方 Casdoor 和 Koishi 的部署配置归 ops。模块拆仓不要求每个模块从第一天就成为独立微服务，也不允许通过共享内部表恢复隐式耦合。
 

@@ -1,7 +1,7 @@
 ---
 type: development
 status: Accepted
-updated: 2026-11-19
+updated: 2026-11-20
 ---
 
 # 后端候选实施状态
@@ -32,7 +32,7 @@ updated: 2026-11-19
 
 ## 发布版本
 
-各仓库版本 tag 指向 main 合并提交，[workspace.lock.json](https://github.com/StuHelper/stuhelper-next/blob/develop/workspace.lock.json) 记录 `v0.1.26` 组合提交。当前固定 backend v0.1.38、catalog v0.1.13、reviews v0.1.7、Web v0.1.18 与 Admin v0.1.7，覆盖启动回归、注销安装历史跳过与课程换号搜索恢复。生产部署与真实账号验收由私有 ops 记录。
+各仓库版本 tag 指向 main 合并提交，[workspace.lock.json](https://github.com/StuHelper/stuhelper/blob/develop/workspace.lock.json) 记录 `v0.1.26` 组合提交。当前固定 backend v0.1.38、catalog v0.1.13、reviews v0.1.7、Web v0.1.18 与 Admin v0.1.7，覆盖启动回归、注销安装历史跳过与课程换号搜索恢复。生产部署与真实账号验收由私有 ops 记录。
 
 | 仓库 | 版本 | 提交 |
 | --- | --- | --- |
