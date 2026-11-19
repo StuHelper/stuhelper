@@ -1,7 +1,7 @@
 ---
 type: index
 status: Accepted
-updated: 2026-11-11
+updated: 2026-11-20
 ---
 
 # 文档写作与维护
@@ -10,7 +10,7 @@ updated: 2026-11-11
 
 文档直接描述可使用的当前状态。代码、接口、产品规则或操作方式变化时，在同一项工作中更新对应主题，删除过时段落并合并重复说明。Git 历史、PR 和 CI 保存变更过程与运行详情。
 
-工程与语言要求见仓库根目录的 [AGENTS.md](https://github.com/StuHelper/stuhelper-next/blob/develop/AGENTS.md)。正文先说明行为、对象和条件，再解释必要的原因。使用清晰、具体的中文与准确的专业术语。
+工程与语言要求见仓库根目录的 [AGENTS.md](https://github.com/StuHelper/stuhelper/blob/develop/AGENTS.md)。正文先说明行为、对象和条件，再解释必要的原因。使用清晰、具体的中文与准确的专业术语。
 
 ## 内容归属
 

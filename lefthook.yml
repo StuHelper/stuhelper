@@ -2,3 +2,10 @@ pre-commit:
   commands:
     staged:
       run: pnpm exec stuhelper-check staged
+    architecture:
+      glob:
+        - "architecture/*"
+        - "mani.yaml"
+        - "scripts/*"
+        - "workspace.lock.json"
+      run: bash -o pipefail -c 'git show :scripts/check-staged-architecture.sh | bash'

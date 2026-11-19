@@ -124,8 +124,11 @@ modules:
     interface_owner: storage
     contract_status: library
     specifications:
+      - docs/spec/storage-contribution.md
       - docs/spec/storage-placement.md
     scenario_tests:
+      ST-03:
+        - contribution_test.go#TestContributionExitWaitsForRecordedReplicaCleanup
       SP-27:
         - content_test.go#TestSharedContentConcurrentProofAndSinglePhysicalObject
         - content_test.go#TestConcurrentSharedIngestKeepsOneProviderIntent
@@ -167,11 +170,33 @@ modules:
       - verification.information-document
       - verification.information-material
       - verification.group-card.read
+      - verification.facts.read
+      - verification.profile.facts.read
+      - verification.teacher.facts.read
       - verification.read
       - verification.write
       - verification.admin
       - verification.capture
     capability_requires:
+      verification.information-query:
+        - identity
+      verification.information-identity:
+        - identity
+      verification.information-resolve:
+        - identity
+      verification.information-document:
+        - identity
+      verification.information-material:
+        - identity
+      verification.group-card.read:
+        - identity
+      verification.facts.read:
+        - identity
+      verification.profile.facts.read:
+        - identity
+      verification.teacher.facts.read:
+        - identity
+        - catalog
       verification.read:
         - identity
       verification.write:
@@ -317,12 +342,14 @@ modules:
         - complaints_test.go#TestResourceComplaintPortDeduplicatesRetriesAndRejectsPublicBypass
         - integration_test.go#TestPendingReportMergesEvidenceAndAuthorRequestsAreScoped
       CM-02:
+        - integration_test.go#TestAppendTaskTracksOneItemAndBindsItsDecision
         - integration_test.go#TestDecisionDeliveryRecoversUnknownResultAndRejectsStaleRevision
       CM-05:
         - integration_test.go#TestPolicyScopeReplayAndPrivateDecisionProjection
         - policies_test.go#TestEffectivePolicyAndAdminInitiatedReviewAreScoped
         - policies_test.go#TestResourcePolicyDefaultsToReviewAndUsesScopedQueue
       CM-10:
+        - categories_errors_appeal_test.go#TestClosedCategoriesErrorReasonsRetryAfterAndCanAppeal
         - operations_test.go#TestAppealRequiresContentOwnerAndAnotherReviewer
         - contract_test.go#TestGeneratedAppealSubmissionPreservesRequestFields
       CM-12:
@@ -352,8 +379,11 @@ modules:
     interface_owner: media
     contract_status: library
     specifications:
+      - docs/spec/resource-sharing.md
       - docs/spec/media.md
     scenario_tests:
+      RS-30:
+        - integration_test.go#TestRetainedSourceSurvivesReleaseAndRestoresWithFreshPublication
       MEDIA-11:
         - reuse_test.go#TestOwnContentReuseKeepsIndependentApprovalAndReferences
         - reuse_test.go#TestDigestAloneCannotReuseAnotherOwnersFile
@@ -373,6 +403,11 @@ modules:
     contract_status: library
     specifications:
       - docs/spec/storage-contribution.md
+      - docs/spec/storage-contribution.md
+    scenario_tests:
+      ST-03:
+        - reopen_test.go#TestExitedContributionReleasesActiveQuotaAndReopensSameBinding
+
   - id: favorites
     repository: StuHelper/stuhelper-favorites
     visibility: public
@@ -462,6 +497,7 @@ modules:
       ACAD-34:
         - integration_test.go#TestCourseTermEligibilityAndImmutableTeacherAttribution
       ACAD-08:
+        - append_test.go#TestAppendsAreModeratedIndependentlyUnderSchoolPolicy
         - community_test.go#TestDraftPublicationIsAtomicAndRecoverable
         - community_test.go#TestChronologicalPaginationTeacherFilterAndPrivateDetails
       ACAD-21:
@@ -547,6 +583,8 @@ modules:
       resources.manage:
         - identity
     scenario_tests:
+      RS-30:
+        - publish_release_test.go#TestBlockedApprovedProposalRestartsWithFreshOperationAndSourceRetention
       RS-01:
         - integration_test.go#TestOriginConsentAndRequestsUseOutbox
       RS-03:
@@ -682,7 +720,7 @@ modules:
         - delivery_membership_test.go#TestGroupsForOwnerPaginationAndBounds
         - api_v03_test.go#TestGroupSummaryCountsMaskingAndScope
         - api_v03_test.go#TestConfigurationRevisionPasswordAndReplay
-        - api_v03_test.go#TestCandidateMigrationToFinalContractAndLeaseRecovery
+        - api_v03_test.go#TestFinalSchemaInitializationAndLeaseRecovery
         - integration_test.go#TestQQAdmissionGraceRestorationExtensionExemptionAndRemoval
       QQ-02:
         - my_groups_test.go#TestMyGroupsMissingConditionsAndUnknownFacts
@@ -751,11 +789,11 @@ modules:
     capability_requires: {}
     scenario_tests:
       IQ-01:
-        - service_test.go#TestPlatformQQAndSeparateCandidates
+        - resolver_test.go#TestResolveKindsGroupsAndHistory
       IQ-02:
         - service_test.go#TestScopeAndDomainIsolation
       IQ-03:
-        - service_test.go#TestPlatformQQAndSeparateCandidates
+        - resolver_test.go#TestResolveKindsGroupsAndHistory
       IQ-04:
         - service_test.go#TestScopeAndDomainIsolation
       IQ-05:
@@ -835,6 +873,7 @@ modules:
       DS-04:
         - integration_test.go#TestMyVotesHTTPAndTimeout
       DS-05:
+        - popular_scale_test.go#TestPopularFixedSnapshotRenewalExpiryAndRevocation
         - activity_test.go#TestHeatWeightsWindowAndTeachers
         - activity_test.go#TestActivityOwnership
       DS-06:
@@ -852,6 +891,10 @@ modules:
     required:
       - platform
     optional:
+      - reviews
+      - resources
+      - verification
+      - moderation
       - profiles
     interface_owner: notifications
     contract_status: implemented
@@ -917,7 +960,7 @@ modules:
     scenario_tests:
       QQB-01:
         - integration_test.go#TestIndependentBindingsCodesConflictAndClosure
-        - integration_test.go#TestCodeRetentionReissueAndOutbox
+        - integration_test.go#TestCodeRetentionAndReissue
       QQB-02:
         - integration_test.go#TestOAuthSessionStateUnionIDAndFailures
         - integration_test.go#TestOAuthConfirmCancelReplayAndAlreadyBound
@@ -934,6 +977,7 @@ applications:
     visibility: private
     implementation: framework
     specifications:
+      - docs/spec/academic-content.md
       - docs/spec/module-lifecycle.md
       - docs/spec/sso-compatibility.md
       - docs/spec/resource-sharing.md
@@ -949,10 +993,23 @@ applications:
       - profiles
       - billing
       - favorites
+      - verification
+      - campus-adapters
+      - storage
+      - storage-contribution
+      - qq-binding
+      - notifications
+      - information-query
+      - search
+      - groups
     capability_requires:
       resources.read:
         - resources
     scenario_tests:
+      RS-30:
+        - internal/resourceapp/integration_test.go#TestBlockedPublicationRetainsPrivateMediaAndRestoresOriginalBytes
+      ACAD-41:
+        - internal/academicapp/integration_test.go#TestSchoolPostPublicationAppendFlowsThroughRelayAndDecision
       OP-05:
         - internal/openplatformapp/integration_test.go#TestOpenPlatformComposesCurrentContentAdmissionAndMinimalOwnedData
       PC-07:
@@ -966,6 +1023,9 @@ applications:
     visibility: public
     implementation: framework
     optional:
+      - identity
+      - profiles
+      - verification
       - storage
       - storage-contribution
       - catalog
@@ -973,8 +1033,26 @@ applications:
       - moderation
       - media
       - resources
+      - favorites
+      - billing
+      - open-platform
+      - qq-binding
+      - notifications
+      - search
       - groups
     capability_requires:
+      catalog.directory:
+        - catalog
+      catalog.read:
+        - catalog
+      catalog.enrollments:
+        - catalog
+      reviews.read:
+        - reviews
+      reviews.write:
+        - reviews
+      moderation.tasks:
+        - moderation
       storage.custody:
         - storage
       contributions.manage:
@@ -982,6 +1060,8 @@ applications:
       resources.read:
         - resources
     specifications:
+      - docs/spec/content-management.md
+      - docs/spec/discovery-and-statistics.md
       - docs/spec/sso-compatibility.md
       - docs/spec/internationalization.md
       - docs/spec/module-lifecycle.md
@@ -997,6 +1077,13 @@ applications:
       - docs/spec/academic-content.md
       - docs/spec/notifications.md
     scenario_tests:
+      CM-10:
+        - src/features/account/lifecycle-actions.test.ts#keeps evidence after a refusal and appends it to the selected pending appeal
+        - tests/e2e/my-reviews-discussion.spec.mjs#a pending appeal receipt appends evidence to its original request after a lost response
+      SSO-01:
+        - tests/e2e/profile.spec.mjs#profile writes use the current browser session and origin
+      DS-01:
+        - tests/e2e/search.spec.mjs#expired popular ranking stays on screen until the reader refreshes
       RS-25:
         - tests/e2e/resources.spec.mjs#owned file reuse avoids content transfer and keeps separate review
       ST-10:
@@ -1006,10 +1093,12 @@ applications:
       ST-01:
         - tests/e2e/contributions.spec.mjs#consent, creation, quota adjustment and renewal retain distinct request state
       ST-03:
+        - src/features/account/lifecycle-actions.test.ts#requires new consent and a future end date to reopen the exited binding
+        - tests/e2e/contributions.spec.mjs#an exited contribution reactivates its original ID with fresh consent and retries the same command
         - tests/e2e/contributions.spec.mjs#exit remains pending while replicas remain
       ST-08:
         - tests/e2e/contributions.spec.mjs#lost response retries original mutation, paginates and clears revoked data
-        - src/composables/hostTransport.test.ts#passes current host credentials to both APIs and clears private state on revocation
+        - src/features/storage/hostTransport.test.ts#passes current host credentials to both APIs and clears private state on revocation
       RS-19:
         - tests/e2e/resources.spec.mjs#configured category field filters and grouping follow server configuration
       RS-13:
@@ -1023,6 +1112,9 @@ applications:
     visibility: public
     implementation: framework
     optional:
+      - identity
+      - profiles
+      - verification
       - storage
       - storage-contribution
       - catalog
@@ -1030,7 +1122,23 @@ applications:
       - moderation
       - media
       - resources
+      - favorites
+      - billing
+      - open-platform
+      - qq-binding
+      - information-query
+      - groups
     capability_requires:
+      catalog.read:
+        - catalog
+      catalog.maintain:
+        - catalog
+      catalog.import:
+        - catalog
+      reviews.moderate:
+        - reviews
+      moderation.tasks:
+        - moderation
       storage.operations:
         - storage
       storage.custody.operations:
@@ -1054,15 +1162,15 @@ applications:
       - docs/spec/qq-group-services.md
       - docs/spec/personal-center.md
     scenario_tests:
-      RS-25:
-        - tests/e2e/resources.spec.mjs#owned file reuse avoids content transfer and keeps separate review
+      CM-01:
+        - tests/e2e/moderation.spec.mjs#a moderator rejects the selected follow-up without deciding its sibling or the original review
       ST-11:
         - tests/e2e/custody.spec.mjs#custody administration resumes original consent without credential access
         - tests/e2e/custody.spec.mjs#custody administration handles unauthenticated and empty states
       ST-09:
         - tests/e2e/contributions.spec.mjs#operator retry preserves conditions, retains uncertain request and clears revoked inventory
         - tests/e2e/contributions.spec.mjs#operator login boundary recovers to an empty page
-        - apps/web-antd/src/composables/hostTransport.test.ts#passes current host credentials to both APIs and clears private state on revocation
+        - apps/web-antd/src/features/storage/hostTransport.test.ts#passes current host credentials to both APIs and clears private state on revocation
       RS-19:
         - tests/e2e/resources.spec.mjs#category configuration preserves stable ids, fields and original-request retry
       RS-13:

@@ -1,4 +1,4 @@
-# StuHelper Next 工程约定
+# StuHelper 工程约定
 
 更新日期：2026-11-15。
 
@@ -11,12 +11,12 @@
 * 主检出位于 `workspace/<仓库名>`，任务工作树位于 `workspace/worktrees/<任务>/<仓库名>`。大功能使用专用短期分支和独立工作树，一个主要写入者，保留其他任务的改动。
 * 一个 PR 解决一个明确问题，可包含多次本地提交和批量推送。同一任务持续更新同一 PR，不要求每次提交都推送或新建 PR。跨仓改动列出依赖、合并顺序和验证组合。提交与 squash 标题使用 `type(scope): 简述`，scope 可省略。
 * 每次开发先刷新 `origin/develop`，短期分支通过 PR squash 合入 develop。正式发布采用 develop 到 main 的 merge commit。tag、镜像发行和生产晋级由 owner 授权。
-* 公开仓库普通检查使用 GitHub ubuntu-26.04，私有仓库使用 StuHelper 自建 runner。Docker/OCI 与 BJ1 Registry 任务使用自建 runner。主机升级先确认快照或备份可用，并等待运行任务结束。规则见[runner 规格](docs/spec/ci-runners.md)。
+* 公开 Linux 检查与 GHCR 镜像发行使用 GitHub ubuntu-26.04。私有 Linux 作业只选 stuhelper-arc 组。主机系统升级由负责人安排。规则见[runner 规格](docs/spec/ci-runners.md)。
 * Actions 与部署镜像使用明确版本 tag，源码提交、digest 和 checksum 用于核验。正式部署组合由 ops 管理，工具包使用带注释的版本 tag，已发行 tag 保持不变。普通集成默认解析最新源码，候选覆盖必须明确登记。每轮源码组合写入 CI summary，`workspace.lock.json` 保存固定候选。
 * CI 同时验证 develop/main push 和面向这两个分支的 PR，取消同一事件及分支或 PR 的旧运行。路径选择和最终必需检查见 [CI 规格](docs/spec/ci-runners.md)，本地 hooks 见[检查指南](docs/guide/repository-checks.md)。
-* 普通检查按锁文件安装依赖。私有自建 runner 可缓存 Go 模块与构建、pnpm store 和 Playwright 浏览器；只接收可信 develop/main 成功运行，PR 只读，公开仓库不使用这些缓存。容量、保留期和清理遵循 runner 规格，私有模块不上传 GitHub。不自动扩大付费额度。BuildKit 缓存使用任务专属 builder 或 BJ1 Registry。
+* 普通检查按锁文件安装依赖。公开依赖使用仓库 Actions 缓存，私有依赖保存在自建服务，可信 develop/main 成功后保存，PR 只恢复。新增存储说明用途、容量和回收方式。BuildKit 缓存独立维护。
 * Docker 测试使用任务专属名称、标签或 Compose project。完成、失败和中断时清理本任务的容器及闲置镜像，保留其他任务资源和持久数据。
-* 本仓库任务在 Next 工作区内完成。旧 StuHelper、AI、Store 工作树及生产系统分别按对应任务处理。
+* 本仓库任务在 StuHelper 工作区完成。AI、Store 的工作树及生产系统按各自工程约定维护。
 
 ## 接口、数据与国际化
 

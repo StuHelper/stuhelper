@@ -1,7 +1,7 @@
 ---
 type: design
 status: Accepted
-updated: 2026-11-11
+updated: 2026-11-20
 ---
 
 # 按模块划分仓库
@@ -117,4 +117,4 @@ backend 的 credentials 与 bhpancustody 保存和使用敏感凭据，公共 st
 
 platform、Web 和 stuhelper-admin 的框架已实现，通用文件、存储、BHpan 托管及容量贡献已有代码与隔离验收。当前候选由配套 PR 和 workspace.lock.json 固定，合并、正式发行与生产部署分别报告，不能把主分支未合并的旧文档当成候选实现清单。
 
-[模块清单](https://github.com/StuHelper/stuhelper-next/blob/develop/architecture/modules.yaml)登记模块与依赖，[框架工作记录](../development/framework-bootstrap.md)维护平台状态，[存储实施状态](../development/storage-module.md)维护文件、存储、账号托管和贡献的实现及验收。职责归属与完成状态分别记录。
+[模块清单](https://github.com/StuHelper/stuhelper/blob/develop/architecture/modules.yaml)登记模块与依赖，[框架工作记录](../development/framework-bootstrap.md)维护平台状态，[存储实施状态](../development/storage-module.md)维护文件、存储、账号托管和贡献的实现及验收。职责归属与完成状态分别记录。
