@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { integrationRefs, lockedCandidateSummary } from './integration-refs.mjs';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
+import { integrationRefs, lockedCandidateSummary, pullRequestLockChanged } from './integration-refs.mjs';
 
 const names = ['platform', 'web', 'admin', 'catalog', 'reviews', 'moderation', 'storage', 'media', 'resources', 'backend'];
 const current = {
@@ -61,4 +66,30 @@ test('locked summary verifies every record including private providers and accep
   for (const change of [{ dirty: true }, { revision: 'develop' }, { tag: 'latest' }, { repository: 'unexpected' }]) {
     assert.throws(() => lockedCandidateSummary({ ...lock, projects: { backend: { ...lock.projects.backend, ...change } } }));
   }
+});
+
+test('a shallow PR merge compares the lock to the integrated base', t => {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'integration-refs-'));
+  t.after(() => fs.rmSync(temp, { recursive: true, force: true }));
+  const repo = path.join(temp, 'source');
+  fs.mkdirSync(repo);
+  const git = (...args) => execFileSync('git', ['-c', 'user.name=Test', '-c', 'user.email=test@localhost', ...args], { cwd: repo, stdio: 'pipe' });
+  git('init', '-b', 'develop');
+  git('commit', '--allow-empty', '-m', 'original base');
+  git('switch', '-c', 'feature');
+  git('commit', '--allow-empty', '-m', 'feature');
+  git('switch', 'develop');
+  fs.writeFileSync(path.join(repo, 'workspace.lock.json'), '{}');
+  git('add', '.');
+  git('commit', '-m', 'new base lock');
+  git('merge', '--no-ff', 'feature', '-m', 'PR merge');
+  const checkout = path.join(temp, 'checkout');
+  git('clone', '--depth=2', pathToFileURL(repo).href, checkout);
+  assert.equal(pullRequestLockChanged(checkout), false);
+  git('switch', '-c', 'update');
+  fs.writeFileSync(path.join(repo, 'workspace.lock.json'), '{"schema_version":1}');
+  git('commit', '-am', 'candidate');
+  git('switch', 'develop');
+  git('merge', '--no-ff', 'update', '-m', 'candidate PR merge');
+  assert.equal(pullRequestLockChanged(repo), true);
 });

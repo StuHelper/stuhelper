@@ -1,9 +1,14 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const modules = ['platform', 'web', 'admin', 'catalog', 'reviews', 'moderation', 'storage', 'media', 'resources'];
 const versionTag = /^v(?:\d+\.\d+\.\d+|\d{4}\.\d{2}\.\d{2}\.\d+)$/;
+// actions/checkout fetches the PR merge commit and its parents at depth two.
+export function pullRequestLockChanged(cwd) {
+  return execFileSync('git', ['diff', '--name-only', 'HEAD^1', 'HEAD', '--', 'workspace.lock.json'], { cwd, encoding: 'utf8' }).trim() !== '';
+}
 function useLock(env, snapshot) {
   if (env.GITHUB_EVENT_NAME === 'pull_request') return env.LOCK_CHANGED === 'true' || env.GITHUB_BASE_REF === 'main';
   return Boolean(snapshot?.release && (env.GITHUB_REF === 'refs/heads/main' || env.GITHUB_EVENT_NAME === 'workflow_dispatch'));
@@ -55,8 +60,10 @@ export function lockedCandidateSummary(snapshot) {
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const snapshot = fs.existsSync('workspace.lock.json') ? JSON.parse(fs.readFileSync('workspace.lock.json', 'utf8')) : undefined;
-  const refs = integrationRefs(process.env, snapshot);
-  if (process.env.GITHUB_STEP_SUMMARY && useLock(process.env, snapshot)) {
+  const env = { ...process.env };
+  if (env.GITHUB_EVENT_NAME === 'pull_request') env.LOCK_CHANGED = String(pullRequestLockChanged(process.cwd()));
+  const refs = integrationRefs(env, snapshot);
+  if (process.env.GITHUB_STEP_SUMMARY && useLock(env, snapshot)) {
     fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lockedCandidateSummary(snapshot));
   }
   for (const [name, ref] of Object.entries(refs)) {
