@@ -167,11 +167,33 @@ modules:
       - verification.information-document
       - verification.information-material
       - verification.group-card.read
+      - verification.facts.read
+      - verification.profile.facts.read
+      - verification.teacher.facts.read
       - verification.read
       - verification.write
       - verification.admin
       - verification.capture
     capability_requires:
+      verification.information-query:
+        - identity
+      verification.information-identity:
+        - identity
+      verification.information-resolve:
+        - identity
+      verification.information-document:
+        - identity
+      verification.information-material:
+        - identity
+      verification.group-card.read:
+        - identity
+      verification.facts.read:
+        - identity
+      verification.profile.facts.read:
+        - identity
+      verification.teacher.facts.read:
+        - identity
+        - catalog
       verification.read:
         - identity
       verification.write:
@@ -317,6 +339,7 @@ modules:
         - complaints_test.go#TestResourceComplaintPortDeduplicatesRetriesAndRejectsPublicBypass
         - integration_test.go#TestPendingReportMergesEvidenceAndAuthorRequestsAreScoped
       CM-02:
+        - integration_test.go#TestAppendTaskTracksOneItemAndBindsItsDecision
         - integration_test.go#TestDecisionDeliveryRecoversUnknownResultAndRejectsStaleRevision
       CM-05:
         - integration_test.go#TestPolicyScopeReplayAndPrivateDecisionProjection
@@ -462,6 +485,7 @@ modules:
       ACAD-34:
         - integration_test.go#TestCourseTermEligibilityAndImmutableTeacherAttribution
       ACAD-08:
+        - append_test.go#TestAppendsAreModeratedIndependentlyUnderSchoolPolicy
         - community_test.go#TestDraftPublicationIsAtomicAndRecoverable
         - community_test.go#TestChronologicalPaginationTeacherFilterAndPrivateDetails
       ACAD-21:
@@ -835,6 +859,7 @@ modules:
       DS-04:
         - integration_test.go#TestMyVotesHTTPAndTimeout
       DS-05:
+        - popular_scale_test.go#TestPopularFixedSnapshotRenewalExpiryAndRevocation
         - activity_test.go#TestHeatWeightsWindowAndTeachers
         - activity_test.go#TestActivityOwnership
       DS-06:
@@ -938,6 +963,7 @@ applications:
     visibility: private
     implementation: framework
     specifications:
+      - docs/spec/academic-content.md
       - docs/spec/module-lifecycle.md
       - docs/spec/sso-compatibility.md
       - docs/spec/resource-sharing.md
@@ -966,6 +992,8 @@ applications:
       resources.read:
         - resources
     scenario_tests:
+      ACAD-41:
+        - internal/academicapp/integration_test.go#TestSchoolPostPublicationAppendFlowsThroughRelayAndDecision
       OP-05:
         - internal/openplatformapp/integration_test.go#TestOpenPlatformComposesCurrentContentAdmissionAndMinimalOwnedData
       PC-07:
@@ -1016,6 +1044,7 @@ applications:
       resources.read:
         - resources
     specifications:
+      - docs/spec/discovery-and-statistics.md
       - docs/spec/sso-compatibility.md
       - docs/spec/internationalization.md
       - docs/spec/module-lifecycle.md
@@ -1031,6 +1060,10 @@ applications:
       - docs/spec/academic-content.md
       - docs/spec/notifications.md
     scenario_tests:
+      SSO-01:
+        - tests/e2e/profile.spec.mjs#profile writes use the current browser session and origin
+      DS-01:
+        - tests/e2e/search.spec.mjs#expired popular ranking stays on screen until the reader refreshes
       RS-25:
         - tests/e2e/resources.spec.mjs#owned file reuse avoids content transfer and keeps separate review
       ST-10:
@@ -1107,6 +1140,8 @@ applications:
       - docs/spec/qq-group-services.md
       - docs/spec/personal-center.md
     scenario_tests:
+      CM-01:
+        - tests/e2e/moderation.spec.mjs#a moderator rejects the selected follow-up without deciding its sibling or the original review
       ST-11:
         - tests/e2e/custody.spec.mjs#custody administration resumes original consent without credential access
         - tests/e2e/custody.spec.mjs#custody administration handles unauthenticated and empty states

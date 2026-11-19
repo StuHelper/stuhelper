@@ -83,9 +83,11 @@ jobs:
       - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 2
       - name: Resolve source refs
         id: refs
         env:
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
           PLATFORM: ${{ inputs.platform_commit }}
           WEB: ${{ inputs.web_commit }}
           ADMIN: ${{ inputs.admin_commit }}
@@ -95,7 +97,17 @@ jobs:
           STORAGE: ${{ inputs.storage_commit }}
           MEDIA: ${{ inputs.media_commit }}
           RESOURCES: ${{ inputs.resources_commit }}
-        run: node scripts/integration-refs.mjs
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
+            status=0
+            git diff --quiet "$PR_BASE" HEAD -- workspace.lock.json || status=$?
+            case "$status" in
+              0) export LOCK_CHANGED=false ;;
+              1) export LOCK_CHANGED=true ;;
+              *) exit "$status" ;;
+            esac
+          fi
+          node scripts/integration-refs.mjs
       - uses: actions/checkout@v7.0.1
         with:
           repository: StuHelper/stuhelper-platform

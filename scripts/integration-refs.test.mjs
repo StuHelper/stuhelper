@@ -2,39 +2,63 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { integrationRefs, lockedCandidateSummary } from './integration-refs.mjs';
 
-test('ordinary integration uses develop and candidate PRs require explicit clean source records', () => {
-  const projects = Object.fromEntries(['platform', 'web', 'admin', 'catalog', 'reviews', 'moderation', 'storage', 'media', 'resources'].map(name => [name, { repository: `https://github.com/StuHelper/stuhelper-${name}.git`, revision: 'a'.repeat(40), dirty: false }]));
-  const env = { GITHUB_EVENT_NAME: 'pull_request', GITHUB_HEAD_REF: 'codex/academic-community' };
-  assert.equal(integrationRefs(env, { projects }).catalog, 'a'.repeat(40));
-  assert.equal(integrationRefs({...env,GITHUB_HEAD_REF:'feat/backend-decisions'},{projects}).catalog,'a'.repeat(40));
-  assert.equal(integrationRefs({ ...env, GITHUB_EVENT_NAME: 'push' }, { projects }).catalog, 'develop');
-  assert.equal(integrationRefs({ ...env, GITHUB_HEAD_REF: 'another-task' }, { projects }).catalog, 'develop');
-  assert.equal(integrationRefs({ WEB: 'b'.repeat(40) }).web, 'b'.repeat(40));
-  assert.throws(() => integrationRefs({ WEB: 'branch\ninjected' }));
-  assert.throws(() => integrationRefs(env, {}));
-  projects.catalog.dirty = true;
-  assert.throws(() => integrationRefs(env, { projects }), /Uncommitted/);
-});
+const names = ['platform', 'web', 'admin', 'catalog', 'reviews', 'moderation', 'storage', 'media', 'resources', 'backend'];
+const current = {
+  schema_version: 1, release: 'v0.1.26',
+  projects: Object.fromEntries(names.map(name => [name, {
+    repository: `https://github.com/StuHelper/stuhelper-${name}.git`, tag: 'v0.1.0',
+    revision: 'c'.repeat(40), dirty: false,
+  }])),
+};
+function candidate() {
+  const lock = structuredClone(current);
+  lock.release = 'v2026.11.19.1';
+  lock.projects.storage = { ...lock.projects.storage, tag: 'v0.1.1', revision: 'a'.repeat(40) };
+  return lock;
+}
+const pr = { GITHUB_EVENT_NAME: 'pull_request', GITHUB_BASE_REF: 'develop', GITHUB_HEAD_REF: 'fix/new-topic' };
 
-test('candidate summary preserves locked providers outside public integration and rejects unsafe records', () => {
-  const snapshot = { schema_version: 1, projects: Object.fromEntries(['backend', 'web', 'search', 'qq-binding'].map((name, index) => [name, { repository: `https://github.com/StuHelper/stuhelper-${name}.git`, revision: String(index + 1).repeat(40), dirty: false }])) };
-  const summary = lockedCandidateSummary(snapshot);
-  for (const [name, record] of Object.entries(snapshot.projects)) assert(summary.includes(`| ${name} | — | ${record.revision} |`));
-  assert(summary.includes('actually checked out and tested are listed separately'));
-  assert.throws(() => lockedCandidateSummary({ schema_version: 1, projects: {} }));
-  for (const change of [{ dirty: true }, { revision: 'develop' }, { repository: 'https://github.com/other/backend.git' }]) {
-    const invalid = structuredClone(snapshot);
-    Object.assign(invalid.projects.backend, change);
-    assert.throws(() => lockedCandidateSummary(invalid));
+test('ordinary development resolves develop even with the published lock present', () => {
+  for (const env of [pr, { GITHUB_EVENT_NAME: 'push', GITHUB_REF: 'refs/heads/develop' }]) {
+    assert.equal(integrationRefs(env, current).catalog, 'develop');
   }
 });
 
- test('release integration pins every event to published commits and records tags', () => {
-  const projects = Object.fromEntries(['platform','web','admin','catalog','reviews','moderation','storage','media','resources'].map(name => [name,{repository:`https://github.com/StuHelper/stuhelper-${name}.git`,tag:name==='platform'?'v0.2.0':'v0.1.0',revision:'a'.repeat(40),dirty:false}]));
-  const snapshot={schema_version:1,release:'v0.1.0',projects};
-  for(const env of [{GITHUB_EVENT_NAME:'push',GITHUB_REF:'refs/heads/main'},{GITHUB_EVENT_NAME:'pull_request',GITHUB_HEAD_REF:'develop'},{GITHUB_EVENT_NAME:'workflow_dispatch'}]) assert.equal(integrationRefs(env,snapshot).web,projects.web.revision);
-  assert.equal(integrationRefs({WEB:'b'.repeat(40)},snapshot).web,'b'.repeat(40));
-  assert(lockedCandidateSummary(snapshot).includes(`| platform | v0.2.0 | ${projects.platform.revision} |`));
-  delete projects.web.tag;
-  assert.throws(()=>integrationRefs({},snapshot),/Missing release tag/);
- });
+test('a changed PR lock selects clean candidates independently of branch name', () => {
+  const env = { ...pr, LOCK_CHANGED: 'true' };
+  const lock = candidate();
+  assert.equal(integrationRefs(env, lock).storage, lock.projects.storage.revision);
+  delete lock.release;
+  assert.equal(integrationRefs(env, lock).web, lock.projects.web.revision);
+  lock.projects.web.dirty = true;
+  assert.throws(() => integrationRefs(env, lock), /Uncommitted/);
+  assert.throws(() => integrationRefs(env), /lock/i);
+});
+
+test('main and manual runs can replay the exact published combination', () => {
+  for (const env of [{GITHUB_EVENT_NAME: 'push', GITHUB_REF: 'refs/heads/main'}, { GITHUB_EVENT_NAME: 'workflow_dispatch' }]) {
+    assert.equal(integrationRefs(env, current).web, current.projects.web.revision);
+  }
+  assert.equal(integrationRefs({ GITHUB_EVENT_NAME: 'workflow_dispatch', WEB: 'b'.repeat(40) }, current).web, 'b'.repeat(40));
+  assert.throws(() => integrationRefs({ WEB: 'invalid' }, current));
+});
+
+test('a new release candidate cannot reuse the known defective storage commit under any tag', () => {
+  const lock = candidate();
+  lock.projects.storage.revision = '70d0785c66ad16809f674d34566bbdbfc7de4632';
+  for (const env of [{ ...pr, LOCK_CHANGED: 'true' }, { ...pr, GITHUB_BASE_REF: 'main' }]) {
+    assert.throws(() => integrationRefs(env, lock), /storage/);
+    assert.throws(() => integrationRefs({ ...env, STORAGE: 'b'.repeat(40) }, lock), /storage/);
+  }
+  delete lock.projects.storage;
+  assert.throws(() => integrationRefs({ ...pr, GITHUB_BASE_REF: 'main', STORAGE: 'b'.repeat(40) }, lock), /storage/);
+});
+
+test('locked summary verifies every record including private providers and accepts both tag formats', () => {
+  const lock = candidate();
+  lock.projects.backend.tag = 'v2026.11.19.1';
+  assert(lockedCandidateSummary(lock).includes('| backend | v2026.11.19.1 |'));
+  for (const change of [{ dirty: true }, { revision: 'develop' }, { tag: 'latest' }, { repository: 'unexpected' }]) {
+    assert.throws(() => lockedCandidateSummary({ ...lock, projects: { backend: { ...lock.projects.backend, ...change } } }));
+  }
+});
