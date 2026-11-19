@@ -124,8 +124,11 @@ modules:
     interface_owner: storage
     contract_status: library
     specifications:
+      - docs/spec/storage-contribution.md
       - docs/spec/storage-placement.md
     scenario_tests:
+      ST-03:
+        - contribution_test.go#TestContributionExitWaitsForRecordedReplicaCleanup
       SP-27:
         - content_test.go#TestSharedContentConcurrentProofAndSinglePhysicalObject
         - content_test.go#TestConcurrentSharedIngestKeepsOneProviderIntent
@@ -346,6 +349,7 @@ modules:
         - policies_test.go#TestEffectivePolicyAndAdminInitiatedReviewAreScoped
         - policies_test.go#TestResourcePolicyDefaultsToReviewAndUsesScopedQueue
       CM-10:
+        - categories_errors_appeal_test.go#TestClosedCategoriesErrorReasonsRetryAfterAndCanAppeal
         - operations_test.go#TestAppealRequiresContentOwnerAndAnotherReviewer
         - contract_test.go#TestGeneratedAppealSubmissionPreservesRequestFields
       CM-12:
@@ -375,8 +379,11 @@ modules:
     interface_owner: media
     contract_status: library
     specifications:
+      - docs/spec/resource-sharing.md
       - docs/spec/media.md
     scenario_tests:
+      RS-30:
+        - integration_test.go#TestRetainedSourceSurvivesReleaseAndRestoresWithFreshPublication
       MEDIA-11:
         - reuse_test.go#TestOwnContentReuseKeepsIndependentApprovalAndReferences
         - reuse_test.go#TestDigestAloneCannotReuseAnotherOwnersFile
@@ -396,6 +403,11 @@ modules:
     contract_status: library
     specifications:
       - docs/spec/storage-contribution.md
+      - docs/spec/storage-contribution.md
+    scenario_tests:
+      ST-03:
+        - reopen_test.go#TestExitedContributionReleasesActiveQuotaAndReopensSameBinding
+
   - id: favorites
     repository: StuHelper/stuhelper-favorites
     visibility: public
@@ -571,6 +583,8 @@ modules:
       resources.manage:
         - identity
     scenario_tests:
+      RS-30:
+        - publish_release_test.go#TestBlockedApprovedProposalRestartsWithFreshOperationAndSourceRetention
       RS-01:
         - integration_test.go#TestOriginConsentAndRequestsUseOutbox
       RS-03:
@@ -992,6 +1006,8 @@ applications:
       resources.read:
         - resources
     scenario_tests:
+      RS-30:
+        - internal/resourceapp/integration_test.go#TestBlockedPublicationRetainsPrivateMediaAndRestoresOriginalBytes
       ACAD-41:
         - internal/academicapp/integration_test.go#TestSchoolPostPublicationAppendFlowsThroughRelayAndDecision
       OP-05:
@@ -1044,6 +1060,7 @@ applications:
       resources.read:
         - resources
     specifications:
+      - docs/spec/content-management.md
       - docs/spec/discovery-and-statistics.md
       - docs/spec/sso-compatibility.md
       - docs/spec/internationalization.md
@@ -1060,6 +1077,9 @@ applications:
       - docs/spec/academic-content.md
       - docs/spec/notifications.md
     scenario_tests:
+      CM-10:
+        - src/features/account/lifecycle-actions.test.ts#keeps evidence after a refusal and appends it to the selected pending appeal
+        - tests/e2e/my-reviews-discussion.spec.mjs#a pending appeal receipt appends evidence to its original request after a lost response
       SSO-01:
         - tests/e2e/profile.spec.mjs#profile writes use the current browser session and origin
       DS-01:
@@ -1073,6 +1093,8 @@ applications:
       ST-01:
         - tests/e2e/contributions.spec.mjs#consent, creation, quota adjustment and renewal retain distinct request state
       ST-03:
+        - src/features/account/lifecycle-actions.test.ts#requires new consent and a future end date to reopen the exited binding
+        - tests/e2e/contributions.spec.mjs#an exited contribution reactivates its original ID with fresh consent and retries the same command
         - tests/e2e/contributions.spec.mjs#exit remains pending while replicas remain
       ST-08:
         - tests/e2e/contributions.spec.mjs#lost response retries original mutation, paginates and clears revoked data
