@@ -1,6 +1,6 @@
-# StuHelper Next
+# StuHelper
 
-StuHelper 的重构工程，采用 Go 平台、Vue Web、stuhelper-admin 和按业务划分的独立仓库。Next 是过渡名称。Casdoor 使用官方发行版本，各业务通过 OIDC 和官方 API 接入。
+StuHelper 是校园信息平台，采用 Go、Vue、stuhelper-admin 和按业务划分的独立仓库。Casdoor 使用官方发行版本，各业务通过 OIDC 和官方 API 接入。
 
 **当前阶段：提供方、后端和客户端已正式发行，生产部署与业务验收状态由私有 ops 接续说明记录。** platform 提供应用框架，课程目录、评价、审核、存储、贡献和学习资料已有独立仓库实现。Web 与 stuhelper-admin 提供八语言页面，backend 装配各模块并使用独立数据库身份。
 
@@ -40,7 +40,7 @@ pnpm run test:e2e
 ## 技术约定
 
 - 模块拥有自己的接口和数据，通过公开接口协作。必需依赖用于判断模块基础可用性，可选依赖通过能力级规则影响具体操作。
-- Casdoor 独立部署，应用通过 issuer、subject 标识用户并保存消费方绑定。首次生产部署使用空库，旧评课与资料不迁移。
+- Casdoor 独立部署，应用通过 issuer、subject 标识用户并保存消费方绑定。社区评价与共享资料由各自模块维护。
 - Web 和 stuhelper-admin 默认中文，提供八种界面语言。国际化检查覆盖消息键、插值、复数和区域格式，翻译质量由人工审阅，阿拉伯语使用 RTL 布局。
 - 公开 Linux 检查和镜像发行使用 GitHub 托管 runner。私有 Linux 作业通过组织 runner group 接单。调度、依赖缓存和镜像验收见 [runner 规格](docs/spec/ci-runners.md)。
 - 短期分支通过 PR squash 合入 develop。正式发行由 develop 向 main 合并，经负责人授权后创建版本 tag、镜像和生产晋级。

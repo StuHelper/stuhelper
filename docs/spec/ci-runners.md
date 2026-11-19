@@ -16,7 +16,7 @@ updated: 2026-11-20
 
 | 仓库 | 可见性 | 必需检查 |
 | --- | --- | --- |
-| stuhelper-next | public | Architecture checks |
+| stuhelper | public | Architecture checks |
 | stuhelper-tooling | public | Tooling checks |
 | stuhelper-platform | public | Platform checks |
 | stuhelper-backend | private | Backend checks |

@@ -1,14 +1,14 @@
 ---
 type: spec
 status: Accepted
-updated: 2026-11-19
+updated: 2026-11-20
 ---
 
 # 模块生命周期
 
 ## 范围与适用情况
 
-定义多仓库模块与外部扩展的目标行为，供服务端、客户端和运维使用。[模块清单](https://github.com/StuHelper/stuhelper-next/blob/develop/architecture/modules.yaml)记录模块归属。首期框架通过配置与重启启停模块，当前没有在线管理开关；运行机制见[框架实现设计](../design/framework-runtime.md)。
+定义多仓库模块与外部扩展的目标行为，供服务端、客户端和运维使用。[模块清单](https://github.com/StuHelper/stuhelper/blob/develop/architecture/modules.yaml)记录模块归属。首期框架通过配置与重启启停模块，当前没有在线管理开关；运行机制见[框架实现设计](../design/framework-runtime.md)。
 
 ## 模块与依赖
 

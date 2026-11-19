@@ -1,14 +1,14 @@
 ---
 type: design
 status: Accepted
-updated: 2026-11-11
+updated: 2026-11-20
 ---
 
 # 项目设计
 
 | 主题 | 内容 |
 | --- | --- |
-| [重构定位与业务范围](business-scope.md) | 已确认业务、后台管理与机器人菜单分类 |
+| [项目定位与业务范围](business-scope.md) | 已确认业务、后台管理与机器人菜单分类 |
 | [身份能力与私有认证边界](student-identity.md) | 公共资格接口与私有认证边界 |
 | [私有账务模块与业务接入](wallet-and-points.md) | 两套账户、获取奖励、购买权益与退款的业务关系 |
 | [按模块划分仓库](module-repositories.md) | 模块职责、公开与私有范围、数据与接口归属 |
