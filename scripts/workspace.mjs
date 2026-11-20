@@ -146,6 +146,7 @@ function syncToolingVersion(location, isRoot, pkg, version, write) {
 
 export function toolchains(directory = root, write = false, includeCheckouts = true) {
   const versions = readYaml(path.join(directory, 'architecture/toolchains.yaml'));
+  assert(Number.isSafeInteger(versions.postgresql) && versions.postgresql > 0, 'PostgreSQL must declare a positive integer major version');
   const directories = [directory, ...(includeCheckouts ? projects(directory).map(project => project.directory).filter(location => fs.existsSync(path.join(location, '.git'))) : [])];
   for (const location of directories) {
     const isRoot = path.resolve(location) === path.resolve(directory);
@@ -170,6 +171,14 @@ export function toolchains(directory = root, write = false, includeCheckouts = t
     assert.equal(pkg.engines?.pnpm, versions.pnpm, `${location}: pnpm`);
     assert.equal(pkg.packageManager, `pnpm@${versions.pnpm}`, `${location}: packageManager`);
     assert.equal(pkg.devDependencies?.lefthook, versions.lefthook, `${location}: lefthook`);
+    const postgresScript = path.join(location, 'actions/setup/postgres.sh');
+    if (fs.existsSync(postgresScript)) {
+      const source = fs.readFileSync(postgresScript, 'utf8');
+      const major = /^pg_major=(\d+)$/m;
+      assert(major.test(source), `${postgresScript}: missing PostgreSQL major assignment`);
+      if (write) fs.writeFileSync(postgresScript, source.replace(major, `pg_major=${versions.postgresql}`));
+      assert.equal(Number(fs.readFileSync(postgresScript, 'utf8').match(major)?.[1]), versions.postgresql, `${postgresScript}: PostgreSQL major`);
+    }
     const actionlintScript = path.join(location, 'actions/setup/actionlint.sh');
     const setupFile = path.join(location, 'actions/setup/action.yml');
     if (fs.existsSync(actionlintScript)) {

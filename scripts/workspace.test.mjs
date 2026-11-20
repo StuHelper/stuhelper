@@ -118,7 +118,7 @@ test('standalone architecture validation is independent of stale sibling checkou
   fs.mkdirSync(path.join(directory, 'architecture'));
   fs.writeFileSync(path.join(directory, 'mani.yaml'), 'sync_remotes: false\nsync_gitignore: false\nremove_orphaned_worktrees: false\nspecs:\n  default:\n    ignore_errors: false\n    ignore_non_existing: false\nprojects:\n  web:\n    path: workspace/web\n    url: https://github.com/StuHelper/stuhelper-web.git\n    branch: develop\n');
   fs.writeFileSync(path.join(directory, 'architecture/modules.yaml'), 'modules: []\noperations: []\napplications:\n  - repository: StuHelper/stuhelper-web\n');
-  const versions = { node: '24.22.1', go: '1.27.3', pnpm: '10.33.4', lefthook: '2.2.2' };
+  const versions = { node: '24.22.1', go: '1.27.3', postgresql: 18, pnpm: '10.33.4', lefthook: '2.2.2' };
   fs.writeFileSync(path.join(directory, 'architecture/toolchains.yaml'), JSON.stringify(versions));
   const pkg = { engines: { node: versions.node, pnpm: versions.pnpm }, packageManager: `pnpm@${versions.pnpm}`, devDependencies: { lefthook: versions.lefthook } };
   fs.writeFileSync(path.join(directory, 'package.json'), JSON.stringify(pkg));
@@ -382,13 +382,13 @@ test('dynamic client contract gate verifies all declared modules, respects scope
   );
 });
 
-test('toolchains synchronize playwright, stuhelper-tooling tags, catalog entries, and strict go directives', async t => {
+test('toolchains synchronize PostgreSQL, Playwright, tooling tags, catalog entries, and Go directives', async t => {
   const { toolchains, validate } = await import('./workspace.mjs');
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'stuhelper-toolchains-sync-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   fs.mkdirSync(path.join(directory, 'architecture'));
   fs.mkdirSync(path.join(directory, '.github/workflows'), { recursive: true });
-  const versions = { node: '24.22.1', go: '1.27.3', pnpm: '10.33.4', actionlint: '1.7.12', lefthook: '2.2.2', playwright: '1.64.1', tooling: 'v0.1.9' };
+  const versions = { node: '24.22.1', go: '1.27.3', postgresql: 18, pnpm: '10.33.4', actionlint: '1.7.12', lefthook: '2.2.2', playwright: '1.64.1', tooling: 'v0.1.9' };
   fs.writeFileSync(path.join(directory, 'architecture/toolchains.yaml'), YAML.stringify(versions));
   fs.writeFileSync(path.join(directory, 'mani.yaml'), YAML.stringify({
     sync_remotes: false,
@@ -423,12 +423,22 @@ test('toolchains synchronize playwright, stuhelper-tooling tags, catalog entries
   }));
   fs.writeFileSync(path.join(adminDir, 'pnpm-workspace.yaml'), 'catalog:\n  playwright: 1.60.0\n');
   fs.writeFileSync(path.join(adminDir, 'go.mod'), 'module example.test/admin\n// go 1.27.3\ngo 1.26.0\n');
+  const toolingDir = path.join(directory, 'workspace/tooling');
+  fs.mkdirSync(path.join(toolingDir, '.git'), { recursive: true });
+  fs.mkdirSync(path.join(toolingDir, 'actions/setup'), { recursive: true });
+  fs.writeFileSync(path.join(toolingDir, 'package.json'), '{"devDependencies":{}}');
+  const postgresScript = path.join(toolingDir, 'actions/setup/postgres.sh');
+  fs.writeFileSync(postgresScript, '#!/usr/bin/env bash\npg_major=19\n');
 
   toolchains(directory, true, true);
   validate(directory);
   assert.match(fs.readFileSync(path.join(directory, '.github/workflows/checks.yml'), 'utf8'), /@v0\.1\.9/);
   assert.match(fs.readFileSync(path.join(adminDir, 'pnpm-workspace.yaml'), 'utf8'), /playwright: 1\.64\.1/);
   assert.match(fs.readFileSync(path.join(adminDir, 'go.mod'), 'utf8'), /^go 1\.27\.3$/m);
+  assert.equal(fs.readFileSync(postgresScript, 'utf8'), '#!/usr/bin/env bash\npg_major=18\n');
+  fs.writeFileSync(postgresScript, '#!/usr/bin/env bash\npg_major=19\n');
+  assert.throws(() => toolchains(directory), /PostgreSQL major/);
+  toolchains(directory, true, true);
 
   fs.writeFileSync(path.join(adminDir, 'go.mod'), 'module example.test/admin\n// go 1.27.3\ngo 1.26.0\n');
   assert.throws(() => toolchains(directory, false, true), /go\.mod/);
