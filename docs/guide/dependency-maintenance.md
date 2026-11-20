@@ -1,14 +1,14 @@
 ---
 type: guide
 status: Accepted
-updated: 2026-11-19
+updated: 2026-11-20
 ---
 
 # 工具链与依赖维护
 
 ## 版本来源
 
-Go、Node.js、pnpm、Lefthook、actionlint、Playwright 与共享工程工具包版本维护在 `architecture/toolchains.yaml`。`.node-version`、`.go-version`、Go 模块、包管理器声明、Playwright 及工作流工具引用由工作区命令同步。
+Go、PostgreSQL、Node.js、pnpm、Lefthook、actionlint、Playwright 与共享工程工具包版本维护在 `architecture/toolchains.yaml`。工作区命令同步各仓版本文件、Go 模块、包管理器声明、Playwright、工作流工具引用及 tooling 的 PostgreSQL 安装脚本。
 
 CI 从版本文件读取 Go 与 Node.js。Mani 和 Git 是主机工具，开发者自行安装，CI 直接执行各仓检查命令。
 
@@ -25,6 +25,8 @@ Renovate 适合需要共享更新预设、更多版本文件识别和集中更�
 共享 CLI、action 与 reusable workflow 在 stuhelper-tooling 独立维护，以带注释的 `v<版本>` tag 分发。已发行 tag 不得重新指向其他提交。主架构仓库不再发行工具版本。
 
 工具链升级先修改 `architecture/toolchains.yaml`，执行 `node scripts/workspace.mjs toolchains --write`，再更新受影响的 pnpm 锁文件。工具仓库独立测试通过后按授权创建新版本，消费者更新 Git 依赖、Actions 引用和锁文件。
+
+PostgreSQL 主版本升级需要同时核对 tooling 安装脚本、ops 的 runner 预装包及各部署的数据库镜像。生产数据目录的主版本升级按独立迁移流程执行。
 
 pnpm 锁文件固定实际解析提交。首次更新使用 `pnpm install --no-frozen-lockfile`，日常与 CI 使用 `--frozen-lockfile`。公开工具依赖使用 HTTPS 来源，生成锁文件时设置 `GIT_SSH_COMMAND=false` 可防止意外采用本机 SSH 授权。
 
