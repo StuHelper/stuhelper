@@ -961,8 +961,17 @@ modules:
       - qq-binding.information-resolve
       - qq-binding.identity.resolve
       - qq-binding.manage
+      - qq-binding.connect
+      - qq-binding.onebot
+      - qq-binding.official
       - qq-binding.bot
     capability_requires:
+      qq-binding.connect:
+        - identity
+      qq-binding.onebot:
+        - identity
+      qq-binding.official:
+        - identity
       qq-binding.manage:
         - identity
     scenario_tests:
@@ -970,6 +979,9 @@ modules:
         - integration_test.go#TestIndependentBindingsCodesConflictAndClosure
         - integration_test.go#TestCodeRetentionAndReissue
       QQB-02:
+        - connect_login_test.go#TestQQLoginBrowserCallbackAndRepair
+        - connect_login_test.go#TestQQLoginConflictRollsBackBindingAuditOutbox
+        - connect_login_test.go#TestQQProviderPermissionAndCallbackErrors
         - integration_test.go#TestOAuthSessionStateUnionIDAndFailures
         - integration_test.go#TestOAuthConfirmCancelReplayAndAlreadyBound
         - integration_test.go#TestOAuthHTTPConfirmCancelAndRemovedCallback
