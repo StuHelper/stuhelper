@@ -1090,6 +1090,7 @@ applications:
       - docs/spec/module-lifecycle.md
       - docs/spec/storage-contribution.md
       - docs/spec/resource-sharing.md
+      - docs/spec/qq-binding.md
       - docs/spec/qq-group-services.md
       - docs/spec/personal-center.md
       - docs/spec/student-verification.md
