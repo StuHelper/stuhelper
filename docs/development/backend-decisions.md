@@ -1,7 +1,7 @@
 ---
 type: development
 status: Accepted
-updated: 2026-11-20
+updated: 2026-11-21
 ---
 
 # 后端候选实施状态
@@ -154,6 +154,6 @@ groups、search 与 notifications 已登记模块场景。search 使用 DS-01、
 
 充值返回公开支付指引，只有提供方查询或验签回调确认成功才入账。取消先核实付款状态并关闭未付款支付单。开发环境提供模拟付款与失败入口，生产配置拒绝启用。
 
-qq-binding 的模块检查在本仓库 CI 中使用隔离 PostgreSQL 运行。QQ 登录、真实机器人、真实 QQ 互联与群服务事件投递未验收。
+QQ 绑定候选通过已登记的 Web 回调页提交确认和取消。模块在隔离 PostgreSQL 验证了 Casdoor 同步、重复授权码拦截和摘要清理。Web 接线与主站联合发行待完成。真实 QQ 登录、绑定、机器人及群服务事件投递待验收。
 
 账务管理读取提供退款列表、包含停用项的渠道、方案与最新规则，以及按账号查询的钱包、最近订单和明细。读取要求 billing.manage，分页上限 100，账号数据与审计同事务返回。billing 独立检查和 backend 固定远程依赖的 GOWORK=off 完整检查通过。接口由私有 billing 仓库的 OpenAPI 定义。
