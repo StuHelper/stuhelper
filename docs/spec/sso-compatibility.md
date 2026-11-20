@@ -1,7 +1,7 @@
 ---
 type: spec
 status: Accepted
-updated: 2026-11-19
+updated: 2026-11-21
 ---
 
 # SSO 接入与应用会话
@@ -45,6 +45,18 @@ Webhook 未覆盖、投递失败或尚未启用时，由下一次到期请求复
 上游调用保留两秒槽位等待、五秒 HTTP 超时和脱敏诊断。日志只含阶段、错误类别、耗时、状态码和 request_id。管理参数不改变业务权限、学校资格、审计或持久数据的归属。
 
 Web 与 Admin 各自共享一次会话检查。401 清除本地登录展示并提供重新登录入口；临时故障保留输入并使用 1、2、4 秒退避，最多等待 8 秒。业务写请求不自动重放。
+
+## Casdoor 4.24.0 的 QQ 自助绑定
+
+账号页展示用户注册应用的 provider。未记录注册应用时，Casdoor 查组织默认应用。组织账户项 `3rd-party logins` 可见且读写规则为 Self 后，页面显示该应用允许展示的第三方登录。解绑还检查该应用对应 provider 的 `canUnlink`。
+
+Casdoor 的原生按钮调用 `Provider.getAuthUrl`，传入 `method=link`。QQ 授权地址使用 Casdoor 的 `/callback`，state 是查询字符串的 Base64，包含应用、provider、method、Casdoor 站内返回路径及标签页专用 nonce。
+
+Casdoor 回调先消费同标签页 sessionStorage 中的 nonce，再携带 Casdoor Cookie 向 `/api/login` 提交授权码。服务端检查请求来源和当前 Casdoor 会话，在应用组织内查找 OpenID，并拒绝已被关联的身份。成功后跳到原站内页面，失败时回调页显示错误。
+
+没有 Casdoor 会话时，绑定分支在交换 QQ 授权码后返回用户不存在错误。公开 API 的错误消息可能包含账号信息。StuHelper 的页面只显示固定结果码。Casdoor 的 QQ 驱动未请求 UnionID，StuHelper 采用[QQ 互联绑定](qq-binding.md)获取完整身份。
+
+依据：[授权地址](https://github.com/casdoor/casdoor/blob/v4.24.0/web/src/auth/Provider.ts#L399-L458)、[state 和 nonce](https://github.com/casdoor/casdoor/blob/v4.24.0/web/src/auth/Util.ts#L202-L247)、[浏览器回调](https://github.com/casdoor/casdoor/blob/v4.24.0/web/public/AuthCallbackHandler.js#L353-L474)、[服务端绑定](https://github.com/casdoor/casdoor/blob/v4.24.0/controllers/auth.go#L1372-L1424)、[QQ 驱动](https://github.com/casdoor/casdoor/blob/v4.24.0/idp/qq.go)。
 
 ## 应用会话验收
 

@@ -1,7 +1,7 @@
 ---
 type: spec
 status: Accepted
-updated: 2026-11-19
+updated: 2026-11-21
 ---
 
 # QQ 三项独立绑定
@@ -18,11 +18,21 @@ qq-binding 独立管理 OneBot 的真实 QQ 号、QQ 互联的 openid 与 unioni
 
 ## QQ 互联
 
-模块直接使用 QQ 互联 OAuth 授权码流程，仅用于绑定，不提供登录。state 绑定当前登录会话，短期且一次有效。校验 state 后换取 access token，再请求 me 接口取得 openid 与 unionid；缺少 unionid 时明确失败，不保存部分身份。
+StuHelper 账号与安全页通过 QQ 互联 OAuth 绑定身份。生产使用 Casdoor QQ provider 的同一个互联应用。已登录用户发起授权，state 绑定当前 StuHelper 会话，五分钟有效且一次消费。绑定过程不需要 Casdoor 浏览器会话。
 
-AppID、AppSecret 和回调地址从私有配置文件读取。access token 只用于当次请求，不持久化。外部请求设置超时、取消和响应大小上限，禁止重定向携带凭据，错误使用稳定代码，日志不记录凭据、验证码或上游原文。
+后端换取 access token 后请求 `me?unionid=1&fmt=json`，验证应用标识、OpenID 与 UnionID。模块保存两项标识及应用命名空间，在同一事务写入绑定、审计及 outbox。应用内的 OpenID 与 UnionID 分别受唯一约束。
 
-QQ 主动撤销通知尚未接入。当前以用户在本系统解绑作为撤销检测依据，不宣称能够主动得知 QQ 侧授权撤销。
+QQ 返回 100048 时报告 UnionID 权限未开通，响应缺少 UnionID 时报告标识缺失。两种情况均在发起 Casdoor 更新前拒绝。回调地址被 QQ 拒绝时报告配置错误。若 QQ 在自己的网页上阻止继续授权，用户会在 QQ 页面看到错误。
+
+后端按会话的 Casdoor issuer 和稳定用户 ID 定位账号。写入前核对当前账号及组织内的 QQ 归属，已关联相同 OpenID 可继续补全。已占用或当前账号持有另一个 OpenID 时拒绝覆盖。Casdoor 官方 API 只更新 `qq` 字段并读回验证。
+
+QQ 互联 access token 仅用于本次读取。绑定不读取昵称和头像。外部请求设置超时、限制响应大小并拒绝重定向。状态和业务日志使用固定代码，浏览器回跳不携带授权码、QQ 标识或上游原文。
+
+本地事务序列化 StuHelper 的绑定写入，并在 Casdoor 核对失败时回滚。同一个 OpenID 已写入 Casdoor 而本地提交结果未知时，重新授权会核对现有归属并补齐本地记录。Casdoor 4.24.0 的管理 API 未提供跨入口原子归属检查。
+
+QQ 互联与机器人配置独立。生产仅启用 QQ 互联身份和账号状态读取。OneBot 与官方机器人没有可用凭据，发码及机器人验码按各自权限和能力状态处理。
+
+Casdoor 自助解绑由注册应用决定，现有外部项目的 provider 配置保持原样。QQ 互联身份与 Casdoor QQ 登录各有状态，页面读回差异并提示核对。QQ 侧主动撤销通知尚未接入。
 
 ## 状态、管理与注销
 
@@ -50,8 +60,12 @@ Web 展示三项状态、各自操作入口及验证码提醒，不以一个标�
 | QQB-04 | backend 装配真实绑定来源，缺项即未完成，来源故障返回 503，注销删除三项 |
 | QQB-05 | Koishi 只处理配置机器人的私聊验证码，使用适配器身份，重试使用同一幂等键，八语言回复包含本人验证码提醒 |
 
-QQ 互联 redirect_uri 使用私有配置中的 Web `/me/qq/callback` 完整 HTTPS 地址。页面读取 state、code 或 QQ 错误参数，有 code 时调用 POST `/api/v1/qq-binding/connect/confirm`，拒绝授权时调用 POST `/api/v1/qq-binding/connect/cancel`。
+## Web 授权与结果
 
-确认请求体为 `{state, code}`，取消请求体为 `{state}`。两者需要当前登录会话与 Idempotency-Key，state 必须属于当前会话且未过期。相同请求重试返回原结果，取消使 state 失效且不访问 QQ。
+`POST /api/v1/qq-binding/connect/start` 要求登录 Cookie、同源 CSRF 令牌和 Idempotency-Key，请求体为 `{}`。浏览器将当前标签页导航到响应的 `url`。同一幂等键返回原结果，新键作废本项上一条未使用的 state。
 
-同一项使用新幂等键生成验证码或发起 OAuth 时，之前未用的验证码或 state 立即失效，其他项不受影响。相同幂等键重试返回原凭据。本项已绑定返回 409 qq_binding_already_bound；身份已属于其他账号才返回 qq_binding_ownership_conflict。
+生产回调固定为 `https://stuhelper.com/api/v1/auth/qq-link/callback`。后端验证当前 StuHelper 会话并处理授权或取消，以 303 返回 `/me/account?qq_link=<结果>`。账户页按契约的固定值展示本地化消息并刷新本人状态。
+
+`GET /api/v1/qq-binding/me` 的 `connect_login` 表示 Casdoor QQ 登录状态。`reauthorize` 表示已有 Casdoor 绑定，需完成一次 QQ 授权以补齐 UnionID。`out_of_sync` 表示两侧状态有差异，使用相同 QQ 重新授权可恢复 Casdoor 登录绑定。
+
+`connect/confirm` 和 `connect/cancel` 仍提供带幂等键的 HTTP 操作。身份被其他账号持有时返回归属冲突。能力关闭或配置缺失时返回固定 503 代码。
