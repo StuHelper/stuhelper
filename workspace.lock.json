@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "release": "v0.1.27",
+  "release": "v0.1.28",
   "projects": {
     "platform": {
       "repository": "https://github.com/StuHelper/stuhelper-platform.git",
@@ -10,14 +10,14 @@
     },
     "web": {
       "repository": "https://github.com/StuHelper/stuhelper-web.git",
-      "tag": "v0.1.19",
-      "revision": "bdd4b6d942669d015ac93d122d3d5027ed1e8015",
+      "tag": "v0.1.20",
+      "revision": "dea463a9786102bcfe8ce81fa79219cf609525aa",
       "dirty": false
     },
     "admin": {
       "repository": "https://github.com/StuHelper/stuhelper-admin.git",
-      "tag": "v0.1.8",
-      "revision": "ac78910c67793d4d285c6e307e0c34252760e8c0",
+      "tag": "v0.1.9",
+      "revision": "45f18fe384f76abe33f449a835d4d681fcf18c44",
       "dirty": false
     },
     "verification": {
@@ -28,8 +28,8 @@
     },
     "storage": {
       "repository": "https://github.com/StuHelper/stuhelper-storage.git",
-      "tag": "v0.1.1",
-      "revision": "99a24b31452230f2d2f6369ad5ecd88c87916bd9",
+      "tag": "v0.1.2",
+      "revision": "d36c9b863c63356b083a51a2aab6ea93e53db8bb",
       "dirty": false
     },
     "media": {
@@ -40,8 +40,8 @@
     },
     "storage-contribution": {
       "repository": "https://github.com/StuHelper/stuhelper-storage-contribution.git",
-      "tag": "v0.1.1",
-      "revision": "a8d60231d1c55fae2d197be7e074a37f9fca48a8",
+      "tag": "v0.1.2",
+      "revision": "16277e72d656b731716e68317002f074c93294d8",
       "dirty": false
     },
     "billing": {
@@ -52,8 +52,8 @@
     },
     "backend": {
       "repository": "https://github.com/StuHelper/stuhelper-backend.git",
-      "tag": "v0.1.41",
-      "revision": "0ac01c2e81ec473e99c8c3477de5d0493d22e81d",
+      "tag": "v0.1.43",
+      "revision": "284d5f5fbb7bee6536a52965beb14240773381ec",
       "dirty": false
     },
     "catalog": {
@@ -136,8 +136,8 @@
     },
     "ops": {
       "repository": "https://github.com/StuHelper/stuhelper-ops.git",
-      "tag": "v0.1.25",
-      "revision": "51c16185751732bc03eb37cd297e11175d011f89",
+      "tag": "v0.1.27",
+      "revision": "b0ba15660788c1293817c9e3824d52284a30d0ac",
       "dirty": false
     },
     "campus-adapters": {

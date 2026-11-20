@@ -129,6 +129,8 @@ modules:
     scenario_tests:
       ST-03:
         - contribution_test.go#TestContributionExitWaitsForRecordedReplicaCleanup
+      SP-02:
+        - integration_test.go#TestAccountDeduplicationAcrossContributorAccounts
       SP-27:
         - content_test.go#TestSharedContentConcurrentProofAndSinglePhysicalObject
         - content_test.go#TestConcurrentSharedIngestKeepsOneProviderIntent
@@ -136,6 +138,11 @@ modules:
         - content_test.go#TestSharedContentIndependentReferencesAndLastRelease
         - content_test.go#TestSharedContentProtectionMigrationAndReuseRemainIndependent
         - content_test.go#TestDeleteDuringSharedProtectionCopyCleansDestinationAndKeepsOtherHandle
+      SP-29:
+        - admission_policy_test.go#TestAdmissionPolicySelectorsAndDefault
+        - admission_policy_integration_test.go#TestContributionAdmissionAdoptionPlacementAndNarrowing
+      SP-30:
+        - admission_policy_integration_test.go#TestContributionAdmissionAdoptionPlacementAndNarrowing
   - id: storage-bhpan
     repository: StuHelper/stuhelper-storage-bhpan
     visibility: public
@@ -403,10 +410,11 @@ modules:
     contract_status: library
     specifications:
       - docs/spec/storage-contribution.md
-      - docs/spec/storage-contribution.md
     scenario_tests:
       ST-03:
         - reopen_test.go#TestExitedContributionReleasesActiveQuotaAndReopensSameBinding
+      ST-13:
+        - integration_test.go#TestAdoptVerifiedAccountPreservesBindingAndStatistics
 
   - id: favorites
     repository: StuHelper/stuhelper-favorites
@@ -1018,6 +1026,8 @@ applications:
         - internal/resourceapp/integration_test.go#TestResourceCompositionCatalogReviewMediaArchiveAndRevocation
       RS-23:
         - internal/resourceapp/integration_test.go#TestResourceCompositionConfigurationAndCurrentRights
+      RS-19:
+        - cmd/business-migrate/migrate_order_test.go#TestResourcesMigrationSeedsExistingEmptySchema
   - id: web
     repository: StuHelper/stuhelper-web
     visibility: public
