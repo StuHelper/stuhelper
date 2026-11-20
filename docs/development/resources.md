@@ -8,7 +8,7 @@ updated: 2026-11-20
 
 ## 当前范围
 
-resources 已有独立公开仓库和候选实现，管理统一分类、配置字段、课程关联、版本、审核、访问授权、申请和目录打包。文件内容由 media 与 storage 保存，课程对象通过 catalog 校验，审核由 moderation 执行。
+生产已装配 resources，管理资料分类、字段、课程关联、版本、审核、访问授权、申请和目录打包。文件内容由 media 与 storage 保存，课程对象由 catalog 校验，审核由 moderation 执行。
 
 Web 与 stuhelper-admin 的资料入口为 /resources，课程主页提供关联入口。用户可筛选分类字段、查看年份分组、上传原文件、维护本人资料、提交申请和下载分包。管理员配置分类与目录、处理审核、设置售价与会员覆盖、授予或撤回访问权。
 
@@ -25,6 +25,10 @@ Web 与 stuhelper-admin 的资料入口为 /resources，课程主页提供关联
 ## 配置与业务边界
 
 初始课件、往年题、教材和习题保存在数据库，管理员可以修改。分类使用稳定 ID，字段支持文本、整数与选项。年份只是可筛选和分组的整数配置，未知值保留为空，页面不按分类名称分支。
+
+正式安装使用 `business-migrate --modules resources`，同时创建结构和初始分类修订。已有空结构也补齐四类，重复运行保留管理员修改。未启用任何分类时，Web 上传入口说明当前状态。
+
+管理后台从应用会话读取当前配置的学校。后台审核使用管理 API 的角色与学校范围，审核员可以在缺少社区学生资格时处理其有权限的审核事项。
 
 资料版本保存分类修订快照。修改分类后，新提交检查当前配置，既有已发布版本保留原说明。更正或新版本待审时继续交付旧发布版，审核和异步文件发布成功后再切换。
 
@@ -54,7 +58,9 @@ StuHelper 的 20 模块架构、18 项脚本测试、文档、工作流、13 个
 
 ## 交付与剩余范围
 
-课程、存储和资料模块已发布，版本见[后端实施状态](backend-decisions.md#发布版本)。课程、存储和资料分别维护自己的数据和接口，真实 SSO、校园资格供应方、生产数据导入、运行环境容量与备份恢复仍按对应环境验收，当前尚未部署。
+课程、存储和资料已装配于 txy 生产。2026-11-20 使用 backend v0.1.42 执行迁移，生产读回四个资料分类及各自的初始修订。正式资料上传、审核、发布和下载仍需使用获准账号及合成文件验收。
+
+GAP1 隔离组合验证了 Web 上传、待审下载限制、后台审核、两个独立 BHpan 账号副本和逐字节下载。测试使用 PostgreSQL 和 BHpan 协议夹具。
 
 资料购买、会员覆盖及商品退款已接入 billing、resources 与 backend 组合，Web 提供购买入口，Admin 提供定价和覆盖配置。贡献奖励、在线阅读器、个性化标记及应用层加密继续延期，正式作品授权条款由负责人上线前定稿。
 
@@ -66,13 +72,9 @@ StuHelper 的 20 模块架构、18 项脚本测试、文档、工作流、13 个
 
 新增数据库回归覆盖并发上传、来源权限与配置变化、独立审核、响应丢失、重启、取消、最后引用清理和迁移中删除。最后一个引用释放时，物理删除完成后才报告清理完成。
 
-## 候选组合与合并顺序
+## 生产组合
 
-[Resources #1](https://github.com/StuHelper/stuhelper-resources/pull/1)、[Storage #1](https://github.com/StuHelper/stuhelper-storage/pull/1)、[Media #1](https://github.com/StuHelper/stuhelper-media/pull/1)与[Moderation #2](https://github.com/StuHelper/stuhelper-moderation/pull/2)提供资料和文件能力。
-
-[Backend #7](https://github.com/StuHelper/stuhelper-backend/pull/7)、[Web #11](https://github.com/StuHelper/stuhelper-web/pull/11)与[Admin #13](https://github.com/StuHelper/stuhelper-admin/pull/13)组成资料应用候选。各应用分支组合了已提交的存储和课程候选，未改动其他任务工作树。
-
-先合入 platform、catalog、reviews 与 moderation 基础，再处理 storage、media、moderation 的资料扩展和 resources。原存储与课程应用 PR 合入后，再处理资料应用候选，最后更新发布组合。所有合并、发行和部署继续等待负责人授权。
+提供方与 Web、Admin、Backend 的正式组合记录在 `workspace.lock.json`。生产迁移已补齐四个初始分类。隔离环境已验证两个独立账号的副本达到发布门槛，并逐字节核对下载内容。
 
 ## 统一登录与学生资格
 
