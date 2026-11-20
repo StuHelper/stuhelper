@@ -30,7 +30,7 @@ QQ 互联 access token 仅用于本次读取。绑定不读取昵称和头像。
 
 本地事务序列化 StuHelper 的绑定写入，并在 Casdoor 核对失败时回滚。同一个 OpenID 已写入 Casdoor 而本地提交结果未知时，重新授权会核对现有归属并补齐本地记录。Casdoor 4.24.0 的管理 API 未提供跨入口原子归属检查。
 
-QQ 互联与机器人配置独立。生产仅启用 QQ 互联身份和账号状态读取。OneBot 与官方机器人没有可用凭据，发码及机器人验码按各自权限和能力状态处理。
+三个页面入口分别使用 `qq-binding.connect`、`qq-binding.onebot`、`qq-binding.official`。生产仅启用 `qq-binding.connect` 和账号状态读取 `qq-binding.manage`。未启用的机器人请求返回固定能力关闭状态。
 
 Casdoor 自助解绑由注册应用决定，现有外部项目的 provider 配置保持原样。QQ 互联身份与 Casdoor QQ 登录各有状态，页面读回差异并提示核对。QQ 侧主动撤销通知尚未接入。
 
@@ -48,7 +48,9 @@ Casdoor 自助解绑由注册应用决定，现有外部项目的 provider 配�
 
 qq_binding_status 只返回三项是否全部完成。qq_binding_details 返回整体状态，完成时提供 OneBot 的 QQ 号，未完成时不提供号码。两个范围分别申请、审批和同意。第三方不能读取 openid 或 unionid。
 
-Web 展示三项状态、各自操作入口及验证码提醒，不以一个标志代替分项状态。Admin 按账号查询并处理冲突。双方按 contracts/qq-binding.openapi.json 生成客户端，处理过期、冲突、限流、依赖故障和重新发起授权。
+Web 展示三项状态及已开启项的操作入口。本人接口返回 `connect`、`onebot`、`official` 的绑定事实及修订。已关闭项的既有数据仍可显示，能力状态由系统能力接口提供。未绑定项初始为 `bound:false`、`revision:0`。
+
+Admin 按账号查询并处理冲突。Web 和 Admin 按 `contracts/qq-binding.openapi.json` 生成客户端，处理过期、冲突、限流、依赖故障和重新授权。
 
 ## 验收场景
 

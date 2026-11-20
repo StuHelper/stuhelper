@@ -962,9 +962,15 @@ modules:
       - qq-binding.identity.resolve
       - qq-binding.manage
       - qq-binding.connect
+      - qq-binding.onebot
+      - qq-binding.official
       - qq-binding.bot
     capability_requires:
       qq-binding.connect:
+        - identity
+      qq-binding.onebot:
+        - identity
+      qq-binding.official:
         - identity
       qq-binding.manage:
         - identity
