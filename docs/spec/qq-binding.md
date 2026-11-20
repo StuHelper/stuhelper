@@ -26,7 +26,7 @@ QQ 返回 100048 时报告 UnionID 权限未开通，响应缺少 UnionID 时报
 
 后端按会话的 Casdoor issuer 和稳定用户 ID 定位账号。写入前核对当前账号及组织内的 QQ 归属，已关联相同 OpenID 可继续补全。已占用或当前账号持有另一个 OpenID 时拒绝覆盖。Casdoor 官方 API 只更新 `qq` 字段并读回验证。
 
-QQ 互联 access token 仅用于本次读取。绑定不读取昵称和头像。外部请求设置超时、限制响应大小并拒绝重定向。状态和业务日志使用固定代码，浏览器回跳不携带授权码、QQ 标识或上游原文。
+QQ 互联 access token 仅用于本次读取。绑定不读取昵称和头像。外部请求设置超时、限制响应大小并拒绝重定向。业务日志只记录固定状态码。Web 读取回调参数后立即清除地址栏查询参数。
 
 本地事务序列化 StuHelper 的绑定写入，并在 Casdoor 核对失败时回滚。同一个 OpenID 已写入 Casdoor 而本地提交结果未知时，重新授权会核对现有归属并补齐本地记录。Casdoor 4.24.0 的管理 API 未提供跨入口原子归属检查。
 
@@ -57,7 +57,7 @@ Admin 按账号查询并处理冲突。Web 和 Admin 按 `contracts/qq-binding.o
 | 场景 | 预期结果 |
 | --- | --- |
 | QQB-01 | 三项独立完成才满足整体条件；验证码单次、过期拒绝、唯一归属、解绑和注销原子执行，事件失败回滚 |
-| QQB-02 | OAuth state 校验会话与期限，确认幂等、取消授权、跨会话与过期拒绝，缺少 unionid 不保存绑定，来源失败返回明确错误 |
+| QQB-02 | 确认与取消校验会话和 state 并支持幂等重试。同一授权码最多交换一次。缺少 UnionID 或 Casdoor 同步失败时不保存绑定 |
 | QQB-03 | 机器人凭据与平台校验、匿名及越权拒绝，响应不泄露验证码归属或其他项身份 |
 | QQB-04 | backend 装配真实绑定来源，缺项即未完成，来源故障返回 503，注销删除三项 |
 | QQB-05 | Koishi 只处理配置机器人的私聊验证码，使用适配器身份，重试使用同一幂等键，八语言回复包含本人验证码提醒 |
@@ -66,8 +66,14 @@ Admin 按账号查询并处理冲突。Web 和 Admin 按 `contracts/qq-binding.o
 
 `POST /api/v1/qq-binding/connect/start` 要求登录 Cookie、同源 CSRF 令牌和 Idempotency-Key，请求体为 `{}`。浏览器将当前标签页导航到响应的 `url`。同一幂等键返回原结果，新键作废本项上一条未使用的 state。
 
-生产回调固定为 `https://stuhelper.com/api/v1/auth/qq-link/callback`。后端验证当前 StuHelper 会话并处理授权或取消，以 303 返回 `/me/account?qq_link=<结果>`。账户页按契约的固定值展示本地化消息并刷新本人状态。
+QQ 将浏览器带回已登记的 `https://stuhelper.com/me/qq/callback`。页面收到单个 `state` 与 `code` 时向 `/api/v1/qq-binding/connect/confirm` 提交 `{state, code}`。
+
+收到 `state` 与 QQ 错误时向 `/api/v1/qq-binding/connect/cancel` 提交 `{state}`。缺少或重复参数以及同时带有 `code` 和 `error` 的回调按无效处理。
+
+两个 POST 均要求原登录会话、同源 CSRF 校验与幂等键。确认在交换授权码前持久化操作，并在 24 小时内阻止相同授权码用于其他 state。同键同请求读取原结果。收到 202 时用原请求和幂等键重试，收到重新授权错误时返回账号页发起新授权。
+
+生产确认成功返回 `connect.bound=true` 和 `connect_login=linked`。取消使 state 失效。页面只显示本地化结果，并提供返回 `/me/account` 的链接。
+
+取消成功后，`access_denied` 显示用户拒绝，`100010` 或 `redirect_uri_mismatch` 显示回调配置错误，`100048` 显示 UnionID 权限错误，其他 QQ 错误提示重新授权。
 
 `GET /api/v1/qq-binding/me` 的 `connect_login` 表示 Casdoor QQ 登录状态。`reauthorize` 表示已有 Casdoor 绑定，需完成一次 QQ 授权以补齐 UnionID。`out_of_sync` 表示两侧状态有差异，使用相同 QQ 重新授权可恢复 Casdoor 登录绑定。
-
-`connect/confirm` 和 `connect/cancel` 仍提供带幂等键的 HTTP 操作。身份被其他账号持有时返回归属冲突。能力关闭或配置缺失时返回固定 503 代码。
