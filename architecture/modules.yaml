@@ -68,6 +68,49 @@ modules:
       QQB-04:
         - internal/qqbindingapp/assembly_test.go#TestQQBindingAssemblyOAuthBotsFactsAndClosure
         - internal/qqbindingapp/assembly_test.go#TestQQBindingConfigRejectsUnknownFieldsAndPublicFiles
+  - id: legal
+    repository: StuHelper/stuhelper-backend
+    visibility: private
+    implementation: in-progress
+    required:
+      - platform
+    optional:
+      - identity
+    interface_owner: legal
+    contract_status: implemented
+    specifications:
+      - docs/spec/legal-documents.md
+    in_application: backend
+    api: 1
+    capabilities:
+      - legal.documents
+      - legal.manage
+    capability_requires:
+      legal.manage:
+        - identity
+    scenario_tests:
+      LEGAL-01:
+        - internal/legalapp/integration_test.go#TestPublishedVersionKeepsRenderedSnapshot
+        - internal/legalapp/render_test.go#TestRenderDocumentFreezesLiteralValuesAndDigest
+      LEGAL-02:
+        - internal/legalapp/integration_test.go#TestEffectiveVersionAndArchivedHistory
+        - internal/legalapp/current_references_test.go#TestCurrentReferencesMatchEffectivePublications
+      LEGAL-03:
+        - internal/legalapp/handler_test.go#TestLegalHTTPAdminAuthorityAndAudit
+        - internal/legalapp/integration_test.go#TestConcurrentChangesAreIdempotentAndRevisionChecked
+      LEGAL-04:
+        - internal/legalapp/integration_test.go#TestLegalRuntimePrivilegesAndAuditRollback
+        - cmd/backend/legal_test.go#TestConfiguredLegalAssembly
+      LEGAL-05:
+        - internal/legalapp/integration_test.go#TestPreviewAndPublishShareValidation
+        - internal/legalapp/render_test.go#TestRenderDocumentRejectsUnsafeOrUnresolvedTemplates
+      LEGAL-06:
+        - internal/resourceapp/legal_terms_test.go#TestLegalTermsSourcePinsPublicUploadLicense
+      LEGAL-07:
+        - internal/legalapp/import_integration_test.go#TestLegalSeedImportThroughHTTP
+      LEGAL-08:
+        - internal/legalapp/handler_test.go#TestLegalHTTPHistoryCORSAndDigest
+        - internal/legalapp/handler_test.go#TestLegalHTTPSOriginIsCanonical
   - id: profiles
     repository: StuHelper/stuhelper-profiles
     visibility: public
@@ -577,12 +620,14 @@ modules:
       - verification
       - billing
       - identity
+      - legal
     interface_owner: resources
     contract_status: implemented
     specifications:
       - docs/spec/resource-sharing.md
       - docs/spec/action-eligibility.md
       - docs/spec/personal-center.md
+      - docs/spec/legal-documents.md
     eligibility_facts:
       campus_eligibility: verification
       phone_bound: identity
@@ -606,6 +651,9 @@ modules:
       resources.manage:
         - identity
     scenario_tests:
+      LEGAL-06:
+        - terms_integration_test.go#TestManagedTermsRotationPinsReceiptAndRejectsStaleOriginal
+        - terms_integration_test.go#TestManagedTermsOutagePreservesReplaysAndReposts
       RS-30:
         - publish_release_test.go#TestBlockedApprovedProposalRestartsWithFreshOperationAndSourceRetention
       RS-01:
@@ -1027,6 +1075,7 @@ applications:
       - media
       - resources
       - open-platform
+      - legal
       - profiles
       - billing
       - favorites

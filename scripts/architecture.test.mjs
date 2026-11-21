@@ -27,6 +27,26 @@ for (const [name, mutate, message] of [
   assert.throws(() => validateModules(config), message);
 });
 
+test('a repository can host multiple logical modules within the same application', () => {
+  const config = load();
+  const identity = config.modules.find(module => module.id === 'identity');
+  const sibling = {
+    ...identity,
+    id: 'hosted-module',
+    interface_owner: 'hosted-module',
+    capabilities: [],
+  };
+  config.modules.push(sibling);
+  validateModules(config);
+
+  sibling.visibility = 'public';
+  assert.throws(() => validateModules(config), /Application module visibility mismatch/);
+  sibling.visibility = 'private';
+
+  delete sibling.in_application;
+  assert.throws(() => validateModules(config), /Duplicate repository owner/);
+});
+
 test('applications and operations validate optional dependencies and private visibility', () => {
   const badOps = load();
   badOps.operations[0].visibility = 'public';

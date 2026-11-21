@@ -1,7 +1,7 @@
 ---
 type: design
 status: Accepted
-updated: 2026-11-21
+updated: 2026-11-22
 ---
 
 # 按模块划分仓库
@@ -18,12 +18,13 @@ updated: 2026-11-21
 
 ## 仓库与数据归属
 
-下表对应 [Mani 工作区清单](https://github.com/StuHelper/stuhelper/blob/develop/mani.yaml)。同一仓库可以承担多个职责，例如 backend 同时维护应用装配与 identity。
+下表对应 [Mani 工作区清单](https://github.com/StuHelper/stuhelper/blob/develop/mani.yaml)。backend 维护应用装配、identity 和 legal。同仓模块各自拥有接口、数据与运行身份。
 
 | 模块 | 仓库 | 可见性 | 拥有的数据与职责 |
 | --- | --- | --- | --- |
 | platform | stuhelper-platform | public | 模块注册、接口发现、动作资格配置、授权范围、组合 API 与通用运行能力 |
 | identity | stuhelper-backend | private | 本应用 OIDC 接入、身份映射与会话适配 |
+| legal | stuhelper-backend | private | 法律文件、全局变量、发布快照及管理审计。见[法律文件规格](../spec/legal-documents.md) |
 | 应用装配 | stuhelper-backend | private | main 入口、模块连接、正式二进制与镜像 |
 | Web | stuhelper-web | public | 学生端 Web、同源 API 传输与用户业务入口 |
 | Admin | stuhelper-admin | public | 基于 Vben 的管理端、运营入口与宿主认证接入 |
