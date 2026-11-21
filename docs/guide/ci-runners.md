@@ -37,7 +37,7 @@ Docker 测试使用任务专属 Compose project、镜像标签和 builder。退�
 
 ## 镜像与主机升级
 
-上海私有池已使用 Ubuntu 26.04 的 `ubuntu26.04-v0.2.3` 镜像。镜像由公开 GHCR 提供，以版本 tag 拉取。主机系统单独维护，站点配置、缓存接入、升级和回退步骤由私有 ops 的 runner 维护说明提供。
+上海私有池已使用 Ubuntu 26.04 的 `ubuntu26.04-v0.2.3` 镜像。镜像由公开 GHCR 提供，以版本 tag 拉取。吉林和北京 runner 的接单与故障切换延后。站点配置、缓存、升级与回退见[私有 runner 指南](https://github.com/StuHelper/stuhelper-ops/blob/develop/docs/guide/ci-runners.md)。
 
 发布新 runner 镜像前检查全部镜像层、配置及构建历史，确认只有公共工具和配置。在无镜像缓存及拉取凭据的环境完整下载，核对 manifest digest，再验证候选能接单并运行工具链、数据库和浏览器检查。
 

@@ -22,6 +22,7 @@ updated: 2026-11-21
 ## 后续与待确认
 
 - 生产账号的核验项目由 Ops 维护，包含真实学生认证、QQ 互联、手机号短信、会话范围和资料审核下载。后台及客户端的后续实现记录在相应主题。
-- SLO、可接受数据丢失时间、恢复时间和容量目标仍待业务规模及基准证据。异地恢复与目标环境压力基准分别验收。
+- SLO、可接受数据丢失时间、恢复时间和容量目标仍待业务规模及压力基准证据。
+- 业务库与 SSO 日常备份的异地留存与恢复、备用服务器接管、吉林和北京 runner 接单及故障切换延后。运维范围见[私有 Ops 生产基线](https://github.com/StuHelper/stuhelper-ops/blob/develop/docs/development/production-baseline.md)。
 - 微信小程序、Android、iOS、HarmonyOS 与独立社交功能继续延期。签名、商店账号与 HarmonyOS 工具链在恢复对应客户端开发时验证。
 - 会员、价格、奖励和真实支付继续按账务规格及运营配置安排。业务边界见[业务规则与延期事项](business-decisions.md)。
