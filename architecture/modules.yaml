@@ -989,6 +989,7 @@ modules:
       QQB-03:
         - integration_test.go#TestHTTPServiceAuthenticationAndIsolation
       QQB-05:
+        - koishi/plugin.test.mjs#accepts group-read only for the private systemd credential
         - koishi/plugin.test.mjs#only direct codes from configured platforms are submitted with stable retry keys
         - koishi/plugin.test.mjs#failure and rate responses do not reveal ownership and all locales carry warnings
         - koishi/plugin.test.mjs#409 replies distinguish an occupied account slot from foreign ownership
