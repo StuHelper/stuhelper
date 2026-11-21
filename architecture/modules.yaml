@@ -104,6 +104,7 @@ modules:
       LEGAL-05:
         - internal/legalapp/integration_test.go#TestPreviewAndPublishShareValidation
         - internal/legalapp/render_test.go#TestRenderDocumentRejectsUnsafeOrUnresolvedTemplates
+        - internal/legalapp/email_transfer_test.go#TestEmailTransferPublicationRequiresVisibleVariables
       LEGAL-06:
         - internal/resourceapp/legal_terms_test.go#TestLegalTermsSourcePinsPublicUploadLicense
       LEGAL-07:
@@ -232,11 +233,13 @@ modules:
       - identity
       - campus-adapters
       - catalog
+      - legal
     interface_owner: verification
     contract_status: implemented
     specifications:
       - docs/spec/student-verification.md
       - docs/spec/personal-center.md
+      - docs/spec/data-retention.md
     api: 1
     capabilities:
       - verification.information-query
@@ -279,6 +282,21 @@ modules:
       verification.admin:
         - identity
     scenario_tests:
+      SV-EMAIL-TRANSFER-01:
+        - email_transfer_test.go#TestEmailTransferConsentGatesIssueAndResend
+        - email_transfer_test.go#TestEmailTransferConsentQueueRollback
+        - email_transfer_test.go#TestEmailTransferPublicationUnavailableAndReplacement
+        - email_transfer_test.go#TestEmailTransferLegacyQueuedChallengeRequiresReceipt
+        - resend_test.go#TestResendRequiresConsentGateForSendAndPendingLookup
+      SV-EMAIL-TRANSFER-02:
+        - email_transfer_test.go#TestEmailTransferWithdrawalStopsQueuedDeliveryAndReplay
+        - email_transfer_test.go#TestEmailTransferWithdrawalStopsUncommittedChoice
+      SV-EMAIL-TRANSFER-03:
+        - email_transfer_test.go#TestEmailTransferAttemptsTrackProviderCallsAcrossShanghaiYears
+        - email_transfer_test.go#TestEmailTransferAnnualCountsRecordedRecipients
+        - email_transfer_test.go#TestEmailTransferThresholdWarningOmitsIdentity
+      RET-10:
+        - email_transfer_test.go#TestEmailTransferConsentArchiveRetention
       PC-11:
         - identity_mask_test.go#TestOwnIdentityMasksComeFromVerifiedDataAndNeverLeakThroughFacts
         - identity_mask_test.go#TestShortIdentityValuesAndMissingMaskEvidenceAreRejected
@@ -1143,6 +1161,7 @@ applications:
       - docs/spec/resource-sharing.md
       - docs/spec/open-platform.md
       - docs/spec/personal-center.md
+      - docs/spec/student-verification.md
     optional:
       - catalog
       - reviews
@@ -1167,6 +1186,12 @@ applications:
       resources.read:
         - resources
     scenario_tests:
+      SV-EMAIL-TRANSFER-01:
+        - internal/verificationapp/legal_transfer_test.go#TestPublishedEmailTransferConsentAcrossModules
+      SV-EMAIL-TRANSFER-02:
+        - internal/sessionapp/consent_gate_test.go#TestConsentGateAcrossAccessModes
+      SV-EMAIL-TRANSFER-03:
+        - cmd/verification-transfer-report/main_test.go#TestVerificationTransferReportReturnsOnlyTotals
       RS-30:
         - internal/resourceapp/integration_test.go#TestBlockedPublicationRetainsPrivateMediaAndRestoresOriginalBytes
       ACAD-41:
