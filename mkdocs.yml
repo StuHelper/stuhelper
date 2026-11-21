@@ -84,6 +84,7 @@ nav:
       - 课程与评价: spec/academic-content.md
       - 学生认证公共接口: spec/student-verification.md
       - 资料与访问权益: spec/resource-sharing.md
+      - 法律文件与版本: spec/legal-documents.md
       - 账户与交易公共接口: spec/wallet-and-points.md
       - 收藏与收藏夹: spec/favorites.md
       - 个人中心: spec/personal-center.md

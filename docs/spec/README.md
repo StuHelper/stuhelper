@@ -1,7 +1,7 @@
 ---
 type: spec
 status: Accepted
-updated: 2026-11-21
+updated: 2026-11-22
 ---
 
 # 功能与模块规格
@@ -30,6 +30,7 @@ updated: 2026-11-21
 | [机器人娱乐功能](bot-entertainment.md) | 骰子、自助禁言及管理配置 |
 | [社交与内容治理](social-content.md) | 动态、互动、匿名、举报、审核和通知 |
 | [SSO 接入与应用会话](sso-compatibility.md) | 身份绑定、会话授权与消费者验收 |
+| [法律文件与版本](legal-documents.md) | 草稿、变量、不可变发布版本、公开查询与同意引用 |
 | [原生客户端行为](native-clients.md) | 技术路线、共享边界、登录和平台限制 |
 | [CI 触发、runner 与缓存](ci-runners.md) | push/PR、必需检查、runner 分配、依赖缓存与制品保留 |
 | [数据保留与删除](data-retention.md) | 数据分类、保存期限、删除与恢复 |
