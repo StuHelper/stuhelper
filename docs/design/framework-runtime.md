@@ -1,14 +1,14 @@
 ---
 type: design
 status: Accepted
-updated: 2026-11-11
+updated: 2026-11-21
 ---
 
 # 框架运行与应用入口
 
 ## 当前范围
 
-platform 提供模块组合、HTTP 边界、契约和远程服务连接。Web 与 stuhelper-admin 提供八语言入口、状态展示与错误恢复。业务 API、持久化、真实身份和数据迁移随各业务仓库实施，进度见[框架状态](../development/framework-bootstrap.md)。
+platform 提供模块组合、HTTP 边界、契约和远程服务连接。backend 装配持久化业务服务与 Casdoor 会话，Web 与 stuhelper-admin 按服务端能力展示八语言入口和错误恢复。各业务的进度和验证见[框架状态](../development/framework-bootstrap.md)。
 
 ## 服务端组合与依赖
 
@@ -32,7 +32,7 @@ Registry 校验业务依赖并确定顺序，Fx 管理启动、回退、停止�
 
 ## HTTP 与身份接口
 
-路由显式声明模块、能力和公开或受保护访问。受保护路由检查能力、Authenticator 和 Authorizer，具体资源权限继续由业务 Service 判断。当前身份适配器尚未接入，管理接口返回 `identity_unavailable`。
+路由声明模块、所需能力与访问类型。受保护路由使用 Authenticator 和 Authorizer，资源权限由业务 Service 检查。正式 backend 注入 Casdoor OIDC 本地会话。公开示例缺少身份适配器时，受保护入口返回 `identity_unavailable`。
 
 平台生成 request ID，统一错误响应隐藏原始异常、凭据和远程响应。响应开始前的 panic 返回结构化 500，响应开始后的 panic 中止连接。默认监听 `127.0.0.1:8080`，由 `STUHELPER_LISTEN` 调整；`STUHELPER_MODULES` 声明启用模块。
 
@@ -46,10 +46,10 @@ platform 维护 OpenAPI 3.1 并生成 Go 和 TypeScript 类型。客户端保存
 
 Web 使用 Vue 3、TypeScript、Vite 和 Vue Router，类型与 ESLint 配置复用官方 create-vue 所采用的预设。stuhelper-admin 基于 Vben Admin v5.7.0 的 web-antd 应用，保留布局、主题、组件和 pnpm workspace。第三方源码与许可证可追溯，升级方法见[依赖维护](../guide/dependency-maintenance.md)。
 
-两端的语言、格式和 RTL 规则由[国际化规格](../spec/internationalization.md)统一管理。页面只呈现实际接口结果，真实业务随模块接入。
+两端的语言、格式和 RTL 规则由[国际化规格](../spec/internationalization.md)统一管理。页面使用宿主认证传输，并根据能力发现与当前 API 结果展示业务状态。
 
 ## 工作区与验证
 
-Mani 统一管理本地独立仓库。Go Workspace 按已检出的 Go 模块生成，各 Go 仓库独立构建。公开应用集成默认使用 develop，手动候选显式传入完整提交 SHA，每轮记录实际组合。backend 的正式构建关闭 go.work，部署版本由 ops 的 Compose 覆盖文件维护。
+Mani 统一管理本地独立仓库。Go Workspace 按已检出的 Go 模块生成，各 Go 仓库独立构建。公开应用集成默认使用 develop，手动候选显式传入完整提交 SHA，每轮记录实际组合。backend 正式构建使用 `GOWORK=off`。部署组合和活动版本由 ops 维护。
 
-验证覆盖依赖、能力降级、生命周期回退、远程恢复、身份拒绝、契约兼容、客户端共用用例和八语言浏览器联调。持久化、事件、真实会话和业务数据迁移在对应实现中增加专门验收。
+框架检查覆盖依赖、能力降级、生命周期回退、远程恢复、身份拒绝和契约兼容。浏览器检查使用共享用例验证两端行为和八语言。数据库、会话、事件和迁移按各业务模块验收。

@@ -1,26 +1,26 @@
 ---
 type: design
 status: Accepted
-updated: 2026-11-20
+updated: 2026-11-21
 ---
 
 # 平台架构
 
 ## 目标与范围
 
-本文提出校园业务模块的协作方式、数据归属和服务拆分条件。模块的启停和扩展行为由[模块生命周期规格](../spec/module-lifecycle.md)定义，实施阶段见[重写计划](../development/rewrite-roadmap.md)。
+平台架构定义校园业务模块的协作方式、数据归属和服务拆分条件。模块的启停和扩展行为由[模块生命周期规格](../spec/module-lifecycle.md)定义，实施阶段见[重写计划](../development/rewrite-roadmap.md)。
 
 完整业务见[业务范围](business-scope.md)。模块、仓库和数据归属以[多仓库设计](module-repositories.md)及机器可读清单为准。
 
 ## 系统边界与总体架构
 
-采用独立身份服务、按模块拆仓的业务系统和原生多端。每个模块独立维护代码、数据、接口、版本与启停流程。公开和私有业务模块可共同编译进私有 backend，模块继续独立管理数据访问权限。官方 Casdoor 与 Koishi 独立运行。
+StuHelper 采用独立身份服务、按模块分仓的业务系统、Web 与管理端。公开和私有业务模块共同编译进私有 backend，各自维护数据访问权限与接口版本。Casdoor 独立运行，Koishi 按机器人能力开关部署。
 
-首期业务实现建议使用 Go 与 PostgreSQL，Redis 用于缓存和限流等可重建状态，文件使用兼容 S3 的对象存储。具体依赖版本由工具链和组件锁文件维护。
+后端使用 Go 与 PostgreSQL。文件通过 media 和 storage 交付，当前接入 BHpan。各组件依赖由工具链清单和锁文件固定。参见[通用文件与分布式存储](storage-architecture.md)。
 
 ```mermaid
 flowchart TB
-  CLIENT[Web / Admin / 原生客户端] --> API[组合 API / 模块能力发现]
+  CLIENT[Web / Admin] --> API[组合 API / 模块能力发现]
   CLIENT -. OIDC .-> SSO[独立官方 SSO]
   API --> CORE[公共业务模块]
   API --> PRIVATE[私有认证与账务模块]
@@ -40,7 +40,7 @@ SSO 可以独立登录、启动、更新和恢复。AI、Store 与现有 Payment
 
 catalog 管理公共学校目录、课程、教师和课表，verification 管理学生资格与实名，campus-adapters 管理学校接入。三者通过接口协作，公共学校目录不保存认证材料或学校核验实现。
 
-reviews 管理课程评价、导师评论及其回复、投票和草稿。favorites 管理收藏和收藏夹。教师评分由课程评价派生。community 管理社交动态和关注关系，关闭 community 不影响评价自身的互动。
+reviews 管理课程评价、导师评论及其回复、投票和草稿。favorites 管理收藏和收藏夹。教师评分由课程评价派生。社交动态与关注关系归延期的 community 设计。
 
 resources 管理资料、版本、访问与交付。billing 管理货币、交易及其产生的权益凭据。资料可以在未安装 billing 时提供免费能力，涉及收费的功能只有在所需能力可用时启用。
 
@@ -57,7 +57,7 @@ qq-binding 拥有三项 QQ 身份、验证码、OAuth 状态、审计和 outbox�
 5. 如果多个模块的操作必须一起成功或失败，设计明确的协调事务。允许分步完成的流程则记录进度，并为失败步骤设计补偿操作。文件先上传到隔离区，确认业务引用后发布，未被引用的文件由有处理上限的后台任务清理。
 6. 搜索、计数和信息流由业务数据生成，可以有明确的短暂延迟。返回结果时仍要检查当前权限、屏蔽关系和下架状态，及时移除不可见内容。
 7. Web BFF 是供浏览器使用的后端，可保存 OIDC 会话并组合页面数据。课程和审核规则继续由业务模块执行。移动端 API 单独定义公有客户端的认证方式。
-8. 各模块独立测试。当前检查覆盖跨模块实现包导入、接口兼容、模块元信息与设计清单的一致性。首个数据库实现同时增加模块数据库身份的越界访问测试。
+8. 各模块独立测试。检查覆盖跨模块实现包导入、契约兼容、模块元信息和架构清单。数据库模块使用实际运行身份验证本模块访问与跨模块拒绝。
 
 ## 运行与质量
 
@@ -71,13 +71,13 @@ qq-binding 拥有三项 QQ 身份、验证码、OAuth 状态、审计和 outbox�
 
 每个业务模块仓库按需包含 `docs/`、`contracts/`、实现目录、迁移与模块检查。目录层次按模块规模选择。模块接口生成 SDK，使用方固定兼容版本，避免复制私有实现。跨仓库版本组合和生产配置由私有部署仓库维护。
 
-客户端分别在 Web、Admin、微信、Android、iOS 和 HarmonyOS 应用仓库开发。客户端共享接口与设计规范，各端保留原生界面和平台生命周期。SSO 工具与候选检查迁入私有 ops 仓库，仍保留完整检查。
+Web 和 Admin 分仓，通过生成的 SDK 共享契约。微信小程序、Android、iOS 与 HarmonyOS 保留参考设计。SSO 运维工具与候选检查由私有 ops 仓库维护。
 
 ## 实施状态与后续设计
 
-公共运行时与 Web/Admin 框架按[框架实现设计](framework-runtime.md)搭建，当前进度见[框架工作记录](../development/framework-bootstrap.md)。业务服务、跨模块事务和容量目标随业务实现补齐。OpenFGA 是否需要在首期引入，按具体授权用例评估。
+应用运行方式见[框架运行与应用入口](framework-runtime.md)，实际接入、验证和待办见[框架工作记录](../development/framework-bootstrap.md)。是否引入 OpenFGA 待具体授权用例验证。
 
-本设计遵循[多仓库决策](../adr/0004-modular-multi-repository.md)。现有已确认的业务规则继续迁移，不因仓库划分而删减功能。
+模块边界遵循[多仓库决策](../adr/0004-modular-multi-repository.md)。
 
 ## 上游线路选择
 
