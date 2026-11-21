@@ -1,7 +1,7 @@
 ---
 type: development
 status: Accepted
-updated: 2026-11-19
+updated: 2026-11-21
 ---
 
 # 框架实施状态
@@ -17,6 +17,12 @@ platform 提供公共模块接口、依赖校验、能力降级、Fx 生命周�
 Web 与 stuhelper-admin 提供状态展示、错误恢复和八语言入口。Admin 另有存储运营页面，接口、权限和验收范围见[存储实施状态](storage-module.md)。国际化检查覆盖消息键、占位符、复数、数字、金额、日期、时区、相对时间和 RTL；界面主动切换语言时同步更新或移除地址栏 `?lang=` 参数已在国际化规格（`I18N-09`）确认，待双端下一版本接入。
 
 共享检查器、GitHub action、reusable workflow 与 Lefthook 预设已迁至 stuhelper-tooling。主仓库保留架构、Mani、工作区工具和应用联调。SSO 官方制品资料归 ops，后端身份实现归 backend。
+
+## 本人手机号
+
+Backend Session 0.9.0 提供本人发码、更换、解绑和近期认证。查询与换绑成功结果使用[本人手机号脱敏规则](../spec/sso-compatibility.md#本人手机号)。Web 接入与实际短信验收单独进行。
+
+PostgreSQL 与模拟 Casdoor 验收覆盖同期旧会话、查重、限频、验证码、解绑保护、写入读回和并发重复请求。本人接口已验证大陆裸号和带 `+86` 号码的显示、异常值的隐藏，以及同键重试返回相同掩码。
 
 ## v0.1.26 课程换号与 QQ 登录组合
 
