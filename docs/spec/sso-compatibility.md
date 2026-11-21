@@ -1,7 +1,7 @@
 ---
 type: spec
 status: Accepted
-updated: 2026-11-21
+updated: 2026-11-22
 ---
 
 # SSO 接入与应用会话
@@ -11,6 +11,30 @@ updated: 2026-11-21
 注册、登录与找回由独立 SSO 提供。本应用当前设备和全部设备退出撤销本应用会话，其他应用按自身规则管理。原生公有客户端不保存 client secret。
 
 身份服务使用官方发行原件。迁移保持原 issuer、subject 和消费方绑定，保留签名验证所需密钥。数据核对与消费者兼容规则见[私有接入规格](https://github.com/StuHelper/stuhelper-ops/blob/develop/docs/spec/sso-compatibility.md)，已完成的运行验收见[迁移记录](../development/sso-migration.md)。
+
+## 主站协议与隐私政策
+
+用户首次登录主站或已同意的条款变更时，须主动同意当前《用户服务协议》和《隐私政策》，才能使用需要登录的业务功能。主站分别提供全文入口与初始未勾选的确认框，由 StuHelper 服务端核对并留证。资料共享、云盘托管等专项授权分别取得同意并留证。
+
+《用户服务协议》以 `terms` 发布，《隐私政策》以 `privacy` 发布，分别保留版本、原文 SHA-256 摘要与公开 URL。管理后台按文档标识独立发布，Ops 发行配置采用已批准原文对应的两份元数据。合订版仅供过渡展示。
+
+发行时核对线上原文与配置的摘要，并归档已发布版本及原文。切换期间，前后端与可回退槽位须遵循同一版本要求。
+
+登录后通过 `GET /api/v1/auth/consent` 读取总 `required`。`documents.terms` 与 `documents.privacy` 分别提供 `version`、`digest`、`url`、`required` 及当前凭证。
+
+以 `POST /api/v1/auth/consent` 单独提交每份待确认文件的 `document_id`、`accepted: true`、`version` 和 `digest`。写入校验当前会话、来源和 CSRF 令牌。
+
+服务端按账号与文件独立记录标识、版本、摘要、服务器确认时间、来源和请求标识。首次对该文件留证的来源为 `registration`，该文件以后更新时为 `version_update`。同一账号并发或重复提交同一文件版本与摘要，返回原凭证。[凭证保存期限](data-retention.md)
+
+任一当前文件待同意时，登录后的业务请求返回 `403 consent_required`。提交的文件版本或摘要已变化时返回 `409 consent_version_changed`。客户端刷新条款状态，重新确认变更的文件。仍匹配当前版本和摘要的同意继续有效。
+
+同意接口遇到未登录、格式错误或存储故障时分别返回 `401`、`400` 或 `503`。
+
+登录、会话检查、退出和办理注销在待同意期间保持可用。待同意的会话返回 `consent_required: true`、CSRF 令牌和到期时间。匿名访问公开内容沿用原有权限规则。用户拒绝当前条款时可退出或申请注销。
+
+撤回涉及特定可选处理的同意时，停止相应处理，可通过对应设置或条款载明的渠道申请办理。撤回前的处理、既有授权及依法留存按对应条款执行。
+
+Casdoor 4.24.0 的注册 `Agreement` 固定默认勾选。沿用该版本时可在应用配置隐藏该项，由主站取得主动同意。官方 4.28.0 起可将该项规则设为 `Agreement - False`，注册时初始不勾选。两种方式都由主站独立留证。[4.24.0 注册源码](https://github.com/casdoor/casdoor/blob/v4.24.0/web/src/pages/auth/SignupPage.tsx) · [官方变更](https://github.com/casdoor/casdoor/commit/1e3cfea33f9519ac913d14b6af092a6b95b6612b)
 
 ## 本地会话与定期复核
 
@@ -109,6 +133,10 @@ Casdoor 回调先消费同标签页 sessionStorage 中的 nonce，再携带 Casd
 | SSO-PHONE-04 | 两次查重均可拒绝被占用的号码，错误或过期验证码不写入，正确验证码写入并读回，首次成功与同键重试返回相同掩码 |
 | SSO-PHONE-05 | 解绑保护最后一个登录方式和短信 MFA。上游响应丢失后通过读回核对，复用幂等键 |
 | SSO-PHONE-06 | 同账号在途写入期间拒绝其他键，原键只读回，最终只有一次上游写入 |
+| SSO-CONSENT-01 | 未同意时登录可完成，主站查询返回两份当前文件，需要登录的业务功能返回 `consent_required` |
+| SSO-CONSENT-02 | 每份文件独立留证。同一账号并发确认同一文件版本和摘要只写入一次，重试返回该份凭证原确认时间和请求标识 |
+| SSO-CONSENT-03 | 文件版本或摘要变化时，该项需要重新确认，过期请求返回 `consent_version_changed`。另一项的有效同意继续生效，旧凭证仍可查 |
+| SSO-CONSENT-04 | 拒绝同意时可退出和申请注销，访问受限业务功能仍须当前同意 |
 
 ## 客户端故障恢复验收
 
