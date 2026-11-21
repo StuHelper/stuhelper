@@ -1,7 +1,7 @@
 ---
 type: development
 status: Accepted
-updated: 2026-11-21
+updated: 2026-11-22
 ---
 
 # 业务规则与延期事项
@@ -46,7 +46,7 @@ updated: 2026-11-21
 | --- | --- | --- |
 | 账户展示 | 积分与 Ivory 分别展示余额、明细、到期信息和退款进度 | [账务对接](../spec/wallet-and-points.md) |
 | 收藏 | 独立 favorites 模块拥有课程、教师、资料收藏和收藏夹 | [收藏规格](../spec/favorites.md) |
-| 账号注销 | 7 天冷静期内可撤销。规格要求期满后自动处理无阻断申请，当前由管理员推进，自动巡检待接入 | [个人中心](../spec/personal-center.md) |
+| 账号注销 | 7 天冷静期内可撤销。Backend 自动处理已到期且无阻断的申请，遇到阻断时保留进度，由管理员续办 | [个人中心](../spec/personal-center.md) |
 | 认证期限 | 普通认证长期有效，只对限时凭证提示到期 | [学生认证](../spec/student-verification.md) |
 | 本人身份字段 | 展示服务端返回的证件类型、脱敏姓名与证件号 | [个人中心](../spec/personal-center.md) |
 | 昵称 | 最多 20 个 Unicode 码点，首次登录依次尝试 SSO 显示名和用户名，都不合规时由用户填写 | [个人中心](../spec/personal-center.md) |
