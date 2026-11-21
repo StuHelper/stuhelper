@@ -1066,7 +1066,7 @@ modules:
         - recipients_test.go#TestConsumeRecipientsConcurrentReplayAndOverlap
         - recipients_test.go#TestBatchInboxMigrationPreservesExistingData
       NT-11:
-        - teacher_homepage_test.go#TestTeacherHomepageNotificationOptInScopesPagingUnreadAndBulkRead
+        - teacher_homepage_test.go#TestTeacherHomepageNotificationPagingUnreadAndBulkRead
   - id: qq-binding
     repository: StuHelper/stuhelper-qq-binding
     visibility: private
