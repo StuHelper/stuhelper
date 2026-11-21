@@ -32,7 +32,13 @@ QQ 互联 access token 仅用于本次读取。绑定不读取昵称和头像。
 
 三个页面入口分别使用 `qq-binding.connect`、`qq-binding.onebot`、`qq-binding.official`。生产仅启用 `qq-binding.connect` 和账号状态读取 `qq-binding.manage`。未启用的机器人请求返回固定能力关闭状态。
 
-Casdoor 自助解绑由注册应用决定，现有外部项目的 provider 配置保持原样。QQ 互联身份与 Casdoor QQ 登录各有状态，页面读回差异并提示核对。QQ 侧主动撤销通知尚未接入。
+用户从 StuHelper 账号页绑定和解除 QQ 互联。`POST /api/v1/qq-binding/bindings/connect/unlink` 使用本人状态中的 connect.revision，只有 Casdoor 登录绑定时也可解除。
+
+解绑提交前通过 Casdoor API 清空当前用户的 `qq` 登录字段并读回。两侧 OpenID 不一致时返回冲突。Casdoor 不可用或未确认清除时，本地绑定、审计、outbox 和幂等回包回滚。同键同请求可重试，已提交时返回原结果。
+
+仅剩 QQ 登录时返回 409 `qq_binding_last_sign_in_method`。保留方式按生产应用启用的登录方法与 Casdoor 用户字段判断。生产当前的备用方式是已设置的密码。成功返回 `connect_login=unbound`。
+
+QQ 互联身份与 Casdoor QQ 登录分别返回状态。QQ 侧主动撤销通知尚未接入。
 
 ## 状态、管理与注销
 
@@ -57,7 +63,7 @@ Admin 按账号查询并处理冲突。Web 和 Admin 按 `contracts/qq-binding.o
 | 场景 | 预期结果 |
 | --- | --- |
 | QQB-01 | 三项独立完成才满足整体条件；验证码单次、过期拒绝、唯一归属、解绑和注销原子执行，事件失败回滚 |
-| QQB-02 | 确认与取消校验会话和 state 并支持幂等重试。同一授权码最多交换一次。缺少 UnionID 或 Casdoor 同步失败时不保存绑定 |
+| QQB-02 | 确认与取消校验会话和 state 并支持幂等重试。同一授权码最多交换一次。缺少 UnionID 或 Casdoor 同步失败时不保存绑定；解绑覆盖仅有 Casdoor 绑定、读回失败重试、最后登录方式拒绝与幂等重放 |
 | QQB-03 | 机器人凭据与平台校验、匿名及越权拒绝，响应不泄露验证码归属或其他项身份 |
 | QQB-04 | backend 装配真实绑定来源，缺项即未完成，来源故障返回 503，注销删除三项 |
 | QQB-05 | Koishi 只处理配置机器人的私聊验证码，使用适配器身份，重试使用同一幂等键，八语言回复包含本人验证码提醒 |
