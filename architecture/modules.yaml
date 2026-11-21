@@ -326,11 +326,15 @@ modules:
       - catalog.directory
       - catalog.teacher-sites.read
       - catalog.teacher-sites.refresh
+      - catalog.teacher-sites.requests
     capability_requires:
       catalog.teacher-sites.read:
         - identity
       catalog.teacher-sites.refresh:
         - identity
+      catalog.teacher-sites.requests:
+        - identity
+        - verification
       catalog.read:
         - identity
       catalog.import:
@@ -369,6 +373,30 @@ modules:
         - teacher_homepage_postgres_test.go#TestTeacherHomepagePostgresDecisionAtomicity
       CAT-TEACHER-07:
         - teacher_homepage_postgres_test.go#TestTeacherHomepagePostgresRefreshPreservesDecisions
+      CAT-TEACHER-08:
+        - teacher_homepage_controls_postgres_test.go#TestTeacherHomepageControlsPostgresVisibilityAndRefresh
+        - teacher_homepage_controls_postgres_test.go#TestTeacherHomepageControlsPostgresSchoolAllowlistAndReplacementPhoto
+        - teacher_homepage_photo_upload_test.go#TestValidateTeacherHomepagePhotoUpload
+        - httpapi/teacher_homepage_photo_test.go#TestWriteTeacherHomepagePhotoUsesPrivateSameOriginResponse
+        - teacher_homepage_complaint_test.go#TestTeacherHomepageComplaintHideRevisionAndReplay
+      CAT-TEACHER-09:
+        - teacher_homepage_controls_postgres_test.go#TestTeacherHomepageControlsPostgresAuditAndReplay
+        - teacher_homepage_controls_storage_test.go#TestTeacherHomepageControlsPostgresPersistence
+        - teacher_homepage_change_audit_test.go#TestTeacherHomepageAuditRecordsChangesWithoutProfileData
+        - teacher_homepage_change_audit_test.go#TestTeacherHomepageAuditDistinguishesPageAndAllowlistChanges
+        - httpapi/teacher_homepage_body_test.go#TestTeacherHomepageInputSizeAndJSONErrors
+      CAT-TEACHER-10:
+        - teacher_homepage_requests_postgres_test.go#TestTeacherHomepageRequestsPostgresAuthorizationAndReview
+        - teacher_homepage_requests_postgres_test.go#TestTeacherHomepageRequestsPostgresSubmissionQuota
+        - teacher_homepage_request_repository_test.go#TestTeacherHomepageRequestRepositoryScopeAndKeyset
+      CAT-TEACHER-11:
+        - teacher_homepage_requests_postgres_test.go#TestTeacherHomepageRequestsPostgresDecisionAndOutboxAtomicity
+        - teacher_homepage_request_notification_test.go#TestTeacherHomepageRequestNotificationUsesOriginalPrivateReceipt
+      CAT-TEACHER-12:
+        - teacher_homepage_requests_postgres_test.go#TestTeacherHomepageRequestsPostgresIndependentPortrait
+        - teacher_homepage_publication_test.go#TestVerifiedTeacherHomepagePublicationCreatesIndependentDirectoryEvidence
+      CAT-TEACHER-13:
+        - teacher_homepage_request_repository_test.go#TestTeacherHomepageRequestRetention
       CO-02:
         - integration_test.go#TestImportRelationsClassificationAndMissingCredits
       CO-04:
@@ -457,6 +485,9 @@ modules:
         - feedback_test.go#TestFeedbackRetentionUsesUTCRegardlessOfDatabaseTimezone
       CM-21:
         - feedback_test.go#TestFeedbackRateCapacityAndCursor
+      CM-24:
+        - teacher_homepage_complaint_test.go#TestTeacherHomepageComplaintQueueAndScope
+        - teacher_homepage_complaint_test.go#TestTeacherHomepageComplaintRetention
   - id: media
     repository: StuHelper/stuhelper-media
     visibility: public
@@ -985,6 +1016,7 @@ modules:
     required:
       - platform
     optional:
+      - identity
       - reviews
       - resources
       - verification
@@ -998,7 +1030,9 @@ modules:
     capabilities:
       - notifications.inbox
       - notifications.consume
-    capability_requires: {}
+    capability_requires:
+      notifications.inbox:
+        - identity
     scenario_tests:
       NT-01:
         - integration_test.go#TestConcurrentDeliveryAggregationPreferencesAndCleanup
@@ -1028,6 +1062,8 @@ modules:
         - recipients_test.go#TestConsumeRecipientsRollbackAllWrites
         - recipients_test.go#TestConsumeRecipientsConcurrentReplayAndOverlap
         - recipients_test.go#TestBatchInboxMigrationPreservesExistingData
+      NT-11:
+        - teacher_homepage_test.go#TestTeacherHomepageNotificationOptInScopesPagingUnreadAndBulkRead
   - id: qq-binding
     repository: StuHelper/stuhelper-qq-binding
     visibility: private
@@ -1086,6 +1122,8 @@ applications:
     implementation: framework
     specifications:
       - docs/spec/academic-content.md
+      - docs/spec/catalog-operations.md
+      - docs/spec/content-management.md
       - docs/spec/module-lifecycle.md
       - docs/spec/sso-compatibility.md
       - docs/spec/resource-sharing.md
@@ -1129,6 +1167,15 @@ applications:
         - internal/resourceapp/integration_test.go#TestResourceCompositionConfigurationAndCurrentRights
       RS-19:
         - cmd/business-migrate/migrate_order_test.go#TestResourcesMigrationSeedsExistingEmptySchema
+      CAT-TEACHER-10:
+        - internal/academicapp/teacher_homepage_controls_test.go#TestTeacherHomepageControlsRoutesSeparateOwnerAndSchoolMaintenance
+      CAT-TEACHER-11:
+        - internal/notificationapp/catalog_test.go#TestTeacherHomepageNotificationDeliveryAndTargetScope
+        - internal/notificationapp/catalog_postgres_test.go#TestTeacherHomepageNotificationRelayRetriesCommittedDecision
+      CAT-TEACHER-12:
+        - internal/businessapp/teacher_homepage_onboarding_test.go#TestTeacherHomepageOnboardingFromUnpublishedDirectoryTeacher
+      CM-24:
+        - internal/academicapp/teacher_homepage_controls_test.go#TestTeacherHomepageComplaintSeparatesReportAndDisplayPermissions
   - id: web
     repository: StuHelper/stuhelper-web
     visibility: public
