@@ -303,6 +303,16 @@ modules:
         - teacher_directory_test.go#TestTeacherSiteSnapshotRejectsConcurrentHomonym
       CAT-TEACHER-03:
         - teacher_directory_test.go#TestTeacherDirectoryKeepsAuthorizedMaintenanceOfHiddenTeachers
+      CAT-TEACHER-04:
+        - teacher_homepage_test.go#TestTeacherHomepageDetailsAndPhotoRequireCurrentAdmission
+        - teacher_homepage_postgres_test.go#TestTeacherHomepagePostgresProjectionAndAdmission
+      CAT-TEACHER-05:
+        - teacher_homepage_test.go#TestTeacherSiteReviewHTTPRequiresSchoolPermissions
+        - teacher_homepage_postgres_test.go#TestTeacherHomepagePostgresReviewPaginationAndScope
+      CAT-TEACHER-06:
+        - teacher_homepage_postgres_test.go#TestTeacherHomepagePostgresDecisionAtomicity
+      CAT-TEACHER-07:
+        - teacher_homepage_postgres_test.go#TestTeacherHomepagePostgresRefreshPreservesDecisions
       CO-02:
         - integration_test.go#TestImportRelationsClassificationAndMissingCredits
       CO-04:
