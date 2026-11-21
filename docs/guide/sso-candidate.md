@@ -1,11 +1,11 @@
 ---
 type: guide
 status: Accepted
-updated: 2026-11-11
+updated: 2026-11-21
 ---
 
 # SSO 候选工具的位置
 
-官方候选解析工具及候选记录已移至私有 stuhelper-ops 仓库，使用方法见 [候选解析指南](https://github.com/StuHelper/stuhelper-ops/blob/develop/docs/guide/sso-candidate.md)。
+在私有 stuhelper-ops 仓库根目录运行 `services/casdoor/resolve_candidate.py`。工具需要 Python 3.11+、已认证的 GitHub CLI，以及到 GitHub API 和 Docker Hub 的连接。精确版本查询和故障处理见[候选解析指南](https://github.com/StuHelper/stuhelper-ops/blob/develop/docs/guide/sso-candidate.md)。
 
-工具通过 `gh api` 查询 GitHub release 与 tag，通过 Registry API 查询 Docker Hub manifest。部署引用使用明确版本 tag，digest 单独保存为核验记录。工具只解析公开元数据，候选记录验证继续在该仓库执行。本公开仓库只检查跨模块架构、文档和依赖声明。
+工具核对稳定 v4 的 GitHub release、源码提交与官方镜像清单。候选记录使用明确版本 tag，并单独保存镜像及各平台 digest 作为核验依据。运行状态以[迁移记录](../development/sso-migration.md)为准。

@@ -1,13 +1,19 @@
 ---
 type: development
 status: Accepted
-updated: 2026-11-11
+updated: 2026-11-21
 ---
 
 # SSO 迁移进度与私有文档
 
-进度：尚未实施生产迁移。原有候选调查、兼容矩阵、备份恢复及切换任务已迁至 [私有 SSO 迁移记录](https://github.com/StuHelper/stuhelper-ops/blob/develop/docs/development/sso-migration.md)。
+## 当前运行
 
-SSO 的配置、候选解析工具和检查由私有 ops 仓库维护。当前后端候选没有执行生产 SSO 变更或账号数据导入。
+生产已使用官方 Casdoor 4.24.0、独立 PostgreSQL 和 Redis，已恢复旧身份数据并沿用公开 issuer。应用会话由 StuHelper 后端单独管理。
 
-业务实现与 SSO 晋级分别验收。生产切换仍需项目负责人明确授权。
+## 已验证
+
+迁移核对覆盖历史签名、已登录会话样本及启用续期的应用。StuHelper v0.1.31 上线后，公网 discovery、健康检查及应用匿名鉴权通过。范围与证据见[私有 SSO 迁移记录](https://github.com/StuHelper/stuhelper-ops/blob/develop/docs/development/sso-migration.md)和[私有生产基线](https://github.com/StuHelper/stuhelper-ops/blob/develop/docs/development/production-baseline.md)。
+
+## 待验证与待确认
+
+完整消费者真实账号矩阵、实际短信和跨主机接管仍待验收。备用节点的复制与接管尚未启用。复制提交方式、故障接管时的会话策略，以及 Casdoor `webhook_event` 自动保留天数保持 InReview，见私有运维记录。

@@ -1,7 +1,7 @@
 ---
 type: guide
 status: Accepted
-updated: 2026-11-20
+updated: 2026-11-21
 ---
 
 # 仓库检查与文档预览
@@ -12,18 +12,14 @@ updated: 2026-11-20
 
 共享检查来自 [stuhelper-tooling](https://github.com/StuHelper/stuhelper-tooling)，通过明确版本 tag 安装。Go 正式检查使用 `GOWORK=off`。actionlint 由共享 setup action 安装并校验官方 checksum；本地使用相同版本，版本见工具链清单。
 
-本地将声明版本的 actionlint 加入 PATH。已有 Go 工具链时，可在工作区安装一次供各仓使用：
+将声明版本的 actionlint 加入 PATH。已有 Go 工具链时，在根仓执行以下命令：
 
 ```bash
 mkdir -p .tools/bin
 GOBIN="$PWD/.tools/bin" go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
 export PATH="$PWD/.tools/bin:$PATH"
 make setup
-make setup-contracts
 make check
-mani run check --tags code
-node scripts/workspace.mjs toolchains
-node scripts/workspace.mjs contracts
 ```
 
 本地工具安装目录被 Git 忽略。单仓检查只读取已安装工具，缺失时明确失败，不在检查过程中安装依赖。
@@ -32,11 +28,9 @@ Mani 原生批量输出用于本地开发。CI 在各仓工作目录直接运行
 
 ## CI 依赖恢复与浏览器检查
 
-公开 Linux 作业使用托管 Ubuntu。私有作业写 `runs-on: {group: stuhelper-arc}`。Go、Node、镜像和发行的共享工作流按仓库可见性选择入口，调用方引用 tooling 的版本 tag。
+运行、runner 与缓存诊断见 [CI 指南](ci-runners.md)。
 
-复查缓存时记录 run、attempt、实际 runner、依赖锁文件与工具版本。比较同一提交的冷、热运行，分别记录排队、恢复、安装与编译耗时。缓存压缩包大小、包管理器下载计数与网络传输字节分别记录。
-
-纯文档提交仍执行基础检查。可独立跳过的浏览器 job 根据变更路径选择，首次 push、手动运行或无法确定范围时执行完整检查。
+纯文档提交仍执行基础检查。Web 和 Admin 的路径选择跳过仅改 `docs/**/*.md`、`README.md` 或 `CONTRIBUTING.md` 的浏览器检查。手动运行或无法确定变更范围时执行浏览器检查。根仓公开联调使用工作流的触发路径。
 
 ## 本地 hooks
 
@@ -52,7 +46,16 @@ pre-commit 检查暂存区快照，包括文件安全、脚本权限、语法和
 
 `scripts/architecture.mjs` 验证模块、应用与运维清单的依赖和规格归属；`scripts/workspace.mjs` 以 `architecture/modules.yaml` 为数据源核对 Mani 公私标签、工具链、运行描述、全量客户端契约来源与联调快照。通用检查器及其回归测试在工具仓库维护。
 
-公开应用联调先记录九个仓库的实际提交、检查契约并构建 platform、Web 和 Admin。浏览器阶段使用相同的提交，分成框架、学术、Web 资料和 Admin 资料四组独立运行。
+先用 Mani 检出相关仓库并安装依赖，再按任务范围运行以下命令：
+
+```bash
+mani run check --tags code
+node scripts/workspace.mjs toolchains
+make setup-contracts
+node scripts/workspace.mjs contracts
+```
+
+根仓公开联调记录九个仓库的实际提交，检查契约并构建 platform、Web 和 Admin。框架、学术、Web 资料和 Admin 资料四组浏览器检查使用契约阶段产出的确切提交。
 
 浏览器覆盖八种语言的桌面和移动视口。学术 Web 用例逐页检查脚本异常、缺失翻译、文字方向和横向溢出。无语言偏好时默认中文，在两种视口各检查一次。
 
@@ -60,9 +63,7 @@ pre-commit 检查暂存区快照，包括文件安全、脚本权限、语法和
 
 缺少声明提交时，按完整 SHA 从提供方 origin 补取 Git 对象，保留当前检出。先运行 `make setup-contracts` 安装固定版本的 oasdiff 并核对归档 SHA-256。契约内容不同时使用本地二进制比较。补取 Git 对象和比较契约各限时 60 秒。
 
-普通 develop push 和面向 develop 的 PR 检出各仓 develop。PR 改动 workspace.lock.json 时使用候选提交。面向 main 的 PR 使用锁定组合。main push 和手动运行可按发行锁文件重放，手动输入完整 SHA 可覆盖单项。
-
-发布候选须登记每个参测仓库的干净提交及版本 tag。含 storage 并发配额缺陷的提交不能用于新发行候选。CI summary 列出锁定组合及实际检出的源码。版本支持三段式及四段式日期 tag。
+发行候选登记组件 tag 和对应的干净源码提交。CI summary 分别列出锁定组合和实际检出的源码。工作流选取提交的规则见 [CI 规格](../spec/ci-runners.md)。
 
 ## 文档预览
 

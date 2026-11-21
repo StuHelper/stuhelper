@@ -1,16 +1,16 @@
 ---
 type: design
 status: InReview
-updated: 2026-11-11
+updated: 2026-11-21
 ---
 
 # 原生多端设计
 
-当前只交付 Web 与 stuhelper-admin，其他端全部搁置。下文保留原生端参考设计，恢复实施前重新确认平台版本与交付安排。
+微信小程序、Android、iOS 与 HarmonyOS 延期。本页记录各端的参考设计。
 
 ## 目标与范围
 
-Web、小程序、Android、iOS、HarmonyOS 使用适合各平台的 UI、导航、生命周期和系统能力，跨端共享协议与产品定义。当前没有客户端产品；交付优先级和最低系统版本仍待确定。可观察行为见[客户端规格](../spec/native-clients.md)。
+Web 与 stuhelper-admin 已交付。原生端共用协议和产品规则，各自处理界面、导航、生命周期和系统能力。参见[客户端规格](../spec/native-clients.md)。
 
 ## 技术路线与理由
 
@@ -45,7 +45,7 @@ Web、小程序、Android、iOS、HarmonyOS 使用适合各平台的 UI、导航
 
 ## 构建与发行
 
-普通 Web、小程序、Android 编译可以使用标准 Linux runner；Docker 镜像构建及 BJ1 Registry 操作遵循[runner 规格](../spec/ci-runners.md)，使用自建 runner。iOS 需要 macOS + Xcode，现有 Linux ARC 无法承担原生 iOS 编译。HarmonyOS 的 SDK、Hvigor、签名和支持环境需先验证，必要时专用 runner。
+Web 检查、镜像构建和推送使用[runner 规格](../spec/ci-runners.md)规定的调度。小程序与 Android 可从 Linux 构建验证开始，iOS 需要 macOS 和 Xcode，HarmonyOS 需核对 SDK、Hvigor、签名及支持环境。
 
 每端完成登录、课程详情、教师详情、发布评价和资料下载的完整旅程后再扩展；模拟器、真机、签名和商店发布分别验收。原生功能包随平台发行，服务端开关只控制已有能力的可见性，不能替代原生发布。
 

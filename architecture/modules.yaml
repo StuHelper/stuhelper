@@ -1230,11 +1230,8 @@ operations:
       - docs/spec/sso-compatibility.md
     scenario_tests:
       CI-16:
-        - scripts/registry-probe.test.mjs#registry probes are confined to unique temporary tags in Next application repositories
-        - scripts/registry-probe.test.mjs#manifest deletion uses a digest verified against the returned bytes
-        - scripts/registry-probe.test.mjs#interruption during asynchronous cleanup waits for the same cleanup before exit
-        - scripts/registry-probe.test.mjs#interruption stops active work before removing its Registry resources
-        - scripts/registry-probe.test.mjs#cancelled builds exit before Registry cleanup begins
+        - scripts/deployment.test.mjs#remote verification reads pinned manifests without pulling or pushing images
+        - scripts/workflow-hygiene.test.mjs#Registry verification and deployment use GHCR package read permission
 shared_specifications:
   - docs/spec/terminology.md
   - docs/spec/native-clients.md
