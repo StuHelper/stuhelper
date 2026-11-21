@@ -124,8 +124,11 @@ modules:
       - billing
       - reviews
       - resources
+      - favorites
       - open-platform
       - qq-binding
+      - storage
+      - storage-contribution
     interface_owner: profiles
     contract_status: implemented
     specifications:
@@ -142,11 +145,16 @@ modules:
     scenario_tests:
       PC-08:
         - integration_test.go#TestProfileOwnershipReplayConcurrentRevisionAndRuntimeRole
+        - avatar_recovery_test.go#TestFlushPendingAvatarReleasesAfterRestartSkipsActiveVersionsAndAdvancesPastFailures
       PC-05:
         - public_test.go#TestPublicProfileDefaultsUnicodeCompletionAndVisibility
+        - preview_test.go#TestOwnProfileDraftPreviewWithoutDatabaseMutation
+        - avatar_public_test.go#TestPublicAvatarRequiresPublishedProfileAndActiveVersion
       PC-10:
         - public_test.go#TestPublicProfileDefaultsUnicodeCompletionAndVisibility
+        - preview_test.go#TestOwnProfileDraftPreviewWithoutDatabaseMutation
       PC-07:
+        - capability_test.go#TestClosureOptionalDependenciesDeclaredInManifest
         - closure_test.go#TestClosureCoolingCancellationSettlementFailureAndConcurrentRecovery
         - closure_test.go#TestClosurePersistsSkipsForEveryStep
       PC-09:
@@ -154,6 +162,11 @@ modules:
       PC-12:
         - capability_test.go#TestGroupCardCapabilityRegistration
         - group_card_test.go#TestGroupCardConsentAuthorizationAndTransaction
+      PC-13:
+        - closure_due_test.go#TestProcessDueClosuresAtDeadlineResumesAfterRestartAndLeavesBlockedCasesForAdmin
+        - closure_due_test.go#TestDueClosureWorkerContinuesPastInvalidRecords
+        - closure_concurrency_idempotency_test.go#TestExpiredClosureWorkerCannotAdvanceOrReleaseReplacementLease
+        - retention_test.go#TestRetentionCleanupIdempotencyAndCompletedClosures
   - id: campus-adapters
     repository: StuHelper/stuhelper-campus-adapters
     visibility: private
