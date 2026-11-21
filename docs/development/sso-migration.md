@@ -1,7 +1,7 @@
 ---
 type: development
 status: Accepted
-updated: 2026-11-21
+updated: 2026-11-22
 ---
 
 # SSO 迁移进度与私有文档
@@ -12,7 +12,9 @@ updated: 2026-11-21
 
 生产入口使用负责人通过独立服务器上的 Certimate 自动续签并部署的 TLS 证书。证书巡检与续签由外部运维负责。
 
-Casdoor 终态投递记录保留 6 个自然月。Ops 的定时清理待实现及上线，计划随下次发行交付。期限见[数据保留与删除](../spec/data-retention.md)。
+Casdoor 终态投递记录保留 6 个自然月。生产定时清理尚未启用，计划随下次 Ops 发行上线。期限见[数据保留与删除](../spec/data-retention.md)。
+
+Ops develop 已提供定时清理。经批准的本地数据库维护例外限于指定 Webhook 的终态投递记录，按到期时间分批处理。常规 Casdoor 操作仍使用官方 API。安装、权限和保留例外见[私有 Ops 指南](https://github.com/StuHelper/stuhelper-ops/blob/develop/docs/guide/sso-failover.md#casdoor-webhook_event-终态记录维护)。
 
 ## 已验证
 
