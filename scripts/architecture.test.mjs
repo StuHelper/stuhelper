@@ -8,6 +8,12 @@ test('declared architecture and all specification owners are valid', () => {
   validateModules(load());
   validateSpecifications(load());
 });
+
+test('profiles declares favorites as an optional dependency for account closure', () => {
+  const profiles = load().modules.find(module => module.id === 'profiles');
+  assert.ok(profiles.optional.includes('favorites'));
+});
+
 for (const [name, mutate, message] of [
   ['adapter libraries do not claim runtime capabilities', modules => { modules.get('storage-bhpan').capabilities = ['storage-bhpan.runtime']; }, /runtime capabilities/],
   ['private implementation cannot become public', modules => { modules.get('verification').visibility = 'public'; }, /must remain private/],
