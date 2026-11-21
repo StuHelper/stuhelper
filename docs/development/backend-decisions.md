@@ -68,6 +68,10 @@ resources.purchase 与 membership.purchase 独立读取平台资格配置，资�
 
 退款收款资料使用 AES-256-GCM 加密，管理员点击后按独立能力读取，审计成功才返回。私有密钥、billing relay DSN、运行权限与清理参数见[后端交易配置](../guide/backend-commerce.md)。
 
+Billing develop 已按退款终结时间起算 3 年。迁移仅用匹配的终结审计回填日期，缺少终结时间依据的历史资料继续保留。清理跳过有效争议保留。[Billing #36](https://github.com/StuHelper/stuhelper-billing/pull/36)
+
+当前正式组合仍使用按收款资料末次保存时间起算的版本。正式组合切换至包含新清理逻辑和迁移的 Billing 版本后，按退款终结时间起算。[数据保留与删除](../spec/data-retention.md)
+
 ## 事件与操作记录
 
 backend 已装配 moderation、verification 到 notifications，以及 catalog、reviews、resources、favorites 到 search 的 relay，groups 的资格消费与事件通道。billing 与 resources 的交易事件共用统一 relay。
@@ -107,7 +111,7 @@ verification、profiles、reviews、resources、groups、billing 已装配公开
 | 认证通知 | 缺少可解析 operation 引用时保留通知，目标显示不可访问 |
 | 通知保留 | 目前按通知创建时间和同一配置期限清理，后端默认 90 日。按已读与未读使用不同期限待实现 |
 | QQ 与群服务 | QQ 互联端到端、真实账号解绑、机器人接入与动作回执待验收 |
-| 交易 | 真实支付及退款待验收。现有清理任务按收款资料末次保存时间起算，待改为退款终结时起算。已确定的期限见[数据保留与删除](../spec/data-retention.md) |
+| 交易 | 真实支付、退款及正式组合中的收款资料清理待验收 |
 | 存储与资料 | 生产账号、额度、上传、审核、下载及恢复覆盖见[存储实施](storage-module.md)和[资料实施](resources.md) |
 
 充值返回公开支付指引。提供方查询或验签回调确认成功后才入账。取消前核实付款状态并关闭未付款支付单。模拟付款入口仅可在开发环境启用。
