@@ -22,7 +22,7 @@ updated: 2026-11-21
 
 宽限期从上次确认时间加复核间隔开始计算，失败不延长宽限。刷新明确被拒、账号封禁或删除、组织不匹配时删除会话并返回 401。临时故障每 30 秒最多重试一次，宽限结束返回 unavailable。会话绝对有效期到达后返回 401。
 
-参数变更作用于下一次复核判断。普通请求不使用 S1 的 introspect 或用户信息短缓存。应用 client_credentials token 仅供登录和复核读取用户信息，保留有容量上限的到期复用。
+参数变更作用于下一次复核判断。普通请求不使用 S1 的 introspect 或用户信息短缓存。应用通过有容量上限的缓存复用 client_credentials token，用于读取用户事实和调用已定义的账号管理接口。
 
 ## 事件撤销与退出
 
@@ -52,7 +52,25 @@ Web 与 Admin 各自共享一次会话检查。401 清除本地登录展示并�
 
 `GET /api/v1/auth/phone` 按当前 StuHelper 会话的身份读取 SSO 手机号，返回绑定状态和脱敏值。已绑定号码最多展示末四位。上游读取失败时返回服务错误，界面可就地重试。
 
-更换和解绑需要身份服务在写入时校验原绑定、待绑定号码的唯一性，并在解绑时保留可用登录方式。Casdoor 4.24.0 的现有接口缺少相应的条件写入能力。当前后端提供脱敏查看，写入流程待上游能力确认后接入。
+绑定、更换和解绑只操作当前 session Cookie 对应的 issuer、subject。发码、更换和解绑校验 Origin 与 CSRF。需要近期认证时返回 428 `recent_authentication_required` 和重新验证入口。
+
+重新验证发起 Casdoor OIDC 请求，设置 `prompt=login` 与 `max_age=0`。回调校验原会话、签名、issuer、subject、audience、nonce 和 `auth_time`。认证时间须在流程启动后，默认 10 分钟内有效，可配置。
+
+发码接受中国大陆手机号，可带 `+86`。Casdoor `send-verification-code` 使用 `reset` 模式和 `countryCode=CN`。挑战绑定当前会话、号码和原绑定，5 分钟有效，最多提交 5 次。向同一号码再次发码会使旧挑战失效。
+
+各后端实例共用数据库限额。默认同一号码间隔 60 秒、每小时最多 5 次，每账号每小时 10 次，全局每小时 100 次，均可配置。发码尝试占用额度，超限返回 429、`Retry-After` 和 `retry_after_seconds`。
+
+发码与更换前调用 Casdoor 按组织查重，其他账号已占用时返回 `phone_taken`。更换调用 `reset-email-or-phone` 由 Casdoor 验码写入。解绑要求还有可确认的其他登录方式，并禁用短信 MFA。解绑只清空 `phone` 和 `country_code`。
+
+更换和解绑要求 `Idempotency-Key`。相同键和输入复用结果，改动输入返回冲突。写入响应丢失时，用当前读回状态确认结果。同键重试只读回；尚未确认时返回 `phone_write_unconfirmed`，10 分钟内阻止同账号发起另一笔写入。
+
+Casdoor 4.24.0 的原生写入缺少条件更新，手机号索引也不唯一。两个账号并发可能绑定同一号码，Casdoor 自助页与 StuHelper 可能相互覆盖。上游按名称受理更换，后台并发改名和名称重用也受同一限制。负责人接受这些风险。
+
+StuHelper 审计记录账号、操作和结果，不保存号码或验证码。负责人接受 Casdoor 4.24.0 的原生审计记录和 webhook 可能携带完整号码与验证码。StuHelper webhook 只提取目标标识，忽略发码、更换及多余字段。
+
+当前绑定以查看接口读回为准。其他业务入口继续使用会话复核后的 `phone_bound`；绑定状态随既有会话复核规则刷新。
+
+依据：[Casdoor 发码与换绑](https://github.com/casdoor/casdoor/blob/v4.24.0/controllers/verification.go)、[字段更新](https://github.com/casdoor/casdoor/blob/v4.24.0/controllers/user.go)、[Casdoor 审计](https://github.com/casdoor/casdoor/blob/v4.24.0/object/record.go)。
 
 ## Casdoor 4.24.0 的 QQ 自助绑定
 
@@ -77,7 +95,12 @@ Casdoor 回调先消费同标签页 sessionStorage 中的 nonce，再携带 Casd
 | SSO-05 | 线路按成本选择，失败被动切换，非幂等请求不重放，不安全配置被拒 |
 | SSO-06 | webhook 拒绝伪造来源，封禁和删除撤销全部会话，重复与乱序事件不重复生效 |
 | SSO-07 | 管理配置校验权限、范围、版本和审计；强制下线与退出不能被在途刷新恢复 |
-| SSO-PHONE-01 | 登录用户读取本人的当前绑定，响应仅含脱敏号码，未绑定时返回空值，上游故障时可重试 |
+| SSO-PHONE-01 | 本人读取当前绑定，响应仅含脱敏号码，未绑定时返回空值，上游故障时可重试 |
+| SSO-PHONE-02 | 近期认证要求同一会话和同一账号，拒绝缺失或过期的签名认证时间及回调重放 |
+| SSO-PHONE-03 | 号码间隔、号码小时、账号小时和全局小时限额生效，超限返回剩余等待时间 |
+| SSO-PHONE-04 | 两次查重均可拒绝被占用的号码，错误或过期验证码不写入，正确验证码写入并脱敏读回 |
+| SSO-PHONE-05 | 解绑保护最后一个登录方式和短信 MFA。上游响应丢失后通过读回核对，复用幂等键 |
+| SSO-PHONE-06 | 同账号在途写入期间拒绝其他键，原键只读回，最终只有一次上游写入 |
 
 ## 客户端故障恢复验收
 
