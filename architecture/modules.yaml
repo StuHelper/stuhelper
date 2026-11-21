@@ -55,6 +55,16 @@ modules:
         - internal/sessionapp/session_test.go#TestSessionDatabaseIsolationAndMigrationPreserveActiveSessions
       SSO-PHONE-01:
         - internal/sessionapp/phone_test.go#TestOwnPhoneReadsCurrentBindingWithoutDisclosingNumber
+      SSO-PHONE-02:
+        - internal/sessionapp/phone_mutation_test.go#TestPhoneRequiresSignedRecentLoginForSameSessionAndSubject
+      SSO-PHONE-03:
+        - internal/sessionapp/phone_mutation_test.go#TestPhoneSendLimitsSharedByAccountNumberAndGlobal
+      SSO-PHONE-04:
+        - internal/sessionapp/phone_mutation_test.go#TestPhoneChangeCodeConflictAndIdempotency
+      SSO-PHONE-05:
+        - internal/sessionapp/phone_mutation_test.go#TestPhoneUnbindAndUncertainWriteReadback
+      SSO-PHONE-06:
+        - internal/sessionapp/phone_mutation_test.go#TestPhoneConcurrentOperationsDoNotRepeatProviderWrite
       QQB-04:
         - internal/qqbindingapp/assembly_test.go#TestQQBindingAssemblyOAuthBotsFactsAndClosure
         - internal/qqbindingapp/assembly_test.go#TestQQBindingConfigRejectsUnknownFieldsAndPublicFiles
