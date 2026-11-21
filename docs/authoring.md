@@ -1,7 +1,7 @@
 ---
 type: index
 status: Accepted
-updated: 2026-11-20
+updated: 2026-11-21
 ---
 
 # 文档写作与维护
@@ -34,7 +34,7 @@ updated: 2026-11-20
 
 ## 元信息与状态
 
-每份 Markdown 使用 `type`、`status`、`updated`。分类直属主题的 `type` 与目录相同，总入口和本约定使用 `index`。`updated` 记录本次实质维护的上海日期，模板使用 `YYYY-MM-DD`。
+`docs/` 下的每份 Markdown 使用 `type`、`status`、`updated`。分类直属主题的 `type` 与目录相同，总入口和本约定使用 `index`。`updated` 记录本次实质维护的上海日期，格式为 `YYYY-MM-DD`。只有模板允许保留日期占位符。
 
 检查器拒绝未来日期。正文或日期字段变更时，`updated` 不得早于正文最近一次修改提交的上海日期；未提交的正文改动使用检查当天作为下界。仅调整日期字段保留原正文日期作为下界。复核后的日期修正可以晚于正文提交日期，因此检查范围为下界至当天，不要求所有日期相等。
 
@@ -52,4 +52,4 @@ updated: 2026-11-20
 
 ## 检查
 
-按[检查指南](guide/repository-checks.md)执行格式、元信息、链接、导航、术语与严格构建检查。业务场景与测试通过编号关联，当前实现范围及相关结果集中在[框架状态](development/framework-bootstrap.md)。
+按[检查指南](guide/repository-checks.md)检查格式、元信息、链接、导航和术语。需要核对文档站时，用 `make docs` 运行严格预览。业务场景与测试通过编号关联，各模块的实现和验证结果记录在[对应开发主题](development/README.md)。

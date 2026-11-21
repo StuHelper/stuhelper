@@ -1,7 +1,7 @@
 ---
 type: guide
 status: Accepted
-updated: 2026-11-20
+updated: 2026-11-21
 ---
 
 # 工具链与依赖维护
@@ -14,11 +14,9 @@ CI 从版本文件读取 Go 与 Node.js。Mani 和 Git 是主机工具，开发�
 
 ## 常规依赖
 
-各仓库的 Dependabot 覆盖其实际使用的 pnpm、Go 和 GitHub Actions，每周提出版本更新。兼容补丁和次版本可以归组，主版本分别评估。依赖修改经过锁文件、独立检查与集成组合验证后合入。
+各仓以 `.github/dependabot.yml` 声明 GitHub Actions、npm 和 Go 等更新范围。维护规则为每周向 develop 提交，次版本和补丁可归组，主版本单独评估。依赖更新按范围运行单仓和组合检查。
 
-安全更新依赖 GitHub 的依赖图、Dependabot alerts 和 security updates 设置。仓库配置进入维护分支后核对这些设置及首次更新结果。新的运行时 LTS 由维护者评估兼容性后统一采用。
-
-Renovate 适合需要共享更新预设、更多版本文件识别和集中更新策略的阶段。采用时统一切换更新机器人，保留现有检查与人工合并流程。任何机器人都需要跨仓版本组合验证。
+安全更新以 GitHub 的依赖图、Dependabot alerts 和 security updates 设置为准。处理 CVE 时先确认受影响的版本、调用路径和修复版本，再运行受影响阶段的检查。
 
 ## 工程工具发行
 
@@ -32,13 +30,13 @@ pnpm 锁文件固定实际解析提交。首次更新使用 `pnpm install --no-f
 
 各仓通过独立检查后，按变更范围执行契约与应用联调。配套 PR 记录实际测试提交和合并顺序，候选改变后重新验证。工具仓库不携带产品模块、术语或语言清单，产品规则由消费者提供。
 
-新的 CVE 先确认受影响版本、调用路径和修复版本，再更新依赖及受影响阶段。公共依赖覆盖保留在消费者的原生 pnpm 配置中，不建立额外包管理系统。
+共享依赖的覆盖写在消费者的 pnpm 配置中。
 
 ## Web 脚手架
 
-新建 Vue 应用优先使用官方 `create-vue`。Web 采用 `create-vue` 3.24.0 模板中的官方 `@vue/tsconfig`、`@vue/eslint-config-typescript` 和 Node 24 配置。产品路由、接口和国际化代码继续由应用维护。
+新建 Vue 应用优先使用官方 `create-vue`。Web 使用 `@vue/tsconfig`、`@vue/eslint-config-typescript` 和 Node 24 配置，产品路由、接口和国际化代码由应用维护。
 
-脚手架适合生成初始结构，升级时仍需要核对依赖的兼容范围。本项目保留已验证的 Vue Router 4 与 TypeScript 5.9 组合，后续主版本升级独立验证。官方说明见 [Vue 快速上手](https://vuejs.org/guide/quick-start)和[工具链指南](https://vuejs.org/guide/scaling-up/tooling)。
+脚手架适合生成初始结构，升级时仍需要核对依赖的兼容范围。Web 使用 Vue Router 4 和 TypeScript 5.9，主版本升级单独验证。官方说明见 [Vue 快速上手](https://vuejs.org/guide/quick-start)和[工具链指南](https://vuejs.org/guide/scaling-up/tooling)。
 
 ## stuhelper-admin 框架升级
 
@@ -48,6 +46,4 @@ Vben 作为框架来源保留自己的标识和许可证，产品名称使用 st
 
 ## Admin 编译器兼容
 
-Admin 契约类型检查使用 TypeScript 7。OpenAPI 生成器仍使用 TypeScript 5 的 JavaScript API，放在独立的 scripts/openapi 工作区。
-
-Vue SFC 与 lint 工具使用 catalog 中的兼容 TypeScript API。pnpm 对 Vue 的 peer 固定在该 catalog，防止原生 TypeScript 7 被误用于旧 API。
+Admin 的 `scripts/contracts` 使用 TypeScript 7 验证契约类型。`scripts/openapi` 单独使用 TypeScript 5.9 的 JavaScript API 生成类型。Vue SFC 与 lint 使用 pnpm catalog 中的 TypeScript 6。

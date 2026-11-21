@@ -2,9 +2,9 @@
 
 StuHelper 是校园信息平台，采用 Go、Vue、stuhelper-admin 和按业务划分的独立仓库。Casdoor 使用官方发行版本，各业务通过 OIDC 和官方 API 接入。
 
-**当前阶段：提供方、后端和客户端已正式发行，生产部署与业务验收状态由私有 ops 接续说明记录。** platform 提供应用框架，课程目录、评价、审核、存储、贡献和学习资料已有独立仓库实现。Web 与 stuhelper-admin 提供八语言页面，backend 装配各模块并使用独立数据库身份。
+生产运行 [StuHelper v0.1.31](https://github.com/StuHelper/stuhelper/releases/tag/v0.1.31)。本批采用 Backend v0.1.46、Web v0.1.22 和 stuhelper-admin v0.1.11。生产就绪、公开页面及匿名访问限制已核验。真实账号操作与短信投递仍待负责人验收。
 
-资料分类及字段由管理员配置，课程只引用统一分类。上传、审核、当前权限下载和目录打包已有候选实现。状态见[资料模块](docs/development/resources.md)、[存储模块](docs/development/storage-module.md)与[评课社区](docs/development/academic-community.md)。正式登录、学生资格和公开昵称已接入统一候选。真实外部账号与生产接入分别验收，结果见[框架状态](docs/development/framework-bootstrap.md#统一业务组合验收)。
+platform 提供应用框架，backend 装配业务模块。Web 和 stuhelper-admin 提供八种界面语言。课程、评价、审核、学习资料和存储的源码归属见[模块仓库](docs/design/module-repositories.md)，实现与验证结果见[开发工作](docs/development/README.md)。
 
 ## 工程入口
 
@@ -19,23 +19,18 @@ StuHelper 是校园信息平台，采用 Go、Vue、stuhelper-admin 和按业务
 
 ## 本地开发
 
-主机安装 Git、Mani、Go、Node.js、pnpm 和 actionlint。文档预览按需使用 uv。精确版本由 [toolchains.yaml](architecture/toolchains.yaml) 维护，当前统一 Go 1.27.3、Node.js 24.22.1 和 pnpm 10.33.4。JavaScript 依赖统一使用 pnpm-lock.yaml。
+在根仓运行以下命令安装锁定依赖并执行仓库检查。Git 和 Mani 使用主机安装的版本，Go、Node.js、pnpm、actionlint 等工具的版本见[工具链清单](architecture/toolchains.yaml)。
 
 ```bash
 make setup
 make check
-mani sync
-mani run setup --tags code
-mani run check --tags code
-node scripts/workspace.mjs contracts
-pnpm run test:e2e
 ```
 
-根仓库 `make check` 独立检查架构、工具链清单、工作区配置、文档和 Actions。已检出模块的版本与锁文件由跨仓 `toolchains` 检查严格验证。运行 `make hooks` 启用 Lefthook 暂存区检查，本地可多次提交后批量推送，同一任务持续更新同一 PR。
+开发多个模块时，用 `mani sync` 检出 [Mani 清单](mani.yaml)登记的仓库，再按[开发工作区](docs/guide/development-workspace.md)安装各仓依赖。主检出位于 `workspace/<仓库名>`，任务工作树位于 `workspace/worktrees/<任务>/<仓库名>`。
 
-各代码仓库独立构建与检查，通用工具由 stuhelper-tooling 发行。公开应用联调使用 platform 示例与 Web/Admin，发布组合由 workspace.lock.json 固定 tag 与完整提交 SHA，CI 记录锁定及实际测试组合。私有 backend 按 go.mod 单独构建正式应用。
+根仓检查架构、文档、工作区配置与 Actions。跨仓契约检查需要提供方与消费方源码，浏览器联调还需要构建应用并安装 Chromium。操作说明见[检查指南](docs/guide/repository-checks.md)，构建顺序见[公开应用联调工作流](.github/workflows/applications.yml)。
 
-`mani.yaml` 统一登记模块仓库及主检出路径。公开与私有区分源码和文档的可见性，GitHub 管理仓库访问权限。任务工作树位于 `workspace/worktrees/<任务>/<仓库名>`，主检出位于 `workspace/<仓库名>`。
+公开应用联调使用 platform 示例、Web 和 stuhelper-admin。正式后端按自身 Go 依赖构建。根仓的 [workspace.lock.json](workspace.lock.json) 固定发行组合的组件 tag 和源码提交，CI 的运行摘要记录实际检出的组合。
 
 ## 技术约定
 
@@ -53,7 +48,7 @@ docs/                五类工程文档
 scripts/             架构与跨仓工作区检查
 tests/e2e/           跨仓浏览器联调
 mani.yaml            统一工作区配置
-workspace.lock.json  按需生成的实际源码组合记录
+workspace.lock.json  发行组合的组件 tag 与源码提交
 ```
 
 文档组织参考 [project-docs-starter](https://github.com/lihaotong0712/project-docs-starter/tree/1c4c6bb1bd401b803ea986b404932926cfc95eb0)。项目代码和文档使用 [AGPL-3.0-only](LICENSE)，第三方组件保留原许可证。沟通与写作遵循 [AGENTS.md](AGENTS.md)。

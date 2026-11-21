@@ -1,14 +1,14 @@
 ---
 type: design
 status: Accepted
-updated: 2026-11-20
+updated: 2026-11-21
 ---
 
 # 项目定位与业务范围
 
 ## 项目定位
 
-StuHelper 提供校园信息查询、课程评价、学习资料共享与学生资格认证。业务按模块交付，具体行为与上线范围由各主题维护。
+StuHelper 提供校园信息查询、课程评价、学习资料共享与学生资格认证。下表列出已确认的业务范围，各部署按能力配置提供入口。
 
 ## 已确认的业务
 
@@ -23,14 +23,16 @@ StuHelper 提供校园信息查询、课程评价、学习资料共享与学生�
 | QQ 绑定与入群认证 | 关联 QQ，按群要求完成认证并查看入群进度 | [QQ 与群管理](../spec/qq-group-services.md) |
 | 群管理 | 管理群名片、提醒、黑名单与资格失效后的群成员处理 | [QQ 与群管理](../spec/qq-group-services.md) |
 | 第三方开放平台 | 开发者申请接入，用户选择向应用授权哪些业务信息 | [开放平台](../spec/open-platform.md) |
-| 存储贡献 | 自愿贡献网盘容量，查看占用、续期、退出和贡献榜 | [存储贡献](../spec/storage-contribution.md) |
+| 存储贡献 | 自愿贡献云盘容量，查看占用、续期、暂停或退出 | [存储贡献](../spec/storage-contribution.md) |
 | 内容运营 | 审核内容、处理举报和作者申请，隐藏或恢复内容并反馈结果 | [内容管理](../spec/content-management.md) |
 | 目录与教务维护 | 维护课程和教师资料，查看教务导入来源、任务与结果 | [目录维护](../spec/catalog-operations.md) |
 | 内容发现 | 查看热门课程、热门教师、评价趋势和我的投票 | [发现与统计](../spec/discovery-and-statistics.md) |
 | 信息查询 | 从学号、姓名或 QQ 关联查看用户的全站业务记录 | [信息查询](../spec/information-query.md) |
 | 娱乐功能 | 使用和管理骰子、自助禁言等机器人命令 | [娱乐功能](../spec/bot-entertainment.md) |
 
-当前只交付 Web 与 stuhelper-admin。社交独立延期，微信小程序、Android、iOS 与 HarmonyOS 暂时搁置，后续分别重新启动，见[社交说明](../spec/social-content.md)和[多端说明](native-clients.md)。独立官方 Casdoor SSO 负责登录，AI、Store 等消费方独立接入，见[独立 SSO](independent-sso.md)。
+已交付 Web 与 stuhelper-admin。独立官方 Casdoor SSO 负责登录，AI、Store 等消费方独立接入。参见[独立 SSO](independent-sso.md)。
+
+生产组合已启用 QQ 管理与互联，群服务、机器人、开放平台及本人课表保持关闭。实际开关、运行版本和真实账号验收由[私有 Ops 生产基线](https://github.com/StuHelper/stuhelper-ops/blob/develop/docs/development/production-baseline.md)维护。
 
 机器人相关菜单统一分为群聊管理、信息查询和娱乐功能。群聊管理包含关键词、防复读、防撤回与 AI 举报分析。信息查询由管理后台提供完整入口，机器人能力按权限配置。
 
@@ -42,16 +44,16 @@ StuHelper 提供校园信息查询、课程评价、学习资料共享与学生�
 
 课程、教师、开课和资料通过明确的对象标识关联。用户从课表进入某门课后，可以继续找到对应教师、历年评价和学习资料；从个人中心可以回到自己发布、收藏或尚未完成的内容。
 
-资料下载初始要求有效校园资格，受限资料另需满足具体访问权，管理员在管理范围内例外。全部动作的资格条件可按[资格配置](../spec/action-eligibility.md)调整。会员、特权群体和逐用户授权由资料访问规则定义。积分与 Ivory 充值余额的规则由账务规格维护。
+资料下载默认要求内容准入。受限资料另需当前访问权，管理员可在获授权的管理范围内下载。动作资格与内容准入见[资格配置](../spec/action-eligibility.md)，会员和逐用户授权见[资料规格](../spec/resource-sharing.md)。
 
-## 品牌与非目标
+## 品牌、延期范围与非目标
 
 产品使用 StuHelper 名称和纸飞机品牌资产。各客户端使用已核对的品牌源文件及导出物。
+
+贡献榜、存储贡献奖励、社交模块和原生客户端延期。参见[存储贡献规格](../spec/storage-contribution.md)、[社交说明](../spec/social-content.md)和[原生多端设计](native-clients.md)。
 
 继续定位为校园信息平台，不建设作业、实验、提交批改或教学成绩申诉系统，也不向学校系统执行选课、退课、排课、调课或成绩修改。个人课表更正仅影响本人的展示记录。
 
 ## 确认边界
 
-业务范围由本规格定义，权限、加密、事务、保留期、部署和存储调度由对应设计与规格维护。
-
-各规格记录已确认行为，当前规则汇总在[业务当前规则与延期事项](../development/business-decisions.md)。具体参数按已确认的后台配置规则管理，明确延期事项记录在清单中。来源与验证记录见[业务整理记录](../development/business-design-extraction.md)。
+各业务规格维护权限、保留期、公开行为与可配置参数。跨业务的延期事项和实施覆盖见[业务当前规则与延期事项](../development/business-decisions.md)。
