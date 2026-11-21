@@ -305,6 +305,9 @@ test('moderator navigates drawer controls with keyboard and closes via Escape', 
   await expect(signedCheckbox).toBeFocused();
   await page.keyboard.press('Space');
   await expect(signedCheckbox).toBeChecked();
+  const categoryCombobox = panel.getByRole('combobox', { name: fieldLabel(m.category) });
+  await page.keyboard.press('Tab');
+  await expect(categoryCombobox).toBeFocused();
   const presets = panel.getByRole('group', { name: m.presetsLabel }).getByRole('button');
   for (const preset of await presets.all()) {
     await page.keyboard.press('Tab');
