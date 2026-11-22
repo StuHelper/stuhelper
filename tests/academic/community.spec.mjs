@@ -24,8 +24,12 @@ const restrictedKinds=new Set(['term_course','class','assignment','schedule']);
 const directory={term_course:offerings,class:classes,schedule:schedules,school:[school],department:[obj('dept','department','Test College')],category:[obj('seminar','category','Test Seminar')],nature:[obj('optional','nature','Optional')],term:terms,course:[course],teacher:[teacher,otherTeacher]};
 const dimensions=Array.from({length:5},()=>({level:3,samples:2,courses:1}));
 const review={id:'review',root_id:'review',kind:'course',school_id:'school',target_id:'course',term_id:'fall',title:'A student review',body:'Useful course content.',ratings:[3,3,3,3,3],author:{anonymous:true,handle:'anonymous'},revision:1,published_at:'2026-10-27T00:00:00Z',upvotes:0,downvotes:0,my_vote:0,mine:false,state:'published',can_edit:false};
-// A signed-in member whose campus eligibility is confirmed; the server still authorizes each request.
+// A member with current consent and confirmed campus eligibility.
 const member={authenticated:true,content_school_id:'school',profile:{id:'00000000-0000-4000-8000-000000000001',nickname:'Fixture student',nickname_required:false,bio:'',visibility:{school:true,badge:true,department:true,grade:false,reviews:true,resources:true},group_card_consent:{school:false,grade:false,department:false,name:false,student_id:false,gender:false,nickname:false},revision:1},csrf_token:'a'.repeat(43),phone_bound:true,administrator:false,expires_at:'2030-01-01T00:00:00Z'};
+const webSession = JSON.parse(fs.readFileSync(path.join(web, 'contracts/session.openapi.json'), 'utf8'));
+if (webSession.components.schemas.FullSession?.required?.includes('consent_required')) {
+  member.consent_required = false;
+}
 const summary={campus_eligibility:true,teacher_verified:false,identity_verified:false,evaluated_at:'2026-10-28T00:00:00Z',revision:1,next_evaluation_at:null};
 const fulfill=(route,value,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(value)});
 export async function fixture(page){
@@ -81,6 +85,13 @@ async function rate(editor,a){
   for(const key of dimensionNames)await pick(editor,a.ratings[key].label,a.ratings[key].level3);
 }
 test.beforeEach(async({page})=>fixture(page));
+
+test('a member with current consent can open the account menu from the course directory', async ({ page }, info) => {
+  const { locale } = info.project.metadata;
+  await page.goto(`/courses?lang=${locale}`);
+  await page.getByRole('button', { name: catalogue(info).nav.account, exact: true }).click();
+  await expect(page.getByRole('menuitem', { name: /Fixture student/ })).toBeVisible();
+});
 
 test('directory has college/category filters and no semester control',async({page},info)=>{
   const locale=info.project.metadata.locale,a=catalogue(info).academic,all=catalogue(info);
