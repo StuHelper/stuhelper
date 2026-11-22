@@ -183,6 +183,13 @@ modules:
     capabilities:
       - campus-adapters.verify
     capability_requires: {}
+    scenario_tests:
+      CAT-TEACHER-15:
+        - teacherhome/body_media_test.go#TestReadV3PreservesBodyMediaAndAcceptsOlderSnapshots
+        - teacherhome/body_media_test.go#TestReadRejectsMalformedBodyMedia
+        - teacherhome/body_media_test.go#TestReadRejectsUnsafeBodyMediaLinks
+        - teacherhome/body_media_test.go#TestReadBodyImageBudgetCountsUniqueDigestsAcrossSnapshot
+        - teacherhome/body_media_test.go#TestReadBodyImageVerifiesBytesInBodyPhotoDirectory
   - id: storage
     repository: StuHelper/stuhelper-storage
     visibility: public
@@ -418,6 +425,14 @@ modules:
         - teacher_homepage_publication_test.go#TestVerifiedTeacherHomepagePublicationCreatesIndependentDirectoryEvidence
       CAT-TEACHER-13:
         - teacher_homepage_request_repository_test.go#TestTeacherHomepageRequestRetention
+      CAT-TEACHER-14:
+        - teacher_homepage_media_postgres_test.go#TestTeacherHomepageBodyMediaPostgresAuthorizationAndRevocation
+      CAT-TEACHER-15:
+        - teacher_homepage_media_test.go#TestTeacherHomepageBodyMediaSnapshotValidation
+        - teacher_homepage_media_test.go#TestTeacherHomepageBodyImageValidatesBytes
+        - postgres/teacher_homepage_body_media_test.go#TestTeacherHomepageBodyImagesQuotaFallbackAndReplacement
+        - postgres/teacher_homepage_body_media_test.go#TestTeacherHomepageBodyImagesGlobalQuotaSerializesSchools
+        - postgres/teacher_homepage_body_media_test.go#TestTeacherHomepageBodyImageQuotaWarningPersistsOutsidePublicJSON
       CO-02:
         - integration_test.go#TestImportRelationsClassificationAndMissingCredits
       CO-04:
@@ -1213,6 +1228,9 @@ applications:
         - internal/notificationapp/catalog_postgres_test.go#TestTeacherHomepageNotificationRelayRetriesCommittedDecision
       CAT-TEACHER-12:
         - internal/businessapp/teacher_homepage_onboarding_test.go#TestTeacherHomepageOnboardingFromUnpublishedDirectoryTeacher
+      BACKEND-TEACHER-BODY-01:
+        - internal/teacherrefresh/body_media_test.go#TestWorkerPublishesBodyMediaAndRecordsImageQuota
+        - internal/teacherrefresh/body_media_test.go#TestSnapshotLockProtectsMediaDuringImport
       CM-24:
         - internal/academicapp/teacher_homepage_controls_test.go#TestTeacherHomepageComplaintSeparatesReportAndDisplayPermissions
   - id: web
