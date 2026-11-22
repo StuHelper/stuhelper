@@ -28,6 +28,20 @@ test('Go and JS scenario references ignore comments and string content', t => {
   }
 });
 
+test('Python scenario references resolve class methods without executing the test module', t => {
+  const dir = fixture(t);
+  fs.writeFileSync(path.join(dir, 'test_media.py'), [
+    'raise RuntimeError("must not execute source")',
+    'class TeacherSitesTest:',
+    '    def test_approved(self): pass',
+    '    # def test_removed(self): pass',
+  ].join('\n'));
+  const check = method => verifyScenarios(dir, {specifications:['spec.md'],
+    scenario_tests:{'MOD-01':['test_media.py#TeacherSitesTest.' + method]}}, dir);
+  check('test_approved');
+  assert.throws(() => check('test_removed'), /Missing scenario test/);
+});
+
 test('test titles can include hashes and malformed references have an explicit error', t => {
   const dir = fixture(t);
   fs.writeFileSync(path.join(dir, 'case.spec.ts'), "test('issue #12', () => {})");
