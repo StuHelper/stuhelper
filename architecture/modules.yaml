@@ -488,6 +488,10 @@ modules:
         - feedback_test.go#TestFeedbackRetentionUsesUTCRegardlessOfDatabaseTimezone
       CM-21:
         - feedback_test.go#TestFeedbackRateCapacityAndCursor
+      CM-22:
+        - violation_categories_test.go#TestFixedCategoriesAndRequiredOtherReason
+      CM-23:
+        - violation_categories_test.go#TestFixedCategoryMigrationQueueAndComplaintReplay
       CM-24:
         - teacher_homepage_complaint_test.go#TestTeacherHomepageComplaintQueueAndScope
         - teacher_homepage_complaint_test.go#TestTeacherHomepageComplaintRetention
@@ -644,6 +648,9 @@ modules:
       ACAD-40:
         - management_test.go#TestPresentationConfigAndAttributionChangesAreScopedAndVersioned
         - presentation_test.go#TestPresentationHTTPPreservesRatingTexts
+      ACAD-41:
+        - append_test.go#TestCourseAppendFirstPublicationWindow
+        - append_test.go#TestPostWindowAppendPreservesAttributionSamplesAndModeration
       CM-09:
         - management_test.go#TestPresentationConfigAndAttributionChangesAreScopedAndVersioned
       CM-14:
@@ -740,6 +747,10 @@ modules:
       RS-24:
         - http_test.go#TestReceiptHTTPStatesMatchGeneratedContract
         - references_test.go#TestComplaintTitleSnapshotRequiresAdmissionAtSubmission
+      RS-27:
+        - references_test.go#TestComplaintTitleSnapshotRequiresAdmissionAtSubmission
+        - complaint_category_test.go#TestResourceComplaintCategoryHTTPAndDelivery
+        - complaint_category_test.go#TestLegacyComplaintCategoryMigrationPreservesReplay
       AE-ACCESS-05:
         - references_test.go#TestOwnResourceNamesRequireUploadOwnershipAndKeepContentPrivate
       AE-ACCESS-07:
