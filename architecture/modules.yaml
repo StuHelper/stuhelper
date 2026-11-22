@@ -185,6 +185,10 @@ modules:
     capability_requires: {}
     scenario_tests:
       CAT-TEACHER-15:
+        - scripts/test_buaa_teacher_sites.py#TeacherSitesTest.test_body_image_public_hops_use_checked_addresses_and_limits
+        - scripts/test_buaa_teacher_sites.py#TeacherSitesTest.test_body_image_nonpublic_destinations_never_connect
+        - scripts/test_buaa_teacher_sites.py#TeacherSitesTest.test_offline_bundle_scopes_approval_and_invalidates_incremental_cache
+        - scripts/test_buaa_teacher_sites.py#TeacherSitesTest.test_domain_limit_and_timeout
         - teacherhome/body_media_test.go#TestReadV3PreservesBodyMediaAndAcceptsOlderSnapshots
         - teacherhome/body_media_test.go#TestReadRejectsMalformedBodyMedia
         - teacherhome/body_media_test.go#TestReadRejectsUnsafeBodyMediaLinks
@@ -428,6 +432,7 @@ modules:
       CAT-TEACHER-14:
         - teacher_homepage_media_postgres_test.go#TestTeacherHomepageBodyMediaPostgresAuthorizationAndRevocation
       CAT-TEACHER-15:
+        - teacher_image_storage_test.go#TestTeacherImageStorageKeepsAuthorizationAndPrivateNamespaces
         - teacher_homepage_media_test.go#TestTeacherHomepageBodyMediaSnapshotValidation
         - teacher_homepage_media_test.go#TestTeacherHomepageBodyImageValidatesBytes
         - postgres/teacher_homepage_body_media_test.go#TestTeacherHomepageBodyImagesQuotaFallbackAndReplacement

@@ -1,7 +1,15 @@
+import { execFileSync } from 'node:child_process';
 import ts from 'typescript';
 
 export function scenarioTitles(file, source) {
   const titles = new Set();
+  if (file.endsWith('.py')) {
+    const methods = execFileSync('python3', ['-I', '-c', `import ast, json, sys
+classes = (node for node in ast.parse(sys.stdin.read()).body if isinstance(node, ast.ClassDef))
+print(json.dumps([cls.name + '.' + method.name for cls in classes for method in cls.body
+                  if isinstance(method, ast.FunctionDef) and method.name.startswith('test_')]))`], { input: source, encoding: 'utf8' });
+    return new Set(JSON.parse(methods));
+  }
   if (file.endsWith('_test.go')) {
     // Go raw strings, interpreted literals and comments can contain entire fake declarations.
     const code = source.replace(/\/\/[^\n]*|\/\*[\s\S]*?\*\/|`[^`]*`|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, token =>
