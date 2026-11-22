@@ -1,7 +1,7 @@
 ---
 type: development
 status: Accepted
-updated: 2026-11-20
+updated: 2026-11-21
 ---
 
 # 旧业务文档迁移覆盖
@@ -57,7 +57,7 @@ SSO、学生认证与 QQ 绑定的数据转换和导入由独立维护流程负�
 
 补查覆盖机器人后台聊天工作台、事件订阅、动态口令、广告与链接检测、频率限制、观察名单、规则预览，以及上传取消的用户可见结果。这些功能由群服务或资料规格维护。
 
-行为来源包括[机器人后台完成记录](https://github.com/StuHelper/StuHelper-legacy/blob/a0a998688a623da7811d04037efe0829c0783267/docs/internal/koishi-webui-refactor-completion-2026-08-23.md)和[上传取消记录](https://github.com/StuHelper/StuHelper-legacy/blob/a0a998688a623da7811d04037efe0829c0783267/docs/internal/exec-plans/completed/2026-09-11-web02-upload-cancellation.md)。Next 的实现结果在对应实施任务中验证。
+行为来源包括[机器人后台完成记录](https://github.com/StuHelper/StuHelper-legacy/blob/a0a998688a623da7811d04037efe0829c0783267/docs/internal/koishi-webui-refactor-completion-2026-08-23.md)和[上传取消记录](https://github.com/StuHelper/StuHelper-legacy/blob/a0a998688a623da7811d04037efe0829c0783267/docs/internal/exec-plans/completed/2026-09-11-web02-upload-cancellation.md)。现行实现和验收状态见对应实施主题。
 
 ## 完成条件
 
@@ -72,14 +72,8 @@ SSO、学生认证与 QQ 绑定的数据转换和导入由独立维护流程负�
 
 各仓库的提交与远端验证结果记录在对应 PR，最终核对以精确提交的完整 CI 为准。
 
-旧业务抽取范围的选择均已确认或明确延期，结果见[确认清单](business-decisions.md)。私有模块细节在相应仓库维护。后续新增的存储方案评审项集中于[存储实施准备](storage-module.md)，不改变资料来源覆盖结果。
+旧业务抽取范围的选择均已确认或明确延期，结果见[确认清单](business-decisions.md)。私有模块细节在相应仓库维护。现行存储评审项见[存储实施状态](storage-module.md)。
 
-## 当前统一组合
+## 实施状态入口
 
-当前候选源码由 workspace.lock.json 固定，提供方、backend 和客户端分别执行对应检查。
-
-合并时修复复核请求契约、认证申请恢复和异步竞争、管理凭证目标清理、审核队列分类、编辑页未保存保护，以及公共 CI 场景检查的检出范围。相应单元测试、浏览器回归和必需检查通过。
-
-隔离预发布的配置和运行证据由私有 ops 仓库维护。当前后端候选没有执行部署。
-
-预发布仍是新业务数据库。真实用户完成登录、学校课程与选课同步、真实学生认证到评价和资料操作的完整流程，以及异地恢复演练仍待验收。当前组合未晋级正式生产版本。
+生产所用源码组合和验证边界见[框架实施](framework-bootstrap.md)。身份数据的保留与迁移按[SSO 兼容规格](../spec/sso-compatibility.md)执行，独立实名与其他旧业务数据的迁移范围见[私有迁移规格](https://github.com/StuHelper/stuhelper-ops/blob/develop/docs/spec/data-migration.md)。

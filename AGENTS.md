@@ -1,6 +1,6 @@
 # StuHelper 工程约定
 
-更新日期：2026-11-15。
+更新日期：2026-11-21。
 
 先读 [README](README.md)、[文档导航](docs/README.md)和任务主题。文档分类、状态与维护方式见[文档约定](docs/authoring.md)。
 
@@ -12,7 +12,8 @@
 * 一个 PR 解决一个明确问题，可包含多次本地提交和批量推送。同一任务持续更新同一 PR，不要求每次提交都推送或新建 PR。跨仓改动列出依赖、合并顺序和验证组合。提交与 squash 标题使用 `type(scope): 简述`，scope 可省略。
 * 每次开发先刷新 `origin/develop`，短期分支通过 PR squash 合入 develop。正式发布采用 develop 到 main 的 merge commit。tag、镜像发行和生产晋级由 owner 授权。
 * 公开 Linux 检查与 GHCR 镜像发行使用 GitHub ubuntu-26.04。私有 Linux 作业只选 stuhelper-arc 组。主机系统升级由负责人安排。规则见[runner 规格](docs/spec/ci-runners.md)。
-* Actions 与部署镜像使用明确版本 tag，源码提交、digest 和 checksum 用于核验。正式部署组合由 ops 管理，工具包使用带注释的版本 tag，已发行 tag 保持不变。普通集成默认解析最新源码，候选覆盖必须明确登记。每轮源码组合写入 CI summary，`workspace.lock.json` 保存固定候选。
+* Actions 与部署镜像使用明确版本 tag，源码提交、digest 和 checksum 用于核验。正式部署组合由 ops 管理，工具包使用带注释的版本 tag，已发行 tag 保持不变。
+* `workspace.lock.json` 固定发行组合。公开联调默认选各仓 develop，修改锁文件的 PR、面向 main 的 PR、main push 和手动运行按[CI 规格](docs/spec/ci-runners.md)选取提交。CI 摘要记录实际检出的组合。
 * CI 同时验证 develop/main push 和面向这两个分支的 PR，取消同一事件及分支或 PR 的旧运行。路径选择和最终必需检查见 [CI 规格](docs/spec/ci-runners.md)，本地 hooks 见[检查指南](docs/guide/repository-checks.md)。
 * 普通检查按锁文件安装依赖。公开依赖使用仓库 Actions 缓存，私有依赖保存在自建服务，可信 develop/main 成功后保存，PR 只恢复。新增存储说明用途、容量和回收方式。BuildKit 缓存独立维护。
 * Docker 测试使用任务专属名称、标签或 Compose project。完成、失败和中断时清理本任务的容器及闲置镜像，保留其他任务资源和持久数据。

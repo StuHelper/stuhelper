@@ -8,6 +8,12 @@ test('declared architecture and all specification owners are valid', () => {
   validateModules(load());
   validateSpecifications(load());
 });
+
+test('profiles declares favorites as an optional dependency for account closure', () => {
+  const profiles = load().modules.find(module => module.id === 'profiles');
+  assert.ok(profiles.optional.includes('favorites'));
+});
+
 for (const [name, mutate, message] of [
   ['adapter libraries do not claim runtime capabilities', modules => { modules.get('storage-bhpan').capabilities = ['storage-bhpan.runtime']; }, /runtime capabilities/],
   ['private implementation cannot become public', modules => { modules.get('verification').visibility = 'public'; }, /must remain private/],
@@ -25,6 +31,26 @@ for (const [name, mutate, message] of [
   const config = load();
   mutate(new Map(config.modules.map(module => [module.id, module])));
   assert.throws(() => validateModules(config), message);
+});
+
+test('a repository can host multiple logical modules within the same application', () => {
+  const config = load();
+  const identity = config.modules.find(module => module.id === 'identity');
+  const sibling = {
+    ...identity,
+    id: 'hosted-module',
+    interface_owner: 'hosted-module',
+    capabilities: [],
+  };
+  config.modules.push(sibling);
+  validateModules(config);
+
+  sibling.visibility = 'public';
+  assert.throws(() => validateModules(config), /Application module visibility mismatch/);
+  sibling.visibility = 'private';
+
+  delete sibling.in_application;
+  assert.throws(() => validateModules(config), /Duplicate repository owner/);
 });
 
 test('applications and operations validate optional dependencies and private visibility', () => {

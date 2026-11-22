@@ -68,6 +68,50 @@ modules:
       QQB-04:
         - internal/qqbindingapp/assembly_test.go#TestQQBindingAssemblyOAuthBotsFactsAndClosure
         - internal/qqbindingapp/assembly_test.go#TestQQBindingConfigRejectsUnknownFieldsAndPublicFiles
+  - id: legal
+    repository: StuHelper/stuhelper-backend
+    visibility: private
+    implementation: in-progress
+    required:
+      - platform
+    optional:
+      - identity
+    interface_owner: legal
+    contract_status: implemented
+    specifications:
+      - docs/spec/legal-documents.md
+    in_application: backend
+    api: 1
+    capabilities:
+      - legal.documents
+      - legal.manage
+    capability_requires:
+      legal.manage:
+        - identity
+    scenario_tests:
+      LEGAL-01:
+        - internal/legalapp/integration_test.go#TestPublishedVersionKeepsRenderedSnapshot
+        - internal/legalapp/render_test.go#TestRenderDocumentFreezesLiteralValuesAndDigest
+      LEGAL-02:
+        - internal/legalapp/integration_test.go#TestEffectiveVersionAndArchivedHistory
+        - internal/legalapp/current_references_test.go#TestCurrentReferencesMatchEffectivePublications
+      LEGAL-03:
+        - internal/legalapp/handler_test.go#TestLegalHTTPAdminAuthorityAndAudit
+        - internal/legalapp/integration_test.go#TestConcurrentChangesAreIdempotentAndRevisionChecked
+      LEGAL-04:
+        - internal/legalapp/integration_test.go#TestLegalRuntimePrivilegesAndAuditRollback
+        - cmd/backend/legal_test.go#TestConfiguredLegalAssembly
+      LEGAL-05:
+        - internal/legalapp/integration_test.go#TestPreviewAndPublishShareValidation
+        - internal/legalapp/render_test.go#TestRenderDocumentRejectsUnsafeOrUnresolvedTemplates
+        - internal/legalapp/email_transfer_test.go#TestEmailTransferPublicationRequiresVisibleVariables
+      LEGAL-06:
+        - internal/resourceapp/legal_terms_test.go#TestLegalTermsSourcePinsPublicUploadLicense
+      LEGAL-07:
+        - internal/legalapp/import_integration_test.go#TestLegalSeedImportThroughHTTP
+      LEGAL-08:
+        - internal/legalapp/handler_test.go#TestLegalHTTPHistoryCORSAndDigest
+        - internal/legalapp/handler_test.go#TestLegalHTTPSOriginIsCanonical
   - id: profiles
     repository: StuHelper/stuhelper-profiles
     visibility: public
@@ -81,8 +125,11 @@ modules:
       - billing
       - reviews
       - resources
+      - favorites
       - open-platform
       - qq-binding
+      - storage
+      - storage-contribution
     interface_owner: profiles
     contract_status: implemented
     specifications:
@@ -99,11 +146,16 @@ modules:
     scenario_tests:
       PC-08:
         - integration_test.go#TestProfileOwnershipReplayConcurrentRevisionAndRuntimeRole
+        - avatar_recovery_test.go#TestFlushPendingAvatarReleasesAfterRestartSkipsActiveVersionsAndAdvancesPastFailures
       PC-05:
         - public_test.go#TestPublicProfileDefaultsUnicodeCompletionAndVisibility
+        - preview_test.go#TestOwnProfileDraftPreviewWithoutDatabaseMutation
+        - avatar_public_test.go#TestPublicAvatarRequiresPublishedProfileAndActiveVersion
       PC-10:
         - public_test.go#TestPublicProfileDefaultsUnicodeCompletionAndVisibility
+        - preview_test.go#TestOwnProfileDraftPreviewWithoutDatabaseMutation
       PC-07:
+        - capability_test.go#TestClosureOptionalDependenciesDeclaredInManifest
         - closure_test.go#TestClosureCoolingCancellationSettlementFailureAndConcurrentRecovery
         - closure_test.go#TestClosurePersistsSkipsForEveryStep
       PC-09:
@@ -111,6 +163,11 @@ modules:
       PC-12:
         - capability_test.go#TestGroupCardCapabilityRegistration
         - group_card_test.go#TestGroupCardConsentAuthorizationAndTransaction
+      PC-13:
+        - closure_due_test.go#TestProcessDueClosuresAtDeadlineResumesAfterRestartAndLeavesBlockedCasesForAdmin
+        - closure_due_test.go#TestDueClosureWorkerContinuesPastInvalidRecords
+        - closure_concurrency_idempotency_test.go#TestExpiredClosureWorkerCannotAdvanceOrReleaseReplacementLease
+        - retention_test.go#TestRetentionCleanupIdempotencyAndCompletedClosures
   - id: campus-adapters
     repository: StuHelper/stuhelper-campus-adapters
     visibility: private
@@ -126,6 +183,17 @@ modules:
     capabilities:
       - campus-adapters.verify
     capability_requires: {}
+    scenario_tests:
+      CAT-TEACHER-15:
+        - scripts/test_buaa_teacher_sites.py#TeacherSitesTest.test_body_image_public_hops_use_checked_addresses_and_limits
+        - scripts/test_buaa_teacher_sites.py#TeacherSitesTest.test_body_image_nonpublic_destinations_never_connect
+        - scripts/test_buaa_teacher_sites.py#TeacherSitesTest.test_offline_bundle_scopes_approval_and_invalidates_incremental_cache
+        - scripts/test_buaa_teacher_sites.py#TeacherSitesTest.test_domain_limit_and_timeout
+        - teacherhome/body_media_test.go#TestReadV3PreservesBodyMediaAndAcceptsOlderSnapshots
+        - teacherhome/body_media_test.go#TestReadRejectsMalformedBodyMedia
+        - teacherhome/body_media_test.go#TestReadRejectsUnsafeBodyMediaLinks
+        - teacherhome/body_media_test.go#TestReadBodyImageBudgetCountsUniqueDigestsAcrossSnapshot
+        - teacherhome/body_media_test.go#TestReadBodyImageVerifiesBytesInBodyPhotoDirectory
   - id: storage
     repository: StuHelper/stuhelper-storage
     visibility: public
@@ -176,11 +244,13 @@ modules:
       - identity
       - campus-adapters
       - catalog
+      - legal
     interface_owner: verification
     contract_status: implemented
     specifications:
       - docs/spec/student-verification.md
       - docs/spec/personal-center.md
+      - docs/spec/data-retention.md
     api: 1
     capabilities:
       - verification.information-query
@@ -223,6 +293,21 @@ modules:
       verification.admin:
         - identity
     scenario_tests:
+      SV-EMAIL-TRANSFER-01:
+        - email_transfer_test.go#TestEmailTransferConsentGatesIssueAndResend
+        - email_transfer_test.go#TestEmailTransferConsentQueueRollback
+        - email_transfer_test.go#TestEmailTransferPublicationUnavailableAndReplacement
+        - email_transfer_test.go#TestEmailTransferLegacyQueuedChallengeRequiresReceipt
+        - resend_test.go#TestResendRequiresConsentGateForSendAndPendingLookup
+      SV-EMAIL-TRANSFER-02:
+        - email_transfer_test.go#TestEmailTransferWithdrawalStopsQueuedDeliveryAndReplay
+        - email_transfer_test.go#TestEmailTransferWithdrawalStopsUncommittedChoice
+      SV-EMAIL-TRANSFER-03:
+        - email_transfer_test.go#TestEmailTransferAttemptsTrackProviderCallsAcrossShanghaiYears
+        - email_transfer_test.go#TestEmailTransferAnnualCountsRecordedRecipients
+        - email_transfer_test.go#TestEmailTransferThresholdWarningOmitsIdentity
+      RET-10:
+        - email_transfer_test.go#TestEmailTransferConsentArchiveRetention
       PC-11:
         - identity_mask_test.go#TestOwnIdentityMasksComeFromVerifiedDataAndNeverLeakThroughFacts
         - identity_mask_test.go#TestShortIdentityValuesAndMissingMaskEvidenceAreRejected
@@ -270,11 +355,15 @@ modules:
       - catalog.directory
       - catalog.teacher-sites.read
       - catalog.teacher-sites.refresh
+      - catalog.teacher-sites.requests
     capability_requires:
       catalog.teacher-sites.read:
         - identity
       catalog.teacher-sites.refresh:
         - identity
+      catalog.teacher-sites.requests:
+        - identity
+        - verification
       catalog.read:
         - identity
       catalog.import:
@@ -303,6 +392,52 @@ modules:
         - teacher_directory_test.go#TestTeacherSiteSnapshotRejectsConcurrentHomonym
       CAT-TEACHER-03:
         - teacher_directory_test.go#TestTeacherDirectoryKeepsAuthorizedMaintenanceOfHiddenTeachers
+      CAT-TEACHER-04:
+        - teacher_homepage_test.go#TestTeacherHomepageDetailsAndPhotoRequireCurrentAdmission
+        - teacher_homepage_postgres_test.go#TestTeacherHomepagePostgresProjectionAndAdmission
+      CAT-TEACHER-05:
+        - teacher_homepage_test.go#TestTeacherSiteReviewHTTPRequiresSchoolPermissions
+        - teacher_homepage_postgres_test.go#TestTeacherHomepagePostgresReviewPaginationAndScope
+      CAT-TEACHER-06:
+        - teacher_homepage_postgres_test.go#TestTeacherHomepagePostgresDecisionAtomicity
+      CAT-TEACHER-07:
+        - teacher_homepage_postgres_test.go#TestTeacherHomepagePostgresRefreshPreservesDecisions
+      CAT-TEACHER-08:
+        - teacher_homepage_render_test.go#TestTeacherHomepagePresentationSuppressesMultilineContactCopies
+        - teacher_homepage_controls_postgres_test.go#TestTeacherHomepageControlsPostgresVisibilityAndRefresh
+        - teacher_homepage_controls_postgres_test.go#TestTeacherHomepageControlsPostgresSchoolAllowlistAndReplacementPhoto
+        - teacher_homepage_photo_upload_test.go#TestValidateTeacherHomepagePhotoUpload
+        - httpapi/teacher_homepage_photo_test.go#TestWriteTeacherHomepagePhotoUsesPrivateSameOriginResponse
+        - teacher_homepage_complaint_test.go#TestTeacherHomepageComplaintHideRevisionAndReplay
+      CAT-TEACHER-09:
+        - teacher_homepage_capacity_postgres_test.go#TestTeacherHomepageControlsPostgresRejectsOverrideCapacity
+        - teacher_homepage_controls_postgres_test.go#TestTeacherHomepageControlsPostgresAuditAndReplay
+        - teacher_homepage_controls_storage_test.go#TestTeacherHomepageControlsPostgresPersistence
+        - teacher_homepage_change_audit_test.go#TestTeacherHomepageAuditRecordsChangesWithoutProfileData
+        - teacher_homepage_change_audit_test.go#TestTeacherHomepageAuditDistinguishesPageAndAllowlistChanges
+        - httpapi/teacher_homepage_body_test.go#TestTeacherHomepageInputSizeAndJSONErrors
+      CAT-TEACHER-10:
+        - teacher_homepage_capacity_postgres_test.go#TestTeacherHomepageRequestsPostgresRejectsApprovalBeyondOverrideCapacity
+        - teacher_homepage_requests_postgres_test.go#TestTeacherHomepageRequestsPostgresAuthorizationAndReview
+        - teacher_homepage_requests_postgres_test.go#TestTeacherHomepageRequestsPostgresSubmissionQuota
+        - teacher_homepage_request_repository_test.go#TestTeacherHomepageRequestRepositoryScopeAndKeyset
+      CAT-TEACHER-11:
+        - teacher_homepage_requests_postgres_test.go#TestTeacherHomepageRequestsPostgresDecisionAndOutboxAtomicity
+        - teacher_homepage_request_notification_test.go#TestTeacherHomepageRequestNotificationUsesOriginalPrivateReceipt
+      CAT-TEACHER-12:
+        - teacher_homepage_requests_postgres_test.go#TestTeacherHomepageRequestsPostgresIndependentPortrait
+        - teacher_homepage_publication_test.go#TestVerifiedTeacherHomepagePublicationCreatesIndependentDirectoryEvidence
+      CAT-TEACHER-13:
+        - teacher_homepage_request_repository_test.go#TestTeacherHomepageRequestRetention
+      CAT-TEACHER-14:
+        - teacher_homepage_media_postgres_test.go#TestTeacherHomepageBodyMediaPostgresAuthorizationAndRevocation
+      CAT-TEACHER-15:
+        - teacher_image_storage_test.go#TestTeacherImageStorageKeepsAuthorizationAndPrivateNamespaces
+        - teacher_homepage_media_test.go#TestTeacherHomepageBodyMediaSnapshotValidation
+        - teacher_homepage_media_test.go#TestTeacherHomepageBodyImageValidatesBytes
+        - postgres/teacher_homepage_body_media_test.go#TestTeacherHomepageBodyImagesQuotaFallbackAndReplacement
+        - postgres/teacher_homepage_body_media_test.go#TestTeacherHomepageBodyImagesGlobalQuotaSerializesSchools
+        - postgres/teacher_homepage_body_media_test.go#TestTeacherHomepageBodyImageQuotaWarningPersistsOutsidePublicJSON
       CO-02:
         - integration_test.go#TestImportRelationsClassificationAndMissingCredits
       CO-04:
@@ -391,6 +526,13 @@ modules:
         - feedback_test.go#TestFeedbackRetentionUsesUTCRegardlessOfDatabaseTimezone
       CM-21:
         - feedback_test.go#TestFeedbackRateCapacityAndCursor
+      CM-22:
+        - violation_categories_test.go#TestFixedCategoriesAndRequiredOtherReason
+      CM-23:
+        - violation_categories_test.go#TestFixedCategoryMigrationQueueAndComplaintReplay
+      CM-24:
+        - teacher_homepage_complaint_test.go#TestTeacherHomepageComplaintQueueAndScope
+        - teacher_homepage_complaint_test.go#TestTeacherHomepageComplaintRetention
   - id: media
     repository: StuHelper/stuhelper-media
     visibility: public
@@ -544,6 +686,9 @@ modules:
       ACAD-40:
         - management_test.go#TestPresentationConfigAndAttributionChangesAreScopedAndVersioned
         - presentation_test.go#TestPresentationHTTPPreservesRatingTexts
+      ACAD-41:
+        - append_test.go#TestCourseAppendFirstPublicationWindow
+        - append_test.go#TestPostWindowAppendPreservesAttributionSamplesAndModeration
       CM-09:
         - management_test.go#TestPresentationConfigAndAttributionChangesAreScopedAndVersioned
       CM-14:
@@ -577,12 +722,14 @@ modules:
       - verification
       - billing
       - identity
+      - legal
     interface_owner: resources
     contract_status: implemented
     specifications:
       - docs/spec/resource-sharing.md
       - docs/spec/action-eligibility.md
       - docs/spec/personal-center.md
+      - docs/spec/legal-documents.md
     eligibility_facts:
       campus_eligibility: verification
       phone_bound: identity
@@ -606,6 +753,9 @@ modules:
       resources.manage:
         - identity
     scenario_tests:
+      LEGAL-06:
+        - terms_integration_test.go#TestManagedTermsRotationPinsReceiptAndRejectsStaleOriginal
+        - terms_integration_test.go#TestManagedTermsOutagePreservesReplaysAndReposts
       RS-30:
         - publish_release_test.go#TestBlockedApprovedProposalRestartsWithFreshOperationAndSourceRetention
       RS-01:
@@ -635,6 +785,10 @@ modules:
       RS-24:
         - http_test.go#TestReceiptHTTPStatesMatchGeneratedContract
         - references_test.go#TestComplaintTitleSnapshotRequiresAdmissionAtSubmission
+      RS-27:
+        - references_test.go#TestComplaintTitleSnapshotRequiresAdmissionAtSubmission
+        - complaint_category_test.go#TestResourceComplaintCategoryHTTPAndDelivery
+        - complaint_category_test.go#TestLegacyComplaintCategoryMigrationPreservesReplay
       AE-ACCESS-05:
         - references_test.go#TestOwnResourceNamesRequireUploadOwnershipAndKeepContentPrivate
       AE-ACCESS-07:
@@ -914,6 +1068,7 @@ modules:
     required:
       - platform
     optional:
+      - identity
       - reviews
       - resources
       - verification
@@ -927,7 +1082,9 @@ modules:
     capabilities:
       - notifications.inbox
       - notifications.consume
-    capability_requires: {}
+    capability_requires:
+      notifications.inbox:
+        - identity
     scenario_tests:
       NT-01:
         - integration_test.go#TestConcurrentDeliveryAggregationPreferencesAndCleanup
@@ -957,6 +1114,8 @@ modules:
         - recipients_test.go#TestConsumeRecipientsRollbackAllWrites
         - recipients_test.go#TestConsumeRecipientsConcurrentReplayAndOverlap
         - recipients_test.go#TestBatchInboxMigrationPreservesExistingData
+      NT-11:
+        - teacher_homepage_test.go#TestTeacherHomepageNotificationPagingUnreadAndBulkRead
   - id: qq-binding
     repository: StuHelper/stuhelper-qq-binding
     visibility: private
@@ -1015,11 +1174,14 @@ applications:
     implementation: framework
     specifications:
       - docs/spec/academic-content.md
+      - docs/spec/catalog-operations.md
+      - docs/spec/content-management.md
       - docs/spec/module-lifecycle.md
       - docs/spec/sso-compatibility.md
       - docs/spec/resource-sharing.md
       - docs/spec/open-platform.md
       - docs/spec/personal-center.md
+      - docs/spec/student-verification.md
     optional:
       - catalog
       - reviews
@@ -1027,6 +1189,7 @@ applications:
       - media
       - resources
       - open-platform
+      - legal
       - profiles
       - billing
       - favorites
@@ -1043,6 +1206,12 @@ applications:
       resources.read:
         - resources
     scenario_tests:
+      SV-EMAIL-TRANSFER-01:
+        - internal/verificationapp/legal_transfer_test.go#TestPublishedEmailTransferConsentAcrossModules
+      SV-EMAIL-TRANSFER-02:
+        - internal/sessionapp/consent_gate_test.go#TestConsentGateAcrossAccessModes
+      SV-EMAIL-TRANSFER-03:
+        - cmd/verification-transfer-report/main_test.go#TestVerificationTransferReportReturnsOnlyTotals
       RS-30:
         - internal/resourceapp/integration_test.go#TestBlockedPublicationRetainsPrivateMediaAndRestoresOriginalBytes
       ACAD-41:
@@ -1057,6 +1226,18 @@ applications:
         - internal/resourceapp/integration_test.go#TestResourceCompositionConfigurationAndCurrentRights
       RS-19:
         - cmd/business-migrate/migrate_order_test.go#TestResourcesMigrationSeedsExistingEmptySchema
+      CAT-TEACHER-10:
+        - internal/academicapp/teacher_homepage_controls_test.go#TestTeacherHomepageControlsRoutesSeparateOwnerAndSchoolMaintenance
+      CAT-TEACHER-11:
+        - internal/notificationapp/catalog_test.go#TestTeacherHomepageNotificationDeliveryAndTargetScope
+        - internal/notificationapp/catalog_postgres_test.go#TestTeacherHomepageNotificationRelayRetriesCommittedDecision
+      CAT-TEACHER-12:
+        - internal/businessapp/teacher_homepage_onboarding_test.go#TestTeacherHomepageOnboardingFromUnpublishedDirectoryTeacher
+      BACKEND-TEACHER-BODY-01:
+        - internal/teacherrefresh/body_media_test.go#TestWorkerPublishesBodyMediaAndRecordsImageQuota
+        - internal/teacherrefresh/body_media_test.go#TestSnapshotLockProtectsMediaDuringImport
+      CM-24:
+        - internal/academicapp/teacher_homepage_controls_test.go#TestTeacherHomepageComplaintSeparatesReportAndDisplayPermissions
   - id: web
     repository: StuHelper/stuhelper-web
     visibility: public
@@ -1230,11 +1411,8 @@ operations:
       - docs/spec/sso-compatibility.md
     scenario_tests:
       CI-16:
-        - scripts/registry-probe.test.mjs#registry probes are confined to unique temporary tags in Next application repositories
-        - scripts/registry-probe.test.mjs#manifest deletion uses a digest verified against the returned bytes
-        - scripts/registry-probe.test.mjs#interruption during asynchronous cleanup waits for the same cleanup before exit
-        - scripts/registry-probe.test.mjs#interruption stops active work before removing its Registry resources
-        - scripts/registry-probe.test.mjs#cancelled builds exit before Registry cleanup begins
+        - scripts/deployment.test.mjs#remote verification reads pinned manifests without pulling or pushing images
+        - scripts/workflow-hygiene.test.mjs#Registry verification and deployment use GHCR package read permission
 shared_specifications:
   - docs/spec/terminology.md
   - docs/spec/native-clients.md

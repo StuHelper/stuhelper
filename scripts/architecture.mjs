@@ -13,13 +13,14 @@ export function validateModules(config) {
   assert(['design-only', 'framework-in-progress', 'framework'].includes(config.status));
   const byId = new Map(config.modules.map(module => [module.id, module]));
   assert.equal(byId.size, config.modules.length, 'Duplicate module ID');
-  const repositories = new Set();
+  const repositories = new Map();
   const capabilities = new Set();
   for (const module of config.modules) {
     assert.match(module.id, /^[a-z][a-z0-9-]*$/);
     assert.match(module.repository, /^StuHelper\/stuhelper-[a-z0-9-]+$/);
-    assert(!repositories.has(module.repository), `Duplicate repository owner: ${module.repository}`);
-    repositories.add(module.repository);
+    const owner = repositories.get(module.repository);
+    assert(!owner || (module.in_application && module.in_application === owner.in_application), `Duplicate repository owner: ${module.repository}`);
+    repositories.set(module.repository, module);
     assert(['public', 'private'].includes(module.visibility));
     assert(['not-implemented', 'in-progress', 'framework', 'library'].includes(module.implementation));
     assert.equal(module.interface_owner, module.id);
@@ -86,10 +87,12 @@ export function validateModules(config) {
     assert.equal(item.repository, `StuHelper/stuhelper-${item.id}`);
     assert.equal(item.visibility, 'private', `${item.id} must remain private`);
     assert(!repositories.has(item.repository), `Duplicate repository owner: ${item.repository}`);
-    repositories.add(item.repository);
+    repositories.set(item.repository, item);
   }
   for (const module of config.modules.filter(item => item.in_application)) {
-    assert.equal(module.repository, apps.get(module.in_application)?.repository, 'Application module ownership mismatch');
+    const app = apps.get(module.in_application);
+    assert.equal(module.repository, app?.repository, 'Application module ownership mismatch');
+    assert.equal(module.visibility, app.visibility, 'Application module visibility mismatch');
   }
   const visited = new Set();
   const active = new Set();

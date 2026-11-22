@@ -242,7 +242,7 @@ export function verifyScenarios(directory, definition, checkout) {
       const file = reference.slice(0, separator);
       const name = reference.slice(separator + 1);
       assert(!path.isAbsolute(file) && !file.split('/').includes('..'));
-      assert(/(?:_test\.go|\.(?:test|spec)\.(?:mjs|[jt]sx?))$/.test(file), `Invalid test file: ${file}`);
+      assert(/(?:_test\.go|(?:^|\/)test_\w+\.py|\.(?:test|spec)\.(?:mjs|[jt]sx?))$/.test(file), `Invalid test file: ${file}`);
       if (!titles.has(file)) titles.set(file, scenarioTitles(file, fs.readFileSync(path.join(checkout, file), 'utf8')));
       assert(titles.get(file).has(name), `Missing scenario test: ${scenario}/${reference}`);
     }

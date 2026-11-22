@@ -1,7 +1,7 @@
 ---
 type: spec
 status: Accepted
-updated: 2026-11-19
+updated: 2026-11-22
 ---
 
 # 功能与模块规格
@@ -18,7 +18,7 @@ updated: 2026-11-19
 | [个人中心](personal-center.md) | 资料、认证、账号绑定、本人内容和业务入口 |
 | [通知中心](notifications.md) | 通知来源、未读、已读与相关内容跳转 |
 | [我的课程与课表](my-courses.md) | 本人课程、教师、时间、地点与学期 |
-| [QQ 绑定、入群认证与群聊管理](qq-group-services.md) | 入群、名片、黑名单、资格宽限期与管理员豁免 |
+| [QQ 入群认证与群聊管理](qq-group-services.md) | 入群、名片、黑名单、资格宽限期与管理员豁免 |
 | [第三方开放平台](open-platform.md) | 应用接入、用户授权和业务信息查询 |
 | [存储贡献](storage-contribution.md) | 容量、期限、占用、续期、退出和贡献榜 |
 | [存储放置与恢复](storage-placement.md) | 密级准入、独立副本、容量预占、撤权与分布式恢复验收 |
@@ -30,13 +30,14 @@ updated: 2026-11-19
 | [机器人娱乐功能](bot-entertainment.md) | 骰子、自助禁言及管理配置 |
 | [社交与内容治理](social-content.md) | 动态、互动、匿名、举报、审核和通知 |
 | [SSO 接入与应用会话](sso-compatibility.md) | 身份绑定、会话授权与消费者验收 |
+| [法律文件与版本](legal-documents.md) | 草稿、变量、不可变发布版本、公开查询与同意引用 |
 | [原生客户端行为](native-clients.md) | 技术路线、共享边界、登录和平台限制 |
-| [CI 触发、runner 与缓存](ci-runners.md) | push/PR、路径选择、必需检查、runner 与免费缓存规则 |
+| [CI 触发、runner 与缓存](ci-runners.md) | push/PR、必需检查、runner 分配、依赖缓存与制品保留 |
 | [数据保留与删除](data-retention.md) | 数据分类、保存期限、删除与恢复 |
 | [国际化与本地化](internationalization.md) | 八种语言、复数、格式化与 RTL 检查 |
 | [文件与媒体模块](media.md) | 上传、文件引用、交付与存储状态 |
 | [模块通信与一致性](module-protocol.md) | 事件、幂等、补偿、签名 URL 与数据库边界 |
 | [统一业务术语](terminology.md) | 统一业务概念、英文名称与接口标识 |
-| [QQ 三项独立绑定](qq-binding.md) | 身份归属、验证码、OAuth、解绑和事件 |
+| [QQ 三项独立绑定](qq-binding.md) | QQ 互联、OneBot 和官方机器人各自的绑定与解绑 |
 
 新增主题使用[分类模板](TEMPLATE.md)，并同步维护[文档导航](../README.md)。
