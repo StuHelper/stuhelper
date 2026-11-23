@@ -1,7 +1,7 @@
 ---
 type: development
 status: InReview
-updated: 2026-11-21
+updated: 2026-11-24
 ---
 
 # 存储模块实施状态
@@ -27,9 +27,9 @@ updated: 2026-11-21
 
 ## BHpan 能力与证据
 
-BHpan 的 SSO、本地账号登录、普通及分片上传、下载、文件校验与清理已有真实账号证据。秒传、归档下载、分享历史和共享目录遍历通过协议夹具，真实账号验收待执行。[适配实施记录](https://github.com/StuHelper/stuhelper-storage-bhpan/blob/8695e00e68688eb532d414aff776f69b2b1d1d01/docs/development/bhpan.md)
+候选版本统一使用 BHpan 官方登录入口。两次人工登录均到达云盘回调。旧版本已用真实账号验证普通和分片上传、下载、文件校验与清理。候选版本的原实例重新授权和容量读取待负责人验收。[适配实施记录](https://github.com/StuHelper/stuhelper-storage-bhpan/blob/0a4ab1d46e38d793d82d917be8f4b266d20f89c9/docs/development/bhpan.md)
 
-适配库提供显式 `RefreshSession` 入口，并支持 CAS 风险确认后继续。图形验证码及双因素验证仍需用户交互。同源根相对登录回调已在 develop 的隔离 TLS 夹具验证，仍需真实账号复验。
+适配库提供显式 `RefreshSession` 入口。登录遇到交互验证时停止。同源相对跳转、拒绝不可信目标与会话续期已通过协议测试。秒传、归档下载、分享历史和共享目录遍历已通过夹具测试，真实账号验收待执行。
 
 实际存储调度采用会话复用和获准托管凭据重登。独立客户端核对稳定账号及专用根后才切换材料。真实账号已验证会话失效后重登，并在另一套数据库及新进程恢复同一账号、根和副本。
 
