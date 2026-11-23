@@ -16,8 +16,8 @@
     },
     "admin": {
       "repository": "https://github.com/StuHelper/stuhelper-admin.git",
-      "tag": "v0.1.12",
-      "revision": "f26a61d66c2f206312f4504778c54324888c5d6e",
+      "tag": "v0.1.13",
+      "revision": "d837c4e553c074eaa4ed9e6471dd3091fb8e3981",
       "dirty": false
     },
     "verification": {
