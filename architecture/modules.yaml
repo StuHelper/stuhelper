@@ -220,9 +220,11 @@ modules:
         - content_test.go#TestDeleteDuringSharedProtectionCopyCleansDestinationAndKeepsOtherHandle
       SP-29:
         - admission_policy_test.go#TestAdmissionPolicySelectorsAndDefault
-        - admission_policy_integration_test.go#TestContributionAdmissionAdoptionPlacementAndNarrowing
+        - admission_policy_integration_test.go#TestContributionTrustRequiresOwnerConsentAndAdministration
+        - admission_policy_integration_test.go#TestContributionAdmissionNarrowingRepairsVerifiedReplicas
       SP-30:
-        - admission_policy_integration_test.go#TestContributionAdmissionAdoptionPlacementAndNarrowing
+        - encryption_integration_test.go#TestRestrictedCiphertextPerVersionAndRotation
+        - encryption_test.go#TestRestrictedEnvelopeRestoreAndAuthenticatedChunks
   - id: storage-bhpan
     repository: StuHelper/stuhelper-storage-bhpan
     visibility: public
