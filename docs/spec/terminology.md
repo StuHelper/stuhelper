@@ -1,7 +1,7 @@
 ---
 type: spec
 status: Accepted
-updated: 2026-11-21
+updated: 2026-11-26
 ---
 
 # 统一业务术语
@@ -15,6 +15,8 @@ updated: 2026-11-21
 | 有效校园资格 | Campus eligibility | `campus_eligibility` | 普通认证、已认证校友或未过期临时新生所提供的当前资格 | 有效学生资格、学生认证通过、已认证学生 |
 | 学生认证 | Student verification | — | 核验学习经历和身份归属的流程及结果 | — |
 | 独立实名 | Identity verification | `identity_verified` | 独立的实名核验结果 | — |
+| 学校数据认证 | School data authorization | `school_data_authorization` | 校园身份持有人单独授权平台读取本人学校数据，可随时撤销 | — |
+| 评价选课状态 | Review enrollment status | `enrollment_status` | 发布快照。enrolled 表示有记录，not_enrolled 表示获准完整读取后无匹配记录，unknown 表示未知 | — |
 | 选课记录 | Course enrollment | `course_enrollment` | 从获准教务来源取得的本人课程与任课关系 | — |
 | 任课教师 | Course instructor | `Enrollment.teacher_ids` | 本人某次选课实际关联的授课教师 | — |
 | 教学班 | Teaching class | `Enrollment.class_id` | 学期开课下的班级及授课来源对象 | — |
