@@ -360,10 +360,13 @@ test('student selects authoritative real name independently and sends no attribu
   await page.goto(`/teachers/teacher-a?lang=${info.project.metadata.locale}`);
   await page.getByRole('button',{name:a.subject.writeMentor,exact:true}).click();
   const editor=editorOf(page,a,'mentor');
-  const name=editor.getByRole('checkbox',{name:new RegExp(labels.real_name)});
+  const disclosures=editor.getByRole('group',{name:a.disclosure.title,exact:true});
+  await expect(disclosures.getByRole('checkbox')).toHaveCount(3);
+  for(const key of ['real_name','gender','department']){
+    await expect(disclosures.locator(`input[type="checkbox"][value="${key}"]`)).toHaveCount(1);
+  }
+  const name=disclosures.getByRole('checkbox',{name:new RegExp(labels.real_name)});
   await expect(name).not.toBeChecked();await name.check();
-  await expect(editor.getByRole('checkbox',{name:new RegExp(labels.teacher)})).toHaveCount(0);
-  await expect(editor.getByRole('checkbox',{name:new RegExp(labels.enrollment)})).toHaveCount(0);
   await editor.getByLabel(a.editor.title,{exact:true}).fill('Student experience');
   await editor.getByLabel(a.editor.body,{exact:true}).fill('Voluntary real-name comment.');
   await editor.getByRole('button',{name:a.editor.publish,exact:true}).click();
