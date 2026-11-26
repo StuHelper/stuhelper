@@ -372,6 +372,7 @@ modules:
         - identity
       catalog.enrollments:
         - identity
+        - verification
       catalog.maintain:
         - identity
       catalog.directory:
