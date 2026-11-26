@@ -23,7 +23,7 @@ const schedules=[obj('schedule','schedule','Teaching time',{class_id:'class-one'
 const restrictedKinds=new Set(['term_course','class','assignment','schedule']);
 const directory={term_course:offerings,class:classes,schedule:schedules,school:[school],department:[obj('dept','department','Test College')],category:[obj('seminar','category','Test Seminar')],nature:[obj('optional','nature','Optional')],term:terms,course:[course],teacher:[teacher,otherTeacher]};
 const dimensions=Array.from({length:5},()=>({level:3,samples:2,courses:1}));
-const review={id:'review',root_id:'review',kind:'course',school_id:'school',target_id:'course',term_id:'fall',title:'A student review',body:'Useful course content.',ratings:[3,3,3,3,3],author:{anonymous:true,handle:'anonymous'},revision:1,published_at:'2026-10-27T00:00:00Z',upvotes:0,downvotes:0,my_vote:0,mine:false,state:'published',can_edit:false};
+const review={id:'review',root_id:'review',kind:'course',school_id:'school',target_id:'course',term_id:'fall',title:'A student review',body:'Useful course content.',ratings:[3,3,3,3,3],author:{anonymous:true,handle:'anonymous'},revision:1,published_at:'2026-10-27T00:00:00Z',upvotes:0,downvotes:0,my_vote:0,mine:false,state:'published',can_edit:false,teacher_ids:['teacher-a','teacher-b'],grade:{scale:'percent',value:92}};
 // A member with current consent and confirmed campus eligibility.
 const member={authenticated:true,content_school_id:'school',profile:{id:'00000000-0000-4000-8000-000000000001',nickname:'Fixture student',nickname_required:false,bio:'',visibility:{school:true,badge:true,department:true,grade:false,reviews:true,resources:true},group_card_consent:{school:false,grade:false,department:false,name:false,student_id:false,gender:false,nickname:false},revision:1},csrf_token:'a'.repeat(43),phone_bound:true,administrator:false,expires_at:'2030-01-01T00:00:00Z'};
 const webSession = JSON.parse(fs.readFileSync(path.join(web, 'contracts/session.openapi.json'), 'utf8'));
@@ -32,6 +32,19 @@ if (webSession.components.schemas.FullSession?.required?.includes('consent_requi
 }
 const summary={campus_eligibility:true,teacher_verified:false,identity_verified:false,evaluated_at:'2026-10-28T00:00:00Z',revision:1,next_evaluation_at:null};
 const fulfill=(route,value,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(value)});
+const composeBase={allowed:true,state:'ready',requirements:[],terms:[],teachers:[],identity:'choice',rule_version:'fixture'};
+function courseComposer(term, marked) {
+  return {
+    ...composeBase,
+    allowed:!!term,
+    state:term?'ready':'choose_term',
+    requirements:['login','campus_eligibility','phone_bound'].map(key=>({key,state:'satisfied'})),
+    terms:[terms[1],terms[0]].map(({id,name})=>({id,name,term_order_key:id==='fall'?20263:20271,enrolled:marked&&id==='spring'})),
+    teachers:term?(term==='fall'?[teacher]:[teacher,otherTeacher]).map(({id})=>({
+      id,enrolled:marked&&term==='spring'&&id===otherTeacher.id,
+    })):[],
+  };
+}
 export async function fixture(page){
   await mockCapabilities(page);
   await page.route('**/api/v1/**',async route=>{
@@ -39,6 +52,7 @@ export async function fixture(page){
     if(p==='/api/v1/system/capabilities')return route.fallback();
     if(p==='/api/v1/auth/session')return fulfill(route,member);
     if(p==='/api/v1/verification/summary')return fulfill(route,summary);
+    if(p==='/api/v1/verification/me/school-data')return fulfill(route,{state:'active'});
     if(p==='/api/v1/catalog/directory'){
       const kind=u.searchParams.get('kind')||'course';
       const selected=kind==='course'?[course]:[teacher,otherTeacher];
@@ -59,8 +73,7 @@ export async function fixture(page){
     if(p.startsWith('/api/v1/catalog/objects/')){const id=p.split('/').at(-1);return fulfill(route,Object.values(directory).flat().find(v=>v.id===id)??course);}
     if(p==='/api/v1/catalog/me/enrollments')return fulfill(route,terms.map((term,i)=>({id:`enrollment-${i}`,subject:'synthetic',school_id:'school',course_id:'course',term_id:term.id,teacher_ids:[i===0?'teacher-a':'teacher-b'],active:true})));
     if(p==='/api/v1/reviews/compose'){
-      const needsTerm=u.searchParams.get('kind')==='course'&&!u.searchParams.get('term_id');
-      return fulfill(route,{allowed:!needsTerm,state:needsTerm?'choose_term':'ready',requirements:[{key:'login',state:'satisfied'},{key:'campus_eligibility',state:'satisfied'},{key:'phone_bound',state:'satisfied'}],teacher_ids:u.searchParams.get('kind')==='course'&&u.searchParams.get('term_id')?[u.searchParams.get('term_id')==='fall'?'teacher-a':'teacher-b']:[],identity:'choice',rule_version:'fixture'});
+      return fulfill(route,u.searchParams.get('kind')==='course'?courseComposer(u.searchParams.get('term_id'),true):composeBase);
     }
     if(p==='/api/v1/reviews/presentation')return fulfill(route,{effective:{school_id:'school',revision:0,rating_texts:{}},configured:null,source:'default'});
     if(p==='/api/v1/reviews/statistics')return fulfill(route,{dimensions,courses:[{course_id:'course',dimensions}],next:'',from:u.searchParams.get('from'),until:u.searchParams.get('until')});
@@ -74,7 +87,7 @@ export async function fixture(page){
 }
 const catalogue=info=>JSON.parse(fs.readFileSync(path.join(web,`src/locales/${info.project.metadata.locale}.json`)));
 const dimensionNames=['recommendation','quality','difficulty','workload','grading'];
-const draftInput={kind:'course',target_id:'course',term_id:'fall',teacher_id:'teacher-a',title:'Saved review',body:'Saved first-hand experience.',ratings:[3,3,3,3,3],signed:false};
+const draftInput={kind:'course',target_id:'course',term_id:'fall',teacher_ids:['teacher-a'],title:'Saved review',body:'Saved first-hand experience.',ratings:[3,3,3,3,3],signed:false};
 const editorOf=(page,a,kind)=>page.locator('form').filter({has:page.getByRole('heading',{name:a.editor.heading[kind],exact:true})});
 const pick=(scope,label,option)=>scope.getByRole('group',{name:label,exact:true}).getByText(option,{exact:true}).click();
 async function choose(page,label,option){
@@ -125,7 +138,7 @@ test('former course link opens the current course with its names and context', a
   }
 });
 
-test('review semester limits teacher choices and unknown submission retries once',async({page},info)=>{
+test('course review renders grades and retries the selected teacher array after a lost response',async({page},info)=>{
   const all=catalogue(info),a=all.academic,posts=[];
   await page.route('**/api/v1/reviews',async route=>{
     if(route.request().method()!=='POST')return route.fallback();
@@ -136,26 +149,39 @@ test('review semester limits teacher choices and unknown submission retries once
   await page.goto(`/courses/course?lang=${info.project.metadata.locale}`);
   const card=page.locator('article').filter({hasText:'Useful course content.'}).first();
   for(const key of dimensionNames)await expect(card.getByText(a.ratings[key].label,{exact:true})).toBeVisible();
+  const formatter=new Intl.NumberFormat(info.project.metadata.locale);
+  await expect(card).toContainText(a.grade.display.replace('{value}',formatter.format(92)));
+  const names=new Intl.ListFormat(info.project.metadata.locale,{style:'long',type:'conjunction'});
+  await expect(card).toContainText(names.format(['Teacher A','Teacher B']));
   await page.getByRole('button',{name:a.subject.writeCourse,exact:true}).click();
   const editor=editorOf(page,a,'course');
+  const terms=editor.getByRole('group',{name:a.editor.term,exact:true});
+  await expect(terms.getByRole('radio',{name:`Spring semester ${a.editor.enrolledMark}`,exact:true})).toBeVisible();
   await pick(editor,a.editor.term,'Fall semester');
   const teachers=editor.getByRole('group',{name:a.editor.teacher,exact:true});
-  await expect(teachers.locator('label')).toHaveText([a.review.noTeacher,'Teacher A']);
+  await expect(teachers.getByText('Teacher A',{exact:true})).toBeVisible();
+  await expect(teachers.getByRole('checkbox',{name:/Teacher B/})).toHaveCount(0);
   await pick(editor,a.editor.teacher,'Teacher A');
   await pick(editor,a.editor.term,'Spring semester');
-  await expect(teachers.locator('label')).toHaveText([a.review.noTeacher,'Teacher B']);
-  await expect(teachers.getByRole('radio',{name:a.review.noTeacher,exact:true})).toBeChecked();
+  await expect(teachers.getByRole('checkbox',{name:`Teacher B ${a.editor.enrolledMark}`,exact:true})).toBeVisible();
+  await expect(teachers.getByRole('checkbox',{name:/Teacher A/})).not.toBeChecked();
+  await pick(editor,a.editor.teacher,'Teacher A');
   await pick(editor,a.editor.teacher,'Teacher B');
   await rate(editor,a);
   await editor.getByLabel(a.editor.title,{exact:true}).fill('My course review');
   await editor.getByLabel(a.editor.body,{exact:true}).fill('First-hand teaching experience.');
+  await expect(editor.getByText(a.grade.hint,{exact:true})).toBeVisible();
+  await pick(editor,a.grade.label,a.grade.scales.two_level);
+  await pick(editor,a.grade.levelLabel,a.grade.two.pass);
   await editor.getByRole('button',{name:a.editor.publish,exact:true}).click();
   await expect(page.getByText(all.common.uncertain,{exact:true})).toBeVisible();
   await expect(editor.getByLabel(a.editor.body,{exact:true})).toHaveValue('First-hand teaching experience.');
   await page.getByRole('button',{name:all.common.retryOriginal,exact:true}).click();
   await expect(page.getByText(a.editor.pending,{exact:true})).toBeVisible();
   expect(posts).toHaveLength(2);expect(posts[1]).toEqual(posts[0]);
-  expect(JSON.parse(posts[0].body)).toMatchObject({term_id:'spring',teacher_id:'teacher-b',signed:false,ratings:[3,3,3,3,3]});
+  const input=JSON.parse(posts[0].body);
+  expect(input).toMatchObject({term_id:'spring',grade:{scale:'two_level',value:'pass'},signed:false,ratings:[3,3,3,3,3]});
+  expect([...input.teacher_ids].sort()).toEqual(['teacher-a','teacher-b']);
 });
 
 test('mentor template can be replaced without rating fields',async({page},info)=>{
@@ -252,9 +278,40 @@ test('draft conflict keeps local writing until the author chooses a version',asy
   expect(posted).toMatchObject({revision:2,input:{body:'Local writing to preserve.'}});
 });
 
+test('a saved draft with another grade scale keeps its value when restored',async({page},info)=>{
+  const all=catalogue(info),a=all.academic;
+  const localGrade={scale:'percent',value:92};
+  const savedGrade={scale:'five_level',value:'good'};
+  const draft={id:'draft',revision:1,input:{...draftInput,grade:localGrade},withdrawn:false,reference_ids:['course','teacher-a'],reference_state:'verified'};
+  const saved={...draft,revision:2,input:{...draftInput,body:'Saved on another device.',grade:savedGrade}};
+  let reads=0,posted;
+  await page.route('**/api/v1/reviews/me/drafts?*',route=>fulfill(route,[draft]));
+  await page.route('**/api/v1/reviews/me/drafts/draft',route=>fulfill(route,++reads===1?draft:saved));
+  await page.route('**/api/v1/reviews/me/drafts/draft/publish',route=>{
+    const body=route.request().postDataJSON();
+    if(body.revision===1)return fulfill(route,{code:'conflict'},409);
+    posted=body;
+    return fulfill(route,{id:'published',state:'published',revision:1});
+  });
+  await page.goto(`/me/reviews?tab=drafts&lang=${info.project.metadata.locale}`);
+  await page.getByRole('button',{name:all.me.continueEditing,exact:true}).click();
+  const editor=editorOf(page,a,'course');
+  const publish=editor.getByRole('button',{name:a.editor.publish,exact:true});
+  await expect(editor.getByLabel(a.grade.percentLabel,{exact:true})).toHaveValue('92');
+  await publish.click();
+  await editor.getByRole('button',{name:a.editor.loadLatest,exact:true}).click();
+  await editor.getByRole('button',{name:a.editor.useLatest,exact:true}).click();
+  const restoredGrade=editor.getByRole('group',{name:a.grade.levelLabel,exact:true});
+  await expect(restoredGrade.getByRole('radio',{name:a.grade.five.good,exact:true})).toBeChecked();
+  await expect(publish).toBeEnabled();
+  await publish.click();
+  await expect(page.getByText(a.editor.published,{exact:true})).toBeVisible();
+  expect(posted).toMatchObject({revision:2,input:{body:saved.input.body,grade:savedGrade}});
+});
+
 test('discussion refresh preserves writing and fixed identity when replying',async({page},info)=>{
   const a=catalogue(info).academic;let posted;
-  await page.route('**/api/v1/reviews/compose?*',route=>fulfill(route,{allowed:true,state:'ready',requirements:[],teacher_ids:[],identity:'anonymous',rule_version:'fixture'}));
+  await page.route('**/api/v1/reviews/compose?*',route=>fulfill(route,{...composeBase,identity:'anonymous'}));
   await page.route('**/api/v1/reviews/review/actions',route=>fulfill(route,{id:'review',state:'published',revision:1}));
   await page.route('**/api/v1/reviews/review/replies',route=>{posted=route.request().postDataJSON();return fulfill(route,{id:'reply',state:'published',revision:1})});
   await page.goto(`/reviews/review?lang=${info.project.metadata.locale}`);
@@ -269,32 +326,47 @@ test('discussion refresh preserves writing and fixed identity when replying',asy
   expect(posted).toMatchObject({kind:'reply',body:'Reply kept while voting.',signed:false});
 });
 
-test('missing enrollment explains the blocked publication and keeps draft access',async({page},info)=>{
-  const a=catalogue(info).academic,enrollmentReads=[];
+test('a member without school data authorization can submit from public candidates',async({page},info)=>{
+  const a=catalogue(info).academic,enrollmentReads=[];let posted;
   page.on('request',req=>{if(new URL(req.url()).pathname==='/api/v1/catalog/me/enrollments')enrollmentReads.push(req.url());});
-  await page.route('**/api/v1/reviews/compose?*',route=>fulfill(route,{allowed:false,state:'enrollment_required',requirements:[{key:'course_enrollment',state:'missing'}],teacher_ids:[],identity:'choice',rule_version:'fixture'}));
+  await page.route('**/api/v1/verification/me/school-data',route=>fulfill(route,{state:'inactive'}));
+  await page.route('**/api/v1/reviews/compose?*',route=>fulfill(route,courseComposer(new URL(route.request().url()).searchParams.get('term_id'),false)));
+  await page.route('**/api/v1/reviews',route=>{
+    if(route.request().method()!=='POST')return route.fallback();
+    posted=route.request().postDataJSON();
+    return fulfill(route,{id:'new-review',state:'pending',revision:1});
+  });
   await page.goto(`/courses/course?lang=${info.project.metadata.locale}`);
   await page.getByRole('button',{name:a.subject.writeCourse,exact:true}).click();
   const editor=editorOf(page,a,'course');
-  await expect(editor.getByText(a.composer.enrollment_required,{exact:true})).toBeVisible();
-  // The personal course page stays closed until enrollment reading is authorized.
-  await expect(editor.getByRole('link',{name:a.requirementStep.course_enrollment,exact:true})).toHaveCount(0);
-  expect(enrollmentReads).toEqual([]);
-  await expect(editor.getByRole('button',{name:a.editor.publish,exact:true})).toBeDisabled();
   await expect(editor.getByRole('button',{name:a.editor.saveDraft,exact:true})).toBeEnabled();
+  await pick(editor,a.editor.term,'Fall semester');
+  await expect(editor.getByRole('checkbox',{name:'Teacher A',exact:true})).toBeVisible();
+  await expect(editor.getByText(a.editor.enrolledLegend,{exact:true})).toHaveCount(0);
+  await editor.getByLabel(a.editor.title,{exact:true}).fill('My course review');
+  await editor.getByLabel(a.editor.body,{exact:true}).fill('First-hand teaching experience.');
+  await rate(editor,a);
+  await editor.getByRole('button',{name:a.editor.publish,exact:true}).click();
+  await expect(page.getByText(a.editor.pending,{exact:true})).toBeVisible();
+  expect(posted).toMatchObject({term_id:'fall'});
+  expect(posted.teacher_ids??[]).toHaveLength(0);
+  expect(enrollmentReads).toEqual([]);
 });
 
 test('student selects authoritative real name independently and sends no attribute values',async({page},info)=>{
   const a=catalogue(info).academic,labels=a.disclosure.labels;let posted;
-  await page.route('**/api/v1/reviews/compose?*',route=>fulfill(route,{allowed:true,state:'ready',requirements:[],teacher_ids:[],identity:'choice',rule_version:'fixture',disclosures:[{key:'real_name',value:'Synthetic Student',required:false},{key:'gender',value:'Synthetic gender',required:false},{key:'department',value:'Synthetic College',required:false}]}));
+  await page.route('**/api/v1/reviews/compose?*',route=>fulfill(route,{...composeBase,disclosures:[{key:'real_name',value:'Synthetic Student',required:false},{key:'gender',value:'Synthetic gender',required:false},{key:'department',value:'Synthetic College',required:false}]}));
   await page.route('**/api/v1/reviews',route=>{if(route.request().method()!=='POST')return route.fallback();posted=route.request().postDataJSON();return fulfill(route,{id:'named-student',state:'published',revision:1})});
   await page.goto(`/teachers/teacher-a?lang=${info.project.metadata.locale}`);
   await page.getByRole('button',{name:a.subject.writeMentor,exact:true}).click();
   const editor=editorOf(page,a,'mentor');
-  const name=editor.getByRole('checkbox',{name:new RegExp(labels.real_name)});
+  const disclosures=editor.getByRole('group',{name:a.disclosure.title,exact:true});
+  await expect(disclosures.getByRole('checkbox')).toHaveCount(3);
+  for(const key of ['real_name','gender','department']){
+    await expect(disclosures.locator(`input[type="checkbox"][value="${key}"]`)).toHaveCount(1);
+  }
+  const name=disclosures.getByRole('checkbox',{name:new RegExp(labels.real_name)});
   await expect(name).not.toBeChecked();await name.check();
-  await expect(editor.getByRole('checkbox',{name:new RegExp(labels.teacher)})).toHaveCount(0);
-  await expect(editor.getByRole('checkbox',{name:new RegExp(labels.enrollment)})).toHaveCount(0);
   await editor.getByLabel(a.editor.title,{exact:true}).fill('Student experience');
   await editor.getByLabel(a.editor.body,{exact:true}).fill('Voluntary real-name comment.');
   await editor.getByRole('button',{name:a.editor.publish,exact:true}).click();
@@ -304,7 +376,7 @@ test('student selects authoritative real name independently and sends no attribu
 
 test('own-course teacher reply visibly requires authorized name and teacher badge',async({page},info)=>{
   const a=catalogue(info).academic,labels=a.disclosure.labels;let posted;
-  await page.route('**/api/v1/reviews/compose?*',route=>fulfill(route,{allowed:true,state:'ready',requirements:[],teacher_ids:[],identity:'anonymous',rule_version:'fixture',teacher_reply:true,disclosures:[{key:'real_name',value:'Synthetic Teacher',required:true},{key:'teacher',value:'verified',required:true},{key:'organization',value:'Synthetic Faculty',required:false}]}));
+  await page.route('**/api/v1/reviews/compose?*',route=>fulfill(route,{...composeBase,identity:'anonymous',teacher_reply:true,disclosures:[{key:'real_name',value:'Synthetic Teacher',required:true},{key:'teacher',value:'verified',required:true},{key:'organization',value:'Synthetic Faculty',required:false}]}));
   await page.route('**/api/v1/reviews/review/replies',route=>{posted=route.request().postDataJSON();return fulfill(route,{id:'teacher-reply',state:'published',revision:1})});
   await page.goto(`/reviews/review?lang=${info.project.metadata.locale}`);
   const editor=editorOf(page,a,'reply');
@@ -324,7 +396,7 @@ test('own-course teacher reply visibly requires authorized name and teacher badg
 
 test('teacher replying elsewhere can disclose only the verification badge',async({page},info)=>{
   const a=catalogue(info).academic,labels=a.disclosure.labels;let posted;
-  await page.route('**/api/v1/reviews/compose?*',route=>fulfill(route,{allowed:true,state:'ready',requirements:[],teacher_ids:[],identity:'choice',rule_version:'fixture',teacher_reply:false,disclosures:[{key:'real_name',value:'Synthetic Teacher',required:false},{key:'teacher',value:'verified',required:false},{key:'organization',value:'Synthetic Faculty',required:false}]}));
+  await page.route('**/api/v1/reviews/compose?*',route=>fulfill(route,{...composeBase,teacher_reply:false,disclosures:[{key:'real_name',value:'Synthetic Teacher',required:false},{key:'teacher',value:'verified',required:false},{key:'organization',value:'Synthetic Faculty',required:false}]}));
   await page.route('**/api/v1/reviews/review/replies',route=>{posted=route.request().postDataJSON();return fulfill(route,{id:'teacher-reply',state:'published',revision:1})});
   await page.goto(`/reviews/review?lang=${info.project.metadata.locale}`);
   const editor=editorOf(page,a,'reply');

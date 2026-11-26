@@ -372,6 +372,7 @@ modules:
         - identity
       catalog.enrollments:
         - identity
+        - verification
       catalog.maintain:
         - identity
       catalog.directory:
@@ -379,6 +380,8 @@ modules:
         - reviews
         - favorites
     scenario_tests:
+      REVIEWUX-01:
+        - projection_test.go#TestReviewOfferingTermsUseCourseAndCutoff
       CAT-REFRESH-01:
         - teacher_refresh_test.go#TestTeacherRefreshDurableConcurrencyIdempotencyAndTimeout
       CAT-REFRESH-02:
@@ -497,6 +500,9 @@ modules:
       moderation.tasks:
         - identity
     scenario_tests:
+      REVIEWUX-04:
+        - privacy_events_test.go#TestDecisionProjectionHidesEnrollmentEvidenceAndSignedState
+        - batch_validation_runtime_test.go#TestInputValidationFeedbackClockDownloadAuditAndCheckRuntime
       CM-01:
         - complaints_test.go#TestResourceComplaintPortDeduplicatesRetriesAndRejectsPublicBypass
         - integration_test.go#TestPendingReportMergesEvidenceAndAuthorRequestsAreScoped
@@ -648,6 +654,14 @@ modules:
       reviews.moderate:
         - identity
     scenario_tests:
+      REVIEWUX-03:
+        - reviewux_test.go#TestReviewGradeAndTeacherSelectionHTTPValidation
+        - reviewux_test.go#TestReviewDraftWithdrawalAndHistoryRetainGradeAndSelection
+      REVIEWUX-04:
+        - reviewux_test.go#TestMultiTeacherStatisticsGradesAndCreateReplay
+        - management_test.go#TestPresentationConfigAndAttributionChangesAreScopedAndVersioned
+      REVIEWUX-05:
+        - postgres/teacher_selection_migration_test.go#TestTeacherSelectionMigrationPreservesAttributionAndCounts
       ACAD-04:
         - integration_test.go#TestContentAdmissionAndCurrentAccessCannotLeakIdentity
       ACAD-05:
@@ -1208,6 +1222,10 @@ applications:
       resources.read:
         - resources
     scenario_tests:
+      REVIEWUX-02:
+        - internal/academicapp/school_data_test.go#TestComposerPublicCandidatesAndAuthorizedEnrollmentMarks
+      REVIEWUX-04:
+        - internal/academicapp/integration_test.go#TestMultiTeacherModerationThroughComposedHTTP
       SV-EMAIL-TRANSFER-01:
         - internal/verificationapp/legal_transfer_test.go#TestPublishedEmailTransferConsentAcrossModules
       SV-EMAIL-TRANSFER-02:
@@ -1376,6 +1394,7 @@ applications:
       - docs/spec/module-lifecycle.md
       - docs/spec/admin-operations.md
       - docs/spec/content-management.md
+      - docs/spec/academic-content.md
       - docs/spec/storage-placement.md
       - docs/spec/storage-contribution.md
       - docs/spec/resource-sharing.md
@@ -1387,6 +1406,8 @@ applications:
       - docs/spec/information-query.md
       - docs/spec/module-protocol.md
     scenario_tests:
+      REVIEWUX-04:
+        - tests/e2e/moderation.spec.mjs#moderation previews and applies multiple teachers from the review term
       CM-01:
         - tests/e2e/moderation.spec.mjs#a moderator rejects the selected follow-up without deciding its sibling or the original review
       ST-11:
