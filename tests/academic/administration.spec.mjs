@@ -240,8 +240,11 @@ test('presentation settings persist the full language set and current revision',
 
 test('moderator attribution correction carries the authoritative evidence revision', async ({ page }, info) => {
   const a = messages(info), m = a.moderation;
-  let decision;
-  await page.route('**/api/v1/reviews/admin/entries/review/attribution*', route => fulfill(route, { revision: 1, evidence_revision: 'source-v2', teacher_ids: ['teacher-a'], previous_teacher_ids: ['teacher-b'] }));
+  let preview, decision;
+  await page.route('**/api/v1/reviews/admin/entries/review/attribution*', route => {
+    preview = route.request().postDataJSON();
+    return fulfill(route, { revision: 1, evidence_revision: 'source-v2', teacher_ids: ['teacher-a'], previous_teacher_ids: ['teacher-b'] });
+  });
   await page.route(/\/api\/v1\/catalog\/(?:admin\/)?objects\?/, route => {
     const kind = new URL(route.request().url()).searchParams.get('kind');
     return fulfill(route, { items: kind === 'school' ? [school] : kind === 'teacher' ? [object('teacher-a', 'teacher', 'Teacher A')] : [], next: '' });
@@ -258,9 +261,10 @@ test('moderator attribution correction carries the authoritative evidence revisi
   await expect(panel.getByRole('button', { name: m.applyDecision, exact: true })).toBeDisabled();
   await panel.getByRole('button', { name: m.previewAttribution, exact: true }).click();
   await expect(panel.getByText(fill(m.attributionResult, { teachers: 'Teacher A' }), { exact: true })).toBeVisible();
+  expect(preview).toEqual({ teacher_ids: [] });
   await panel.getByRole('button', { name: m.applyDecision, exact: true }).click();
   await expect(panel.getByText(m.decisionQueued, { exact: true })).toBeVisible();
-  expect(decision.decision).toMatchObject({ action: 'reassign', evidence_revision: 'source-v2', teacher_id: '' });
+  expect(decision.decision).toMatchObject({ action: 'reassign', evidence_revision: 'source-v2', teacher_ids: [] });
 });
 
 test('batch workflow shows preview and per-item delivery state', async ({ page }, info) => {
