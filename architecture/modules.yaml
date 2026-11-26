@@ -1404,6 +1404,8 @@ applications:
       - docs/spec/information-query.md
       - docs/spec/module-protocol.md
     scenario_tests:
+      REVIEWUX-04:
+        - tests/e2e/moderation.spec.mjs#moderation previews and applies multiple teachers from the review term
       CM-01:
         - tests/e2e/moderation.spec.mjs#a moderator rejects the selected follow-up without deciding its sibling or the original review
       ST-11:
