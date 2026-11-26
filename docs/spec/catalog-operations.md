@@ -1,7 +1,7 @@
 ---
 type: spec
 status: Accepted
-updated: 2026-11-26
+updated: 2026-11-27
 ---
 
 # 课程、教师维护与教务导入
