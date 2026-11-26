@@ -1318,6 +1318,12 @@ applications:
       - docs/spec/academic-content.md
       - docs/spec/notifications.md
     scenario_tests:
+      VERIFICATION-UX-04:
+        - tests/e2e/verification-ux.spec.mjs#school data authorization is granted by term, and stopping rechecks keeps the authorized terms
+      VERIFICATION-UX-05:
+        - tests/e2e/verification-ux.spec.mjs#an earlier school data authorization keeps its past terms only after consenting to the term rules
+      ACAD-SD-03:
+        - tests/e2e/academic.spec.mjs#the review editor names the authorized term, also after rechecks have stopped
       CM-10:
         - src/features/account/lifecycle-actions.test.ts#keeps evidence after a refusal and appends it to the selected pending appeal
         - tests/e2e/my-reviews-discussion.spec.mjs#a pending appeal receipt appends evidence to its original request after a lost response
