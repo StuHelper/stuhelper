@@ -301,7 +301,8 @@ test('a saved draft with another grade scale keeps its value when restored',asyn
   await publish.click();
   await editor.getByRole('button',{name:a.editor.loadLatest,exact:true}).click();
   await editor.getByRole('button',{name:a.editor.useLatest,exact:true}).click();
-  await expect(editor.getByRole('radio',{name:a.grade.five.good,exact:true})).toBeChecked();
+  const restoredGrade=editor.getByRole('group',{name:a.grade.levelLabel,exact:true});
+  await expect(restoredGrade.getByRole('radio',{name:a.grade.five.good,exact:true})).toBeChecked();
   await expect(publish).toBeEnabled();
   await publish.click();
   await expect(page.getByText(a.editor.published,{exact:true})).toBeVisible();
