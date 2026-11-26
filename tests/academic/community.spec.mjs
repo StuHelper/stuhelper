@@ -278,6 +278,36 @@ test('draft conflict keeps local writing until the author chooses a version',asy
   expect(posted).toMatchObject({revision:2,input:{body:'Local writing to preserve.'}});
 });
 
+test('a saved draft with another grade scale keeps its value when restored',async({page},info)=>{
+  const all=catalogue(info),a=all.academic;
+  const localGrade={scale:'percent',value:92};
+  const savedGrade={scale:'five_level',value:'good'};
+  const draft={id:'draft',revision:1,input:{...draftInput,grade:localGrade},withdrawn:false,reference_ids:['course','teacher-a'],reference_state:'verified'};
+  const saved={...draft,revision:2,input:{...draftInput,body:'Saved on another device.',grade:savedGrade}};
+  let reads=0,posted;
+  await page.route('**/api/v1/reviews/me/drafts?*',route=>fulfill(route,[draft]));
+  await page.route('**/api/v1/reviews/me/drafts/draft',route=>fulfill(route,++reads===1?draft:saved));
+  await page.route('**/api/v1/reviews/me/drafts/draft/publish',route=>{
+    const body=route.request().postDataJSON();
+    if(body.revision===1)return fulfill(route,{code:'conflict'},409);
+    posted=body;
+    return fulfill(route,{id:'published',state:'published',revision:1});
+  });
+  await page.goto(`/me/reviews?tab=drafts&lang=${info.project.metadata.locale}`);
+  await page.getByRole('button',{name:all.me.continueEditing,exact:true}).click();
+  const editor=editorOf(page,a,'course');
+  const publish=editor.getByRole('button',{name:a.editor.publish,exact:true});
+  await expect(editor.getByLabel(a.grade.percentLabel,{exact:true})).toHaveValue('92');
+  await publish.click();
+  await editor.getByRole('button',{name:a.editor.loadLatest,exact:true}).click();
+  await editor.getByRole('button',{name:a.editor.useLatest,exact:true}).click();
+  await expect(editor.getByRole('radio',{name:a.grade.five.good,exact:true})).toBeChecked();
+  await expect(publish).toBeEnabled();
+  await publish.click();
+  await expect(page.getByText(a.editor.published,{exact:true})).toBeVisible();
+  expect(posted).toMatchObject({revision:2,input:{body:saved.input.body,grade:savedGrade}});
+});
+
 test('discussion refresh preserves writing and fixed identity when replying',async({page},info)=>{
   const a=catalogue(info).academic;let posted;
   await page.route('**/api/v1/reviews/compose?*',route=>fulfill(route,{...composeBase,identity:'anonymous'}));
