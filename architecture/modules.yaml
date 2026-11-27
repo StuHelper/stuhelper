@@ -1470,6 +1470,12 @@ operations:
       SCHOOL-SYNC-03:
         - services/school-sync/test_observed_executor.py#ObservedTests.test_only_one_group_can_start_and_parallel_operation_is_rejected
         - services/school-sync/test_observed_executor.py#ObservedTests.test_paused_status_is_read_only_and_scheduled_and_manual_runs_never_read
+      SCHOOL-SYNC-05:
+        - services/stuhelper-common/test_school_sync_accounts.py#SchoolSyncAccountTests.test_staged_deployment_rejects_each_stale_controller_account
+        - services/stuhelper-common/test_school_sync_accounts.py#SchoolSyncAccountTests.test_staged_deployment_rejects_stale_unit_user_and_groups
+        - services/stuhelper-common/test_school_sync_accounts.py#SchoolSyncAccountTests.test_installed_check_uses_effective_systemd_identity
+        - services/stuhelper-common/test_slot_deploy.py#SlotDeployTests.test_missing_school_sync_account_blocks_deploy_before_backend_stop
+        - services/ops-healthcheck/test_healthcheck.py#HealthcheckAndAlertTests.test_missing_school_sync_account_fails_healthcheck_and_alerts_with_code
 shared_specifications:
   - docs/spec/terminology.md
   - docs/spec/native-clients.md
