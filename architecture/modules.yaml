@@ -179,11 +179,15 @@ modules:
     contract_status: implemented
     specifications:
       - docs/spec/catalog-operations.md
+      - docs/spec/admin-operations.md
     api: 1
     capabilities:
       - campus-adapters.verify
     capability_requires: {}
     scenario_tests:
+      SCHOOL-SYNC-06:
+        - oracledata/repository/groups_test.go#TestG1FinishesSourceQueriesBeforeReusingArchive
+        - oracledata/repository/groups_test.go#TestAllGroupsUseOneCompleteBatchAndNeverActivateOnSourceFailure
       CAT-TEACHER-15:
         - scripts/test_buaa_teacher_sites.py#TeacherSitesTest.test_body_image_public_hops_use_checked_addresses_and_limits
         - scripts/test_buaa_teacher_sites.py#TeacherSitesTest.test_body_image_nonpublic_destinations_never_connect
@@ -1482,6 +1486,8 @@ operations:
         - services/stuhelper-common/test_school_sync_accounts.py#SchoolSyncAccountTests.test_installed_check_uses_effective_systemd_identity
         - services/stuhelper-common/test_slot_deploy.py#SlotDeployTests.test_missing_school_sync_account_blocks_deploy_before_backend_stop
         - services/ops-healthcheck/test_healthcheck.py#HealthcheckAndAlertTests.test_missing_school_sync_account_fails_healthcheck_and_alerts_with_code
+      SCHOOL-SYNC-06:
+        - services/school-sync/test_observed_executor.py#ObservedTests.test_source_failure_and_interrupted_attempt_never_retry
 shared_specifications:
   - docs/spec/terminology.md
   - docs/spec/native-clients.md
