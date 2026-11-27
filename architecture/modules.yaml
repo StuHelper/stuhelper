@@ -1227,6 +1227,9 @@ applications:
     scenario_tests:
       REVIEWUX-02:
         - internal/academicapp/school_data_test.go#TestComposerPublicCandidatesAndAuthorizedEnrollmentMarks
+      SV-BATCH-01:
+        - internal/verificationapp/buaa_acceptance_test.go#TestBUAAEntryUsesReplicaAndPreservesAdmission
+        - internal/catalogsource/source_test.go#TestReplicaDirectoryAndOwnEnrollmentDriveRealReviewEligibility
       SV-SD-04:
         - cmd/catalog-school/timetables_test.go#TestSchoolDataCalendarSeedAndAuthorizationPostgres
       REVIEWUX-04:
@@ -1460,6 +1463,9 @@ operations:
         - services/school-sync/test_observed_executor.py#ObservedTests.test_fixed_phase_windows_begin_at_shanghai_midnight
       SCHOOL-SYNC-02:
         - services/school-sync/test_observed_executor.py#ObservedTests.test_failed_group_recovery_keeps_all_fixed_slots
+      SCHOOL-SYNC-04:
+        - services/ops-healthcheck/test_healthcheck.py#HealthcheckAndAlertTests.test_old_published_batch_does_not_degrade_health_but_pause_does
+        - services/ops-healthcheck/test_healthcheck.py#HealthcheckAndAlertTests.test_observed_cleanup_overdue_is_detected
       SCHOOL-SYNC-03:
         - services/school-sync/test_observed_executor.py#ObservedTests.test_only_one_group_can_start_and_parallel_operation_is_rejected
         - services/school-sync/test_observed_executor.py#ObservedTests.test_paused_status_is_read_only_and_scheduled_and_manual_runs_never_read
