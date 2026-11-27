@@ -385,6 +385,9 @@ modules:
         - reviews
         - favorites
     scenario_tests:
+      CAT-ADDRESS-01:
+        - address_test.go#TestPublicAddressesKeepAliasesAndRequireAdmission
+        - address_test.go#TestAddressMigrationConcurrentTeacherReservations
       TERMFLOOR-01:
         - term_order_test.go#TestEnrollmentAndTermOptionsUseStructuredOrder
         - projection_test.go#TestReviewOfferingTermsUseCourseAndCutoff
