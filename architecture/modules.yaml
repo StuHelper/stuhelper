@@ -346,6 +346,7 @@ modules:
     specifications:
       - docs/spec/catalog-operations.md
       - docs/spec/my-courses.md
+      - docs/spec/student-verification.md
       - docs/spec/academic-content.md
       - docs/spec/action-eligibility.md
     api: 1
@@ -382,6 +383,8 @@ modules:
     scenario_tests:
       REVIEWUX-01:
         - projection_test.go#TestReviewOfferingTermsUseCourseAndCutoff
+      SV-SD-04:
+        - school_term_calendar_test.go#TestSchoolTermCalendarUndatedTrailingTerms
       CAT-REFRESH-01:
         - teacher_refresh_test.go#TestTeacherRefreshDurableConcurrencyIdempotencyAndTimeout
       CAT-REFRESH-02:
@@ -1224,6 +1227,8 @@ applications:
     scenario_tests:
       REVIEWUX-02:
         - internal/academicapp/school_data_test.go#TestComposerPublicCandidatesAndAuthorizedEnrollmentMarks
+      SV-SD-04:
+        - cmd/catalog-school/timetables_test.go#TestSchoolDataCalendarSeedAndAuthorizationPostgres
       REVIEWUX-04:
         - internal/academicapp/integration_test.go#TestMultiTeacherModerationThroughComposedHTTP
       SV-EMAIL-TRANSFER-01:
@@ -1318,6 +1323,8 @@ applications:
       - docs/spec/academic-content.md
       - docs/spec/notifications.md
     scenario_tests:
+      VERIFICATION-UX-01:
+        - tests/e2e/verification-ux.spec.mjs#finished applications and requests are folded into the history, open ones stay in view
       VERIFICATION-UX-04:
         - tests/e2e/verification-ux.spec.mjs#school data authorization is granted by term, and stopping rechecks keeps the authorized terms
       VERIFICATION-UX-05:
@@ -1440,10 +1447,14 @@ operations:
       - docs/spec/ci-runners.md
       - docs/spec/admin-operations.md
       - docs/spec/sso-compatibility.md
+      - docs/spec/student-verification.md
     scenario_tests:
       CI-16:
         - scripts/deployment.test.mjs#remote verification reads pinned manifests without pulling or pushing images
         - scripts/workflow-hygiene.test.mjs#Registry verification and deployment use GHCR package read permission
+      SV-SD-06:
+        - services/stuhelper-common/test_slot_deploy.py#test_missing_school_term_blocks_switch_before_stopping_backend
+        - services/ops-healthcheck/test_healthcheck.py#test_school_term_calendar_reports_dependency_failure
 shared_specifications:
   - docs/spec/terminology.md
   - docs/spec/native-clients.md
