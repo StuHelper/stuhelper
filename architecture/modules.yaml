@@ -1460,8 +1460,16 @@ operations:
         - scripts/deployment.test.mjs#remote verification reads pinned manifests without pulling or pushing images
         - scripts/workflow-hygiene.test.mjs#Registry verification and deployment use GHCR package read permission
       SV-SD-06:
-        - services/stuhelper-common/test_slot_deploy.py#test_missing_school_term_blocks_switch_before_stopping_backend
-        - services/ops-healthcheck/test_healthcheck.py#test_school_term_calendar_reports_dependency_failure
+        - services/stuhelper-common/test_slot_deploy.py#SlotDeployTests.test_missing_school_term_blocks_switch_before_stopping_backend
+        - services/ops-healthcheck/test_healthcheck.py#HealthcheckAndAlertTests.test_school_term_calendar_reports_dependency_failure
+      SCHOOL-SYNC-01:
+        - services/school-sync/test_observed_executor.py#ObservedTests.test_approved_new_source_completes_once_and_preserves_old_failure
+        - services/school-sync/test_observed_executor.py#ObservedTests.test_fixed_phase_windows_begin_at_shanghai_midnight
+      SCHOOL-SYNC-02:
+        - services/school-sync/test_observed_executor.py#ObservedTests.test_failed_group_recovery_keeps_all_fixed_slots
+      SCHOOL-SYNC-03:
+        - services/school-sync/test_observed_executor.py#ObservedTests.test_only_one_group_can_start_and_parallel_operation_is_rejected
+        - services/school-sync/test_observed_executor.py#ObservedTests.test_paused_status_is_read_only_and_scheduled_and_manual_runs_never_read
 shared_specifications:
   - docs/spec/terminology.md
   - docs/spec/native-clients.md
