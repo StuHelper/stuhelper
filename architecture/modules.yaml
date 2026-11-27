@@ -381,6 +381,11 @@ modules:
         - reviews
         - favorites
     scenario_tests:
+      TERMFLOOR-01:
+        - term_order_test.go#TestEnrollmentAndTermOptionsUseStructuredOrder
+        - projection_test.go#TestReviewOfferingTermsUseCourseAndCutoff
+      TERMFLOOR-03:
+        - termfloor_timetable_test.go#TestTimetableFloorInventoryAndCleanupPostgres
       REVIEWUX-01:
         - projection_test.go#TestReviewOfferingTermsUseCourseAndCutoff
       SV-SD-04:
@@ -1225,6 +1230,8 @@ applications:
       resources.read:
         - resources
     scenario_tests:
+      TERMFLOOR-02:
+        - internal/academicapp/school_data_test.go#TestCourseReviewsAndDraftsRejectPreFloorTermsPostgres
       REVIEWUX-02:
         - internal/academicapp/school_data_test.go#TestComposerPublicCandidatesAndAuthorizedEnrollmentMarks
       SV-BATCH-01:
