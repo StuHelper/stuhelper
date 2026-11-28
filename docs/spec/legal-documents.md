@@ -1,7 +1,7 @@
 ---
 type: spec
 status: Accepted
-updated: 2026-11-23
+updated: 2026-11-28
 ---
 
 # 法律文件与版本
@@ -70,7 +70,7 @@ Backend 将 `email-transfer` 的发布源接入 Verification。当前生效版�
 - 注册与主站同意使用各自的文件。SSO 弹窗用 GET 读取 `sso-terms` 的 HTML，隐私政策链接指向 `sso-privacy`。跨域读取只允许配置的 SSO 来源，响应提供单一 `Access-Control-Allow-Origin`，无需登录或跨域凭据。正式切换前核对注册页面实际加载的版本与正文。
 - 主站同意通过 `GET /api/v1/auth/consent` 读取 `terms`、`privacy` 的固定版本引用。每次 POST 提交一份文件的 `document_id`、`version`、`digest` 和主动确认。全局 `required` 为 false 时恢复进入业务。
 - Resources 原创授权从 `GET /api/v1/resources/capabilities` 的 `terms` 读取 `upload-license` 的标识、固定链接、版本和摘要，按实际展示的版本勾选。上传请求将标识、版本、摘要和主动确认写入 `origin.consent`。
-- Verification 读取 `email-transfer` 当前生效发布快照，在学校邮箱发码前取得并保存单独同意。隐私政策与第三方清单链接专项文件。接收方全称、地址、联系方式、保存地点和期限通过变量提供。[学校邮箱验证码出境](student-verification.md#学校邮箱验证码出境)
+- Verification 读取 `email-transfer` 当前生效发布快照，通过隐私页或发码页取得并保存本人对当前版本和摘要的单独同意。旧版凭证保留原授权范围。隐私政策与第三方清单链接专项文件。接收方全称、地址、联系方式、保存地点和期限通过变量提供。[学校邮箱验证码出境](student-verification.md#学校邮箱验证码出境)
 - 主站收到 `409 consent_version_changed` 后重读同意状态。原创提交收到 `400 resources_invalid_input` 时刷新上传能力并比较条款版本及摘要。两处都清除已变化项目的勾选，由用户重新确认。历史回执按所引用的固定版本查阅。
 - Admin 展示文档版本列表、Markdown 编辑器、可插入变量、独立变量设置、预览与发布确认。显示草稿、已发布及已归档状态和生效日。历史版本只读，提供基于历史版本创建新草稿的操作。对 `changed_variables` 提示涉及的版本与变量，保存后刷新提示。
 - 首次发布前和会话待同意时，Admin 使用 `GET /api/v1/admin/legal/documents` 获取文档列表并确认管理授权。待同意时，会话响应保留 `authenticated`、`consent_required`、`csrf_token` 等必要信息。法律文件管理入口依据管理接口的成功响应开放，按响应处理未登录、无权限和服务不可用。
